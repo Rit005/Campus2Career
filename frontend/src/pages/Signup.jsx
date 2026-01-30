@@ -1,60 +1,75 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Layout from '../components/Layout';
-import Input from '../components/ui/Input';
-import Button from '../components/ui/Button';
-import Alert from '../components/ui/Alert';
-import OAuthButtons from '../components/ui/OAuthButtons';
-import { Eye, EyeOff } from 'lucide-react'; // Eye icons
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import Layout from "../components/Layout";
+import Input from "../components/ui/Input";
+import Button from "../components/ui/Button";
+import Alert from "../components/ui/Alert";
+import OAuthButtons from "../components/ui/OAuthButtons";
+import { Eye, EyeOff } from "lucide-react";
 
 const Signup = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState(''); // NEW ROLE STATE
-  const [showPassword, setShowPassword] = useState(false); // NEW FOR EYE TOGGLE
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState(""); // ROLE ADDED
+  const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
 
-  const { signup, loginWithGoogle, loginWithGithub, isAuthenticated } = useAuth();
+  const { signup, loginWithGoogle, loginWithGithub, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
+  /**
+   * Redirect logic for both normal signup & OAuth
+   */
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      if (!user?.role) {
+        navigate("/choose-dashboard"); // user has no role → choose role
+      } else if (user.role === "student") {
+        navigate("/student/dashboard");
+      } else if (user.role === "recruiter") {
+        navigate("/recruiter/dashboard");
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
+  /**
+   * Validate signup form
+   */
   const validateForm = () => {
     const errors = {};
 
-    if (!name.trim()) errors.name = 'Name is required';
-    if (!email) errors.email = 'Email is required';
-    if (!/\S+@\S+\.\S+/.test(email)) errors.email = 'Enter a valid email';
-    if (!role) errors.role = 'Please select a role';
+    if (!name.trim()) errors.name = "Name is required";
+    if (!email.trim()) errors.email = "Email is required";
+    if (!/\S+@\S+\.\S+/.test(email)) errors.email = "Enter a valid email";
+    if (!role) errors.role = "Please select a role";
 
-    if (!password) errors.password = 'Password is required';
-    else if (password.length < 6) errors.password = 'Password must be 6+ characters';
+    if (!password) errors.password = "Password is required";
+    else if (password.length < 6) errors.password = "Password must be 6+ characters";
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
+  /**
+   * Submit Signup Form
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (!validateForm()) return;
 
     setLoading(true);
 
-    const result = await signup(name, email, password, role); // SEND ROLE
+    const result = await signup(name, email, password, role);
 
     if (result.success) {
-      navigate(result.redirectPath || '/choose-dashboard');
+      navigate(result.redirectPath || "/choose-dashboard");
     } else {
       setError(result.error);
     }
@@ -65,9 +80,9 @@ const Signup = () => {
   return (
     <Layout title="Create your account" subtitle="Start your journey with Campus2Career">
       <form className="space-y-6" onSubmit={handleSubmit}>
-        
+
         {error && (
-          <Alert type="error" message={error} onClose={() => setError('')} />
+          <Alert type="error" message={error} onClose={() => setError("")} />
         )}
 
         {/* NAME */}
@@ -103,17 +118,18 @@ const Signup = () => {
             <option value="">-- Choose Role --</option>
             <option value="student">Student</option>
             <option value="recruiter">Recruiter</option>
+            <option value="recruiter">Null</option>
           </select>
           {validationErrors.role && (
             <p className="text-red-500 text-sm mt-1">{validationErrors.role}</p>
           )}
         </div>
 
-        {/* PASSWORD + EYE TOGGLE */}
+        {/* PASSWORD WITH TOGGLE */}
         <div className="relative">
           <Input
             label="Password"
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
@@ -121,6 +137,7 @@ const Signup = () => {
             error={validationErrors.password}
           />
 
+          {/* EYE ICON */}
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
@@ -130,10 +147,12 @@ const Signup = () => {
           </button>
         </div>
 
+        {/* SUBMIT BUTTON */}
         <Button type="submit" className="w-full" loading={loading}>
           Create account
         </Button>
 
+        {/* OAUTH BUTTONS */}
         <OAuthButtons
           onGoogleClick={loginWithGoogle}
           onGithubClick={loginWithGithub}
@@ -141,7 +160,7 @@ const Signup = () => {
         />
 
         <p className="text-center text-sm text-gray-600">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <Link to="/login" className="link">Sign in</Link>
         </p>
       </form>

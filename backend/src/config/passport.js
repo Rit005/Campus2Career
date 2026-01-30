@@ -130,16 +130,14 @@ passport.use(
  * Generates JWT and redirects to frontend with token
  */
 export const handleOAuthCallback = (req, res, provider) => {
-  // Generate JWT with userId and role (role will be null initially)
-  const token = generateToken(req.user._id, req.user.role);
+const token = generateToken(req.user._id);
 
-  // Send token as cookie
   sendTokenCookie(res, token);
 
   // Redirect to frontend with token in URL for localStorage storage
-  res.redirect(
-    `${process.env.FRONTEND_URL}/auth/callback?token=${token}&provider=${provider}`
-  );
+res.redirect(
+  `${process.env.FRONTEND_URL}/choose-dashboard?token=${token}`
+);
 };
 
 export default passport;

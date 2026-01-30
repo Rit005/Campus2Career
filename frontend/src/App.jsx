@@ -1,35 +1,38 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
 import ChooseDashboard from './pages/ChooseDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import RecruiterDashboard from './pages/RecruiterDashboard';
+import OAuthCallback from './pages/OAuthCallback';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Public routes */}
+
+          {/* 🌐 Public routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          
-          {/* Protected routes */}
+          <Route path="/auth/callback" element={<OAuthCallback />} />
+
+          {/* 🔁 Smart dashboard redirect */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <Navigate to="/choose-dashboard" replace />
               </ProtectedRoute>
             }
           />
-          
-          {/* Dashboard Selection Route */}
+
+          {/* 🧠 Role selection */}
           <Route
             path="/choose-dashboard"
             element={
@@ -38,8 +41,8 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
-          {/* Student Dashboard */}
+
+          {/* 🎓 Student dashboard */}
           <Route
             path="/student/dashboard"
             element={
@@ -48,8 +51,8 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
-          {/* Recruiter Dashboard */}
+
+          {/* 🧑‍💼 Recruiter dashboard */}
           <Route
             path="/recruiter/dashboard"
             element={
@@ -58,9 +61,10 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
-          {/* Redirect unmatched routes to home */}
+
+          {/* 🚫 Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
+
         </Routes>
       </Router>
     </AuthProvider>
@@ -68,4 +72,3 @@ function App() {
 }
 
 export default App;
-

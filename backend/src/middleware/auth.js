@@ -1,18 +1,11 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-/**
- * Protect routes - Verify JWT token
- * 
- * JWT Payload contains:
- * - id: User's MongoDB ObjectId
- * - role: User's selected role (student/recruiter) or null
- */
+
 export const protect = async (req, res, next) => {
   try {
     let token;
 
-    // Get token from Authorization header or cookies
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
     } else if (req.cookies && req.cookies.token) {
@@ -27,10 +20,8 @@ export const protect = async (req, res, next) => {
     }
 
     try {
-      // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       
-      // Get user from database (for latest role info)
       const user = await User.findById(decoded.id);
       
       if (!user) {
@@ -40,9 +31,7 @@ export const protect = async (req, res, next) => {
         });
       }
 
-      // Attach user to request (includes decoded role from JWT)
       req.user = user;
-      req.userRole = decoded.role; // Role from JWT for quick access
       
       next();
     } catch (error) {
@@ -75,7 +64,7 @@ export const optionalAuth = async (req, res, next) => {
         const user = await User.findById(decoded.id);
         if (user) {
           req.user = user;
-          req.userRole = decoded.role;
+          
         }
       } catch (error) {
         // Token invalid, but that's okay for optional auth
@@ -102,7 +91,7 @@ export const requireRole = (...allowedRoles) => {
       return next();
     }
 
-    const userRole = req.userRole || req.user?.role;
+  const userRole = req.user?.role;
 
     if (!userRole) {
       return res.status(403).json({
@@ -129,14 +118,11 @@ export const requireRole = (...allowedRoles) => {
  * @param {string|null} role - 'student' | 'recruiter' | null
  * @returns {string} JWT token
  */
-export const generateToken = (userId, role = null) => {
+export const generateToken = (userId) => {
   return jwt.sign(
-    { 
-      id: userId,
-      role: role
-    },
+    { id: userId },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    { expiresIn: '7d' }
   );
 };
 
@@ -176,4 +162,3 @@ export const clearTokenCookie = (res) => {
     sameSite: 'lax'
   });
 };
-

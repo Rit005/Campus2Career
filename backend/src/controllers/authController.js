@@ -6,11 +6,6 @@ import {
   clearTokenCookie
 } from '../middleware/auth.js';
 
-/**
- * @desc    Register a new user
- * @route   POST /auth/signup
- * @access  Public
- */
 export const signup = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
@@ -61,11 +56,7 @@ export const signup = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Login user
- * @route   POST /auth/login
- * @access  Public
- */
+
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -110,11 +101,7 @@ export const login = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Logout
- * @route   POST /auth/logout
- * @access  Public
- */
+
 export const logout = async (req, res, next) => {
   try {
     clearTokenCookie(res);
@@ -124,11 +111,7 @@ export const logout = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Get current user
- * @route   GET /auth/me
- * @access  Private
- */
+
 export const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
@@ -142,11 +125,6 @@ export const getMe = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Verify token
- * @route   GET /auth/verify
- * @access  Public
- */
 export const verifyToken = async (req, res, next) => {
   try {
     let token;
@@ -180,52 +158,30 @@ export const verifyToken = async (req, res, next) => {
   }
 };
 
-/**
- * @desc    Select or change dashboard role
- * @route   POST /auth/select-role
- * @access  Private
- */
-export const selectRole = async (req, res, next) => {
-  try {
-    const { role } = req.body;
 
-    if (!role || !['student', 'recruiter'].includes(role)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid role. Please select student or recruiter'
-      });
-    }
+export const selectRole = async (req, res) => {
+  const { role } = req.body;
 
-    // Always allow role selection (your requirement)
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    user.role = role;
-    user.isProfileCompleted = true;
-    await user.save();
-
-    const newToken = generateToken(user._id, user.role);
-    sendTokenCookie(res, newToken);
-
-    const redirectPath = role === 'student' ? '/student/dashboard' : '/recruiter/dashboard';
-
-    res.status(200).json({
-      success: true,
-      message: `Role updated to ${role}`,
-      data: {
-        user: user.toPublicProfile(),
-        token: newToken,
-        redirectPath
-      }
-    });
-  } catch (error) {
-    next(error);
+  if (!['student', 'recruiter'].includes(role)) {
+    return res.status(400).json({ success: false, message: 'Invalid role' });
   }
+
+  req.user.role = role;
+  await req.user.save();
+
+  // 🔥 REGENERATE TOKEN
+  const token = generateToken(req.user._id);
+  sendTokenCookie(res, token);
+
+  return res.json({
+    success: true,
+    data: {
+      redirectPath:
+        role === 'student'
+          ? '/student/dashboard'
+          : '/recruiter/dashboard'
+    }
+  });
 };
 
 /**

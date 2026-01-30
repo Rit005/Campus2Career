@@ -1,14 +1,12 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authAPI } from '../api/api';
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { authAPI } from "../api/api";
 
 const AuthContext = createContext(null);
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 };
 
 export const AuthProvider = ({ children }) => {
@@ -16,104 +14,71 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Check if user is authenticated on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const response = await authAPI.verifyToken();
-          setUser(response.data.data.user);
-        } catch (err) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setUser(null);
-        }
-      }
-      setLoading(false);
-    };
-
-    checkAuth();
-  }, []);
-
-  // Login function
-const login = useCallback(async (email, password) => {
-  try {
-    setError(null);
-
-    // ❗ FIX: Clear old user/role before new login
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
-    const response = await authAPI.login({ email, password });
-    const { user, token } = response.data.data;
-
-    // Save fresh data
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
-    setUser(user);
-
-    // Determine redirect path based on role
-    let redirectPath = "/choose-dashboard";
-
-    if (user.role === "student") {
-      redirectPath = "/student/dashboard";
-    } else if (user.role === "recruiter") {
-      redirectPath = "/recruiter/dashboard";
-    }
-
-    return { success: true, user, redirectPath };
-
-  } catch (err) {
-    const message = err.response?.data?.message || "Login failed";
-    setError(message);
-    return { success: false, error: message };
-  }
-}, []);
-
-  // Signup function
-const signup = useCallback(async (name, email, password, role) => {
-  try {
-    setError(null);
-    const response = await authAPI.signup({ name, email, password, role });
-
-    const { user, token } = response.data.data;
-
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-
-    setUser(user);
-
-    // Redirect based on role immediately
-    let redirectPath = '/choose-dashboard';
-    if (user.role === 'student') redirectPath = '/student/dashboard';
-    if (user.role === 'recruiter') redirectPath = '/recruiter/dashboard';
-
-    return { success: true, user, redirectPath };
-  } catch (err) {
-    const message = err.response?.data?.message || 'Signup failed';
-    setError(message);
-    return { success: false, error: message };
-  }
-}, []);
-
-
-  // Logout function
-  const logout = useCallback(async () => {
+  /* ----------------------------------
+     🔄 Fetch current user from backend
+  ---------------------------------- */
+  const refreshUser = useCallback(async () => {
     try {
-      await authAPI.logout();
-    } catch (err) {
-      // Continue with logout even if API call fails
-      console.error('Logout error:', err);
-    } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      const res = await authAPI.verifyToken();
+      setUser(res.data.data.user);
+      return res.data.data.user;
+    } catch {
       setUser(null);
-      setError(null);
+      return null;
     }
   }, []);
-  // Corrected OAuth URLs
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
+  /* ----------------------------------
+     🔐 Check auth on app load
+  ---------------------------------- */
+  useEffect(() => {
+    refreshUser().finally(() => setLoading(false));
+  }, [refreshUser]);
+
+  /* ----------------------------------
+     🔑 Email / password login
+  ---------------------------------- */
+  const login = useCallback(async (email, password) => {
+    try {
+      setError(null);
+      await authAPI.login({ email, password });
+      const user = await refreshUser();
+      return { success: true, user };
+    } catch (err) {
+      const msg = err.response?.data?.message || "Login failed";
+      setError(msg);
+      return { success: false, error: msg };
+    }
+  }, [refreshUser]);
+
+  /* ----------------------------------
+     📝 Signup
+  ---------------------------------- */
+  const signup = useCallback(async (name, email, password) => {
+    try {
+      setError(null);
+      await authAPI.signup({ name, email, password });
+      const user = await refreshUser();
+      return { success: true, user };
+    } catch (err) {
+      const msg = err.response?.data?.message || "Signup failed";
+      setError(msg);
+      return { success: false, error: msg };
+    }
+  }, [refreshUser]);
+
+  /* ----------------------------------
+     🚪 Logout
+  ---------------------------------- */
+  const logout = useCallback(async () => {
+    await authAPI.logout();
+    setUser(null);
+  }, []);
+
+  /* ----------------------------------
+     🌐 OAuth
+  ---------------------------------- */
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
   const loginWithGoogle = () => {
     window.location.href = `${API_BASE}/auth/google`;
@@ -122,37 +87,37 @@ const signup = useCallback(async (name, email, password, role) => {
   const loginWithGithub = () => {
     window.location.href = `${API_BASE}/auth/github`;
   };
-  // Handle OAuth callback
-  const handleOAuthCallback = useCallback((token) => {
-    localStorage.setItem('token', token);
-    window.location.href = '/choose-dashboard';
-  }, []);
 
-  // Clear error
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
+  const handleOAuthCallback = useCallback(async () => {
+    const user = await refreshUser();
+    if (!user) {
+      window.location.href = "/login";
+      return;
+    }
+    window.location.href = "/choose-dashboard";
+  }, [refreshUser]);
 
-  const value = {
+  const clearError = () => setError(null);
+
+  return (
+   <AuthContext.Provider
+  value={{
     user,
     loading,
     error,
-    isAuthenticated: !!user,
+    isAuthenticated: !loading && !!user,
     login,
     signup,
     logout,
     loginWithGoogle,
     loginWithGithub,
     handleOAuthCallback,
+    refreshUser,
     clearError,
-  };
+  }}
+>
 
-  return (
-    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
-
-export default AuthContext;
-

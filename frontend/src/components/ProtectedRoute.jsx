@@ -1,46 +1,41 @@
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
   const location = useLocation();
 
+  // ⏳ Auth still loading
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
       </div>
     );
   }
 
+  // ❌ Not logged in
   if (!isAuthenticated) {
-    // Redirect to login while saving the attempted URL
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If allowedRoles is specified, check if user has required role
-  if (allowedRoles && allowedRoles.length > 0) {
-    // If user has no role (first-time user), redirect to choose dashboard
-    if (!user?.role) {
-      return <Navigate to="/choose-dashboard" state={{ from: location }} replace />;
-    }
+  // 🧠 Logged in BUT role not selected
+  if (!user?.role && location.pathname !== "/choose-dashboard") {
+    return <Navigate to="/choose-dashboard" replace />;
+  }
 
-    // Check if user's role is in allowedRoles
-    if (!allowedRoles.includes(user.role)) {
-      // User doesn't have required role, redirect to their appropriate dashboard
-      if (user.role === 'student') {
-        return <Navigate to="/student/dashboard" replace />;
-      } else if (user.role === 'recruiter') {
-        return <Navigate to="/recruiter/dashboard" replace />;
-      }
+  // 🔐 Role-based protection
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    if (user.role === "student") {
+      return <Navigate to="/student/dashboard" replace />;
+    }
+    if (user.role === "recruiter") {
+      return <Navigate to="/recruiter/dashboard" replace />;
     }
   }
 
+  // ✅ Access allowed
   return children;
 };
 
 export default ProtectedRoute;
-

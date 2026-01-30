@@ -1,20 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-/**
- * Campus2Career User Schema
- * 
- * Design decisions:
- * - email: unique: true already creates an index, no need for extra index
- * - password: nullable for OAuth users
- * - role: null by default, set after dashboard selection
- * - googleId/githubId: sparse indexes for optional fields
- * - isProfileCompleted: tracks onboarding progress
- * 
- * Future scalability:
- * - Schema prepared for StudentProfile and RecruiterProfile sub-documents
- * - Role-based routing prevents data access issues
- */
+
 const userSchema = new mongoose.Schema({
   // Personal Information
   name: {
@@ -131,9 +118,6 @@ userSchema.methods.toPublicProfile = function() {
   };
 };
 
-/**
- * Static method to find user by Google ID or create if not exists
- */
 userSchema.statics.findOrCreateGoogleUser = async function(profile) {
   let user = await this.findOne({ googleId: profile.googleId });
   
@@ -158,9 +142,6 @@ userSchema.statics.findOrCreateGoogleUser = async function(profile) {
   return user;
 };
 
-/**
- * Static method to find user by GitHub ID or create if not exists
- */
 userSchema.statics.findOrCreateGithubUser = async function(profile) {
   let user = await this.findOne({ githubId: profile.githubId });
   
@@ -185,28 +166,9 @@ userSchema.statics.findOrCreateGithubUser = async function(profile) {
   return user;
 };
 
-// Text index for search functionality (future feature)
+
 userSchema.index({ name: 'text', email: 'text' });
 
 const User = mongoose.model('User', userSchema);
 
 export default User;
-
-/**
- * Example MongoDB Document:
- * 
- * {
- *   "_id": ObjectId("..."),
- *   "name": "John Doe",
- *   "email": "john.doe@example.com",
- *   "password": "$2a$12$...", // Hashed password (null for OAuth users)
- *   "role": "student",
- *   "googleId": "123456789",
- *   "githubId": null,
- *   "isProfileCompleted": false,
- *   "studentProfile": ObjectId("..."),
- *   "recruiterProfile": null,
- *   "createdAt": ISODate("2024-01-01T00:00:00Z"),
- *   "updatedAt": ISODate("2024-01-01T00:00:00Z")
- * }
- */
