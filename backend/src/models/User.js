@@ -1,0 +1,212 @@
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+
+/**
+ * Campus2Career User Schema
+ * 
+ * Design decisions:
+ * - email: unique: true already creates an index, no need for extra index
+ * - password: nullable for OAuth users
+ * - role: null by default, set after dashboard selection
+ * - googleId/githubId: sparse indexes for optional fields
+ * - isProfileCompleted: tracks onboarding progress
+ * 
+ * Future scalability:
+ * - Schema prepared for StudentProfile and RecruiterProfile sub-documents
+ * - Role-based routing prevents data access issues
+ */
+const userSchema = new mongoose.Schema({
+  // Personal Information
+  name: {
+    type: String,
+    required: [true, 'Name is required'],
+    trim: true,
+    maxlength: [100, 'Name cannot exceed 100 characters']
+  },
+  
+  // Authentication Fields
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    unique: true, // unique: true creates an index automatically
+    lowercase: true,
+    trim: true,
+    match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
+  },
+  password: {
+    type: String,
+    nullable: true, // OAuth users may not have a password
+    select: false // Security: don't include password in queries by default
+  },
+  
+  // Role Selection (Dashboard Selection)
+  role: {
+    type: String,
+    enum: {
+      values: ['student', 'recruiter', null],
+      message: 'Role must be either "student" or "recruiter"'
+    },
+    default: null,
+    index: true
+  },
+  
+  // OAuth Provider IDs
+  googleId: {
+    type: String,
+    sparse: true // Only index if value exists
+  },
+  githubId: {
+    type: String,
+    sparse: true // Only index if value exists
+  },
+  
+  // Onboarding Progress
+  isProfileCompleted: {
+    type: Boolean,
+    default: false
+  },
+  
+  // Profile Data (Populated later for scalability)
+  studentProfile: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'StudentProfile',
+    default: null
+  },
+  recruiterProfile: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'RecruiterProfile',
+    default: null
+  }
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Compound indexes for efficient queries (only where needed)
+// Note: unique: true on email already creates an index
+userSchema.index({ role: 1, isProfileCompleted: 1 });
+
+// Pre-save middleware to hash password
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password') || this.password === null) {
+    return next();
+  }
+  
+  try {
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Compare provided password with hashed password
+ */
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  if (!this.password) return false;
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+/**
+ * Check if role is already set (prevent overwriting)
+ */
+userSchema.methods.hasRole = function() {
+  return this.role !== null && this.role !== undefined;
+};
+
+/**
+ * Get user's public profile (for API responses)
+ */
+userSchema.methods.toPublicProfile = function() {
+  return {
+    id: this._id,
+    name: this.name,
+    email: this.email,
+    role: this.role,
+    isProfileCompleted: this.isProfileCompleted,
+    createdAt: this.createdAt
+  };
+};
+
+/**
+ * Static method to find user by Google ID or create if not exists
+ */
+userSchema.statics.findOrCreateGoogleUser = async function(profile) {
+  let user = await this.findOne({ googleId: profile.googleId });
+  
+  if (!user) {
+    user = await this.findOne({ email: profile.email });
+    
+    if (user) {
+      user.googleId = profile.googleId;
+      await user.save();
+    } else {
+      user = await this.create({
+        name: profile.name,
+        email: profile.email,
+        password: null,
+        googleId: profile.googleId,
+        role: null,
+        isProfileCompleted: false
+      });
+    }
+  }
+  
+  return user;
+};
+
+/**
+ * Static method to find user by GitHub ID or create if not exists
+ */
+userSchema.statics.findOrCreateGithubUser = async function(profile) {
+  let user = await this.findOne({ githubId: profile.githubId });
+  
+  if (!user) {
+    user = await this.findOne({ email: profile.email });
+    
+    if (user) {
+      user.githubId = profile.githubId;
+      await user.save();
+    } else {
+      user = await this.create({
+        name: profile.name,
+        email: profile.email,
+        password: null,
+        githubId: profile.githubId,
+        role: null,
+        isProfileCompleted: false
+      });
+    }
+  }
+  
+  return user;
+};
+
+// Text index for search functionality (future feature)
+userSchema.index({ name: 'text', email: 'text' });
+
+const User = mongoose.model('User', userSchema);
+
+export default User;
+
+/**
+ * Example MongoDB Document:
+ * 
+ * {
+ *   "_id": ObjectId("..."),
+ *   "name": "John Doe",
+ *   "email": "john.doe@example.com",
+ *   "password": "$2a$12$...", // Hashed password (null for OAuth users)
+ *   "role": "student",
+ *   "googleId": "123456789",
+ *   "githubId": null,
+ *   "isProfileCompleted": false,
+ *   "studentProfile": ObjectId("..."),
+ *   "recruiterProfile": null,
+ *   "createdAt": ISODate("2024-01-01T00:00:00Z"),
+ *   "updatedAt": ISODate("2024-01-01T00:00:00Z")
+ * }
+ */
