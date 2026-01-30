@@ -98,10 +98,11 @@ app.use(errorHandler);
 // ================== DATABASE CONNECTION ==================
 const connectDB = async () => {
   try {
-    const mongoURI =
+    // Priority: Local MongoDB first, then env var, then Atlas fallback
+    const mongoURI = 
+      "mongodb://127.0.0.1:27017/campus2career" ||
       process.env.MONGO_URI ||
-      process.env.MONGODB_URI ||
-      "mongodb://127.0.0.1:27017/campus2career";
+      process.env.MONGODB_URI;
 
     const conn = await mongoose.connect(mongoURI);
 
@@ -113,13 +114,13 @@ const connectDB = async () => {
 };
 
 // ================== START SERVER ==================
-const PORT = process.env.PORT || 5001;
+const PORT = 5001;
 
 const startServer = async () => {
   try {
     await connectDB();
 
-    server = app.listen(PORT, () => {
+    server = app.listen(PORT, '0.0.0.0', () => {
       console.log(
         `🚀 Server running in ${
           process.env.NODE_ENV || "development"
