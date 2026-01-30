@@ -37,51 +37,66 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Login function
-  const login = useCallback(async (email, password) => {
-    try {
-      setError(null);
-      const response = await authAPI.login({ email, password });
-      const { user, token } = response.data.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-      
-      // Determine redirect path based on role
-      let redirectPath = '/choose-dashboard';
-      if (user.role === 'student') {
-        redirectPath = '/student/dashboard';
-      } else if (user.role === 'recruiter') {
-        redirectPath = '/recruiter/dashboard';
-      }
-      
-      return { success: true, user, redirectPath };
-    } catch (err) {
-      const message = err.response?.data?.message || 'Login failed';
-      setError(message);
-      return { success: false, error: message };
+const login = useCallback(async (email, password) => {
+  try {
+    setError(null);
+
+    // ❗ FIX: Clear old user/role before new login
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    const response = await authAPI.login({ email, password });
+    const { user, token } = response.data.data;
+
+    // Save fresh data
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+    setUser(user);
+
+    // Determine redirect path based on role
+    let redirectPath = "/choose-dashboard";
+
+    if (user.role === "student") {
+      redirectPath = "/student/dashboard";
+    } else if (user.role === "recruiter") {
+      redirectPath = "/recruiter/dashboard";
     }
-  }, []);
+
+    return { success: true, user, redirectPath };
+
+  } catch (err) {
+    const message = err.response?.data?.message || "Login failed";
+    setError(message);
+    return { success: false, error: message };
+  }
+}, []);
 
   // Signup function
-  const signup = useCallback(async (name, email, password) => {
-    try {
-      setError(null);
-      const response = await authAPI.signup({ name, email, password });
-      const { user, token } = response.data.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-      
-      // New users have no role, redirect to choose dashboard
-      return { success: true, user, redirectPath: '/choose-dashboard' };
-    } catch (err) {
-      const message = err.response?.data?.message || 'Signup failed';
-      setError(message);
-      return { success: false, error: message };
-    }
-  }, []);
+const signup = useCallback(async (name, email, password, role) => {
+  try {
+    setError(null);
+    const response = await authAPI.signup({ name, email, password, role });
+
+    const { user, token } = response.data.data;
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+
+    setUser(user);
+
+    // Redirect based on role immediately
+    let redirectPath = '/choose-dashboard';
+    if (user.role === 'student') redirectPath = '/student/dashboard';
+    if (user.role === 'recruiter') redirectPath = '/recruiter/dashboard';
+
+    return { success: true, user, redirectPath };
+  } catch (err) {
+    const message = err.response?.data?.message || 'Signup failed';
+    setError(message);
+    return { success: false, error: message };
+  }
+}, []);
+
 
   // Logout function
   const logout = useCallback(async () => {
@@ -97,20 +112,20 @@ export const AuthProvider = ({ children }) => {
       setError(null);
     }
   }, []);
+  // Corrected OAuth URLs
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
-  // OAuth login helpers
   const loginWithGoogle = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/auth/google`;
+    window.location.href = `${API_BASE}/auth/google`;
   };
 
   const loginWithGithub = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/auth/github`;
+    window.location.href = `${API_BASE}/auth/github`;
   };
-
   // Handle OAuth callback
   const handleOAuthCallback = useCallback((token) => {
     localStorage.setItem('token', token);
-    window.location.href = '/dashboard';
+    window.location.href = '/choose-dashboard';
   }, []);
 
   // Clear error

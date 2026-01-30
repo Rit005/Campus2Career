@@ -9,16 +9,6 @@ const ChooseDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Redirect if user already has a role
-  useEffect(() => {
-    if (!authLoading && user) {
-      if (user.role === 'student') {
-        navigate('/student/dashboard', { replace: true });
-      } else if (user.role === 'recruiter') {
-        navigate('/recruiter/dashboard', { replace: true });
-      }
-    }
-  }, [user, authLoading, navigate]);
 
   const handleRoleSelect = async (role) => {
     setLoading(true);

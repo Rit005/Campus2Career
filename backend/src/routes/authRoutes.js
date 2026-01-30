@@ -76,61 +76,13 @@ router.post('/logout', logout);
  */
 router.get('/me', protect, getMe);
 
-/**
- * @desc    Verify token
- * @route   GET /auth/verify
- * @access  Public
- */
+
 router.get('/verify', verifyToken);
 
-/**
- * @desc    Select user role (student or recruiter)
- * @route   POST /auth/select-role
- * @access  Private
- * 
- * This endpoint persists the user's dashboard role selection.
- * Once selected, the role cannot be changed (business rule).
- * 
- * Request body:
- * {
- *   "role": "student" // or "recruiter"
- * }
- * 
- * Response:
- * {
- *   "success": true,
- *   "message": "Successfully selected student role. Redirecting to dashboard...",
- *   "data": {
- *     "user": { "id": "...", "name": "...", "email": "...", "role": "student" },
- *     "token": "new_jwt_token_with_role",
- *     "redirectPath": "/student/dashboard"
- *   }
- * }
- * 
- * Error responses:
- * - 400: Invalid role value or role already selected
- * - 401: Not authenticated
- * - 404: User not found
- */
 router.post('/select-role', protect, selectRole);
 
-/**
- * @desc    Update user profile
- * @route   PUT /auth/profile
- * @access  Private
- */
 router.put('/profile', protect, updateProfile);
 
-// ============ Google OAuth Routes ============
-
-/**
- * @desc    Initiate Google OAuth
- * @route   GET /auth/google
- * @access  Public
- * 
- * Redirects to Google for authentication.
- * After successful auth, redirects to /auth/google/callback
- */
 router.get(
   '/google',
   passport.authenticate('google', {
@@ -138,14 +90,7 @@ router.get(
   })
 );
 
-/**
- * @desc    Google OAuth callback
- * @route   GET /auth/google/callback
- * @access  Public
- * 
- * Handles the callback from Google OAuth.
- * Creates/updates user in database and redirects to frontend with JWT.
- */
+
 router.get(
   '/google/callback',
   passport.authenticate('google', {

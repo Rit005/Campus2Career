@@ -140,7 +140,7 @@ VITE_API_URL=http://localhost:5000
    - Application name: Campus2Career
    - Support email: your-email@example.com
 6. Add authorized redirect URIs:
-   - `http://localhost:5000/auth/google/callback`
+   - `http://localhost:5001/auth/google/callback`
 7. Copy Client ID and Client Secret to `.env`
 
 ### 4. GitHub OAuth Setup
@@ -150,7 +150,7 @@ VITE_API_URL=http://localhost:5000
 3. Fill in the application details:
    - Application name: Campus2Career
    - Homepage URL: `http://localhost:5173`
-   - Authorization callback URL: `http://localhost:5000/auth/github/callback`
+   - Authorization callback URL: `http://localhost:5001/auth/github/callback`
 4. Click "Register application"
 5. Copy Client ID and generate a new Client Secret
 
@@ -173,7 +173,7 @@ cd backend
 npm run dev
 ```
 
-The backend will start on `http://localhost:5000`
+The backend will start on `http://localhost:5001`
 
 ### Start Frontend
 

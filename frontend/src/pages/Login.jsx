@@ -6,10 +6,12 @@ import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import Alert from '../components/ui/Alert';
 import OAuthButtons from '../components/ui/OAuthButtons';
+import { Eye, EyeOff } from "lucide-react"; // 👈 ADD ICONS
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // 👈 ADD STATE
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -17,19 +19,17 @@ const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/choose-dashboard');
     }
   }, [isAuthenticated, navigate]);
 
-  // Check for OAuth callback
   useEffect(() => {
     const token = searchParams.get('token');
     if (token) {
       localStorage.setItem('token', token);
-      navigate('/dashboard');
+      navigate('/choose-dashboard');
     }
   }, [searchParams, navigate]);
 
@@ -41,7 +41,6 @@ const Login = () => {
     const result = await login(email, password);
     
     if (result.success) {
-      // Redirect based on user role or to dashboard selection
       navigate(result.redirectPath || '/choose-dashboard');
     } else {
       setError(result.error);
@@ -59,17 +58,11 @@ const Login = () => {
   };
 
   return (
-    <Layout
-      title="Welcome back"
-      subtitle="Sign in to your account"
-    >
+    <Layout title="Welcome back" subtitle="Sign in to your account">
       <form className="space-y-6" onSubmit={handleSubmit}>
+        
         {error && (
-          <Alert
-            type="error"
-            message={error}
-            onClose={() => setError('')}
-          />
+          <Alert type="error" message={error} onClose={() => setError('')} />
         )}
 
         <Input
@@ -82,31 +75,36 @@ const Login = () => {
           autoComplete="email"
         />
 
-        <div>
+        {/* PASSWORD WITH EYE ICON */}
+        <div className="relative">
           <div className="flex items-center justify-between mb-1">
-            <label htmlFor="password" className="label">
-              Password
-            </label>
+            <label htmlFor="password" className="label">Password</label>
             <Link to="/forgot-password" className="text-sm link">
               Forgot password?
             </Link>
           </div>
+
           <Input
             id="password"
-            type="password"
+            type={showPassword ? "text" : "password"} // 👈 Toggle type
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             required
             autoComplete="current-password"
           />
+
+          {/* EYE ICON BUTTON */}
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-10 text-gray-600"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
         </div>
 
-        <Button
-          type="submit"
-          className="w-full"
-          loading={loading}
-        >
+        <Button type="submit" className="w-full" loading={loading}>
           Sign in
         </Button>
 
@@ -118,9 +116,7 @@ const Login = () => {
 
         <p className="text-center text-sm text-gray-600">
           Don't have an account?{' '}
-          <Link to="/signup" className="link">
-            Sign up
-          </Link>
+          <Link to="/signup" className="link">Sign up</Link>
         </p>
       </form>
     </Layout>
@@ -128,4 +124,3 @@ const Login = () => {
 };
 
 export default Login;
-

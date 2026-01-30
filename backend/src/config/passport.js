@@ -28,7 +28,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/auth/google/callback`,
+      callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5001'}/auth/google/callback`,
       scope: ['profile', 'email']
     },
     async (accessToken, refreshToken, profile, done) => {
@@ -80,7 +80,7 @@ passport.use(
     {
       clientID: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5000'}/auth/github/callback`,
+      callbackURL: `${process.env.BACKEND_URL || 'http://localhost:5001'}/auth/github/callback`,
       scope: ['user:email']
     },
     async (accessToken, refreshToken, profile, done) => {
