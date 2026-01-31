@@ -1,109 +1,108 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
-
+/* ============================================================
+   1️⃣ PROTECTED ROUTE (Requires Login)
+   - Verifies token from Authorization: Bearer <token> OR cookie
+   - Attaches req.user
+============================================================ */
 export const protect = async (req, res, next) => {
   try {
     let token;
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
-    } else if (req.cookies && req.cookies.token) {
+    // 1. Check Authorization header
+    if (req.headers.authorization?.startsWith("Bearer")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
+    // 2. Check HTTP-only cookie
+    if (!token && req.cookies?.token) {
       token = req.cookies.token;
     }
 
+    // 3. No token found
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to access this route'
+        message: "Not authorized — token missing",
       });
     }
 
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
-      const user = await User.findById(decoded.id);
-      
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: 'User no longer exists'
-        });
-      }
+    // 4. Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      req.user = user;
-      
-      next();
-    } catch (error) {
+    // 5. Find user
+    const user = await User.findById(decoded.id).select("-password");
+    if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid or expired token'
+        message: "User does not exist",
       });
     }
+
+    // 6. Attach user to request
+    req.user = user;
+
+    next();
   } catch (error) {
-    next(error);
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired token",
+    });
   }
 };
 
-/**
- * Optional auth - Attach user if token exists but don't require it
- */
+/* ============================================================
+   2️⃣ OPTIONAL AUTH
+   - If token exists attach user
+   - If no token, continue without user
+============================================================ */
 export const optionalAuth = async (req, res, next) => {
   try {
     let token;
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
-    } else if (req.cookies && req.cookies.token) {
+    if (req.headers.authorization?.startsWith("Bearer")) {
+      token = req.headers.authorization.split(" ")[1];
+    } else if (req.cookies?.token) {
       token = req.cookies.token;
     }
 
     if (token) {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id);
-        if (user) {
-          req.user = user;
-          
-        }
-      } catch (error) {
-        // Token invalid, but that's okay for optional auth
+        const user = await User.findById(decoded.id).select("-password");
+        if (user) req.user = user;
+      } catch {
+        // invalid token - ignore
       }
     }
 
     next();
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
-/**
- * Role-based access control middleware
- * 
- * Usage: 
- * requireRole('student')
- * requireRole(['student', 'recruiter'])
- */
-export const requireRole = (...allowedRoles) => {
+/* ============================================================
+   3️⃣ ROLE-BASED ACCESS CONTROL
+   - requireRole("student")
+   - requireRole("recruiter")
+============================================================ */
+export const requireRole = (...roles) => {
   return (req, res, next) => {
-    // If no roles specified, allow all authenticated users
-    if (!allowedRoles || allowedRoles.length === 0) {
-      return next();
-    }
-
-  const userRole = req.user?.role;
+    const userRole = req.user?.role;
 
     if (!userRole) {
       return res.status(403).json({
         success: false,
-        message: 'Please select a dashboard role first'
+        message: "User role not selected. Please choose a dashboard.",
       });
     }
 
-    if (!allowedRoles.includes(userRole)) {
+    if (!roles.includes(userRole)) {
       return res.status(403).json({
         success: false,
-        message: `Access denied. ${userRole} role cannot access this resource`
+        message: `Access denied for role: ${userRole}`,
       });
     }
 
@@ -111,54 +110,43 @@ export const requireRole = (...allowedRoles) => {
   };
 };
 
-/**
- * Generate JWT token with userId and role
- * 
- * @param {string} userId - MongoDB ObjectId
- * @param {string|null} role - 'student' | 'recruiter' | null
- * @returns {string} JWT token
- */
+/* ============================================================
+   4️⃣ GENERATE TOKENS
+============================================================ */
 export const generateToken = (userId) => {
-  return jwt.sign(
-    { id: userId },
-    process.env.JWT_SECRET,
-    { expiresIn: '7d' }
-  );
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: "7d",
+  });
 };
 
-/**
- * Generate refresh token (longer expiration)
- */
 export const generateRefreshToken = (userId) => {
   return jwt.sign(
     { id: userId },
-    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + '_refresh',
-    { expiresIn: '30d' }
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + "_refresh",
+    { expiresIn: "30d" }
   );
 };
 
-/**
- * Send token as HTTP-only cookie
- */
+/* ============================================================
+   5️⃣ SEND TOKEN COOKIE (HTTP-ONLY)
+============================================================ */
 export const sendTokenCookie = (res, token) => {
-  const cookieOptions = {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+  res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
-  };
-
-  res.cookie('token', token, cookieOptions);
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
 };
 
-/**
- * Clear token cookie
- */
+/* ============================================================
+   6️⃣ CLEAR TOKEN COOKIE (Logout)
+============================================================ */
 export const clearTokenCookie = (res) => {
-  res.cookie('token', '', {
-    expires: new Date(Date.now() - 1),
+  res.cookie("token", "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    expires: new Date(0),
   });
 };

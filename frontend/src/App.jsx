@@ -19,11 +19,11 @@ import Analytics from "./pages/student/Analytics";
 import Career from "./pages/student/Career";
 import Profile from "./pages/student/Profile";
 import AiMentor from "./pages/student/AiMentor";
+import ResumeAnalyzer from "./pages/student/ResumeAnalyzer";
 
 /* RECRUITER */
 import RecruiterLayout from "./pages/recruiter/RecruiterLayout";
 import Dashboard from "./pages/recruiter/Dashboard";
-import ResumeAnalyzer from "./pages/recruiter/ResumeAnalyzer";
 import Matching from "./pages/recruiter/Matching";
 import AnalyticsRecruiter from "./pages/recruiter/Analytics";
 import HrAssistant from "./pages/recruiter/HrAssistant";
@@ -65,6 +65,7 @@ function App() {
             <Route index element={<StudentDashboard />} />
             <Route path="dashboard" element={<StudentDashboard />} />
             <Route path="analytics" element={<Analytics />} />
+            <Route path="resume-analyzer" element={<ResumeAnalyzer />} />
             <Route path="career" element={<Career />} />
             <Route path="ai-mentor" element={<AiMentor />} />
             <Route path="profile" element={<Profile />} />
@@ -80,7 +81,6 @@ function App() {
             }
           >
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="resume-analyzer" element={<ResumeAnalyzer />} />
             <Route path="matching" element={<Matching />} />
             <Route path="analytics" element={<AnalyticsRecruiter />} />
             <Route path="hr-assistant" element={<HrAssistant />} />

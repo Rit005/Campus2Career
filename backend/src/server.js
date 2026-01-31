@@ -1,24 +1,28 @@
+// ================== LOAD ENV FIRST ==================
+import dotenv from "dotenv";
+dotenv.config();
+
+// ================== IMPORTS ==================
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import dotenv from "dotenv";
 import passport from "passport";
 import session from "express-session";
 import mongoose from "mongoose";
 import path from "path";
 import { fileURLToPath } from "url";
 
+
 // Routes
 import authRoutes from "./routes/authRoutes.js";
+import recruiterRoutes from "./routes/recruiterRoutes.js";
+import studentRoutes from "./routes/studentRoutes.js";
 
 // Middlewares
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 
 // Passport config
 import "./config/passport.js";
-
-// ================== ENV CONFIG ==================
-dotenv.config();
 
 // ================== __DIRNAME FIX (ESM) ==================
 const __filename = fileURLToPath(import.meta.url);
@@ -57,7 +61,7 @@ app.use(
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
@@ -66,7 +70,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ================== HEALTH CHECK ==================
+// ================== HEALTH CHECK ROUTE ==================
 app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -75,17 +79,16 @@ app.get("/health", (req, res) => {
   });
 });
 
-// ================== ROUTES ==================
-app.use("/auth", authRoutes);
-
+// ================== API ROUTES ==================
+app.use("/auth", authRoutes); // Login + Signup
+app.use("/api/recruiter", recruiterRoutes); // ALL Recruiter APIs
+app.use("/api/student", studentRoutes);
 // ================== PRODUCTION STATIC FILES ==================
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 
   app.get("*", (req, res) => {
-    res.sendFile(
-      path.join(__dirname, "../../frontend/dist/index.html")
-    );
+    res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
   });
 }
 
@@ -98,57 +101,43 @@ app.use(errorHandler);
 // ================== DATABASE CONNECTION ==================
 const connectDB = async () => {
   try {
-    const mongoURI =
-      process.env.MONGO_URI || process.env.MONGODB_URI;
+    const mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI;
 
-    if (!mongoURI) {
-      throw new Error("MONGO_URI not defined in environment variables");
-    }
+    if (!mongoURI) throw new Error("MONGO_URI missing in environment");
 
     const conn = await mongoose.connect(mongoURI);
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error("❌ MongoDB connection failed:", error.message);
+    console.error("❌ MongoDB Connection Failed:", error.message);
     process.exit(1);
   }
 };
 
-
 // ================== START SERVER ==================
-const PORT = 5001;
+const PORT = process.env.PORT || 5001;
 
 const startServer = async () => {
   try {
     await connectDB();
 
-    server = app.listen(PORT, '0.0.0.0', () => {
+    server = app.listen(PORT, "0.0.0.0", () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🔗 Backend URL: http://localhost:${PORT}`);
+      console.log(`🖥️ Frontend URL: ${process.env.FRONTEND_URL}`);
       console.log(
-        `🚀 Server running in ${
-          process.env.NODE_ENV || "development"
-        } mode on port ${PORT}`
-      );
-      console.log(
-        `🖥️ Frontend: ${process.env.FRONTEND_URL || "http://localhost:5173"}`
-      );
-      console.log(
-        `🔗 Backend: ${process.env.BACKEND_URL || "http://localhost:5001"}`
+        `🔑 GROQ KEY loaded: ${process.env.GROQ_API_KEY ? "YES" : "NO"}`
       );
     });
   } catch (error) {
     console.error("❌ Failed to start server:", error);
-    process.exit(1);
   }
 };
 
 // ================== PROCESS HANDLERS ==================
 process.on("unhandledRejection", (err) => {
   console.error("❌ Unhandled Rejection:", err.message);
-  if (server) {
-    server.close(() => process.exit(1));
-  } else {
-    process.exit(1);
-  }
+  if (server) server.close(() => process.exit(1));
 });
 
 process.on("uncaughtException", (err) => {
@@ -161,14 +150,14 @@ process.on("SIGINT", () => {
   if (server) {
     server.close(() => {
       mongoose.connection.close(false, () => {
-        console.log("✅ MongoDB closed");
+        console.log("📦 MongoDB closed");
         process.exit(0);
       });
     });
   }
 });
 
-// ================== BOOT ==================
+// ================== START ==================
 startServer();
 
 export default app;

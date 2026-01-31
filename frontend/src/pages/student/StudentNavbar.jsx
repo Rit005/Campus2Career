@@ -39,7 +39,8 @@ const StudentNavbar = () => {
           {/* CENTER NAV */}
           <div className="flex items-center gap-6 flex-1">
             <NavItem to="/student/dashboard" label="📊 Academic Dashboard" end />
-            <NavItem to="/student/analytics" label="📈 Analytics & Reports" />
+            <NavItem to="/student/analytics" label="📈 Analytics " />
+            <NavItem to="/student/resume-analyzer" label="📄 Resume Analyzer" />
             <NavItem to="/student/career" label="🎯 Career Guidance" />
             <NavItem to="/student/ai-mentor" label="🤖 AI Mentor" />
           </div>

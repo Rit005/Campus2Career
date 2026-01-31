@@ -1,3 +1,4 @@
+// src/api/api.js
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
@@ -7,7 +8,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // 🔥 required for cookie-based auth
+  withCredentials: true, // cookies (session login)
 });
 
 /* ================================
@@ -15,23 +16,24 @@ const api = axios.create({
 ================================ */
 api.interceptors.request.use(
   (config) => {
-    // ❌ DO NOT attach token if using cookies
-    // Backend already reads token from HTTP-only cookie
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
+
 
 /* ================================
    RESPONSE INTERCEPTOR
 ================================ */
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // 🚫 DO NOT redirect here
-    // Let React Router decide navigation
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 /* ================================
@@ -44,5 +46,6 @@ export const authAPI = {
   verifyToken: () => api.get("/auth/verify"),
   selectRole: (data) => api.post("/auth/select-role", data),
 };
+
 
 export default api;

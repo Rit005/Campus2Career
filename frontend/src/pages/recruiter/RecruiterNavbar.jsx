@@ -39,7 +39,6 @@ const RecruiterNavbar = () => {
           {/* CENTER MENU */}
           <div className="flex items-center gap-5 flex-1">
             <NavItem to="/recruiter/dashboard" label="📊 Dashboard" end />
-            <NavItem to="/recruiter/resume-analyzer" label="📄 Resume Analyzer" />
             <NavItem to="/recruiter/matching" label="🤝 Candidate Matching" />
             <NavItem to="/recruiter/analytics" label="📈 Analytics" />
             <NavItem to="/recruiter/hr-assistant" label="🤖 HR Assistant" />
