@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 import { authAPI } from "../api/api";
 
 const AuthContext = createContext(null);
@@ -11,43 +11,44 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false); // ONLY during actions
+  const [authChecked, setAuthChecked] = useState(false); // 🔑 KEY FIX
 
   /* ----------------------------------
-     🔄 Fetch current user from backend
+     🔄 Verify token (MANUAL / LAZY)
   ---------------------------------- */
   const refreshUser = useCallback(async () => {
     try {
       const res = await authAPI.verifyToken();
       setUser(res.data.data.user);
+      setAuthChecked(true);
       return res.data.data.user;
     } catch {
       setUser(null);
+      setAuthChecked(true);
       return null;
     }
   }, []);
 
   /* ----------------------------------
-     🔐 Check auth on app load
-  ---------------------------------- */
-  useEffect(() => {
-    refreshUser().finally(() => setLoading(false));
-  }, [refreshUser]);
-
-  /* ----------------------------------
-     🔑 Email / password login
+     🔑 Email / Password Login
   ---------------------------------- */
   const login = useCallback(async (email, password) => {
     try {
+      setLoading(true);
       setError(null);
+
       await authAPI.login({ email, password });
       const user = await refreshUser();
+
       return { success: true, user };
     } catch (err) {
       const msg = err.response?.data?.message || "Login failed";
       setError(msg);
       return { success: false, error: msg };
+    } finally {
+      setLoading(false);
     }
   }, [refreshUser]);
 
@@ -56,14 +57,19 @@ export const AuthProvider = ({ children }) => {
   ---------------------------------- */
   const signup = useCallback(async (name, email, password) => {
     try {
+      setLoading(true);
       setError(null);
+
       await authAPI.signup({ name, email, password });
       const user = await refreshUser();
+
       return { success: true, user };
     } catch (err) {
       const msg = err.response?.data?.message || "Signup failed";
       setError(msg);
       return { success: false, error: msg };
+    } finally {
+      setLoading(false);
     }
   }, [refreshUser]);
 
@@ -73,6 +79,7 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(async () => {
     await authAPI.logout();
     setUser(null);
+    setAuthChecked(false);
   }, []);
 
   /* ----------------------------------
@@ -88,6 +95,7 @@ export const AuthProvider = ({ children }) => {
     window.location.href = `${API_BASE}/auth/github`;
   };
 
+  // 🔥 OAuth callback MUST verify token ONCE
   const handleOAuthCallback = useCallback(async () => {
     const user = await refreshUser();
     if (!user) {
@@ -100,23 +108,23 @@ export const AuthProvider = ({ children }) => {
   const clearError = () => setError(null);
 
   return (
-   <AuthContext.Provider
-  value={{
-    user,
-    loading,
-    error,
-    isAuthenticated: !loading && !!user,
-    login,
-    signup,
-    logout,
-    loginWithGoogle,
-    loginWithGithub,
-    handleOAuthCallback,
-    refreshUser,
-    clearError,
-  }}
->
-
+    <AuthContext.Provider
+      value={{
+        user,
+        error,
+        loading,
+        authChecked,        // 🔑 exposed for ProtectedRoute
+        isAuthenticated: !!user,
+        login,
+        signup,
+        logout,
+        loginWithGoogle,
+        loginWithGithub,
+        handleOAuthCallback,
+        refreshUser,
+        clearError,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

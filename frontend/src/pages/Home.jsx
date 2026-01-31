@@ -1,76 +1,110 @@
-import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useEffect } from "react";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Home = () => {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated, handleOAuthCallback, logout, loading } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Handle OAuth callback token
+  useEffect(() => {
+    const token = searchParams.get("token");
+    if (token) {
+      handleOAuthCallback(token);
+    }
+  }, [searchParams, handleOAuthCallback]);
+
+  // Auto-redirect logged-in user based on role
+  if (!loading && user?.role) {
+    if (user.role === "student") return <Navigate to="/student/dashboard" replace />;
+    if (user.role === "recruiter") return <Navigate to="/recruiter/dashboard" replace />;
+  }
+
+  // Loading Spinner
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-12 w-12 rounded-full border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 flex items-center">
-                <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-lg font-bold">C2C</span>
-                </div>
-                <span className="ml-2 text-xl font-bold text-gray-900">Campus2Career</span>
-              </div>
+
+  {/* 🔥 FIXED NAVBAR */}
+  <nav className="bg-white shadow-sm fixed top-0 left-0 w-full z-50">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex justify-between h-16">
+        <div className="flex items-center">
+          <div className="flex-shrink-0 flex items-center">
+            <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-lg font-bold">C2C</span>
             </div>
-            <div className="flex items-center space-x-4">
-              {isAuthenticated ? (
-                <Link
-                  to="/dashboard"
-                  className="btn-primary"
-                >
-                  Go to Dashboard
-                </Link>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="btn-primary"
-                  >
-                    Get Started
-                  </Link>
-                </>
-              )}
-            </div>
+            <span className="ml-2 text-xl font-bold text-gray-900">Campus2Career</span>
           </div>
         </div>
-      </nav>
 
-      {/* Hero Section */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="flex items-center space-x-4">
+          {isAuthenticated ? (
+            <Link to="/redirect" className="btn-primary">
+              Go to Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Sign in
+              </Link>
+              <Link to="/signup" className="btn-primary">
+                Get Started
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  {/* 🔥 Add padding so content doesn’t hide behind navbar */}
+  <main className="pt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center animate-fade-in">
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6">
             Bridge Your Campus
             <span className="text-primary-600"> to Career</span>
           </h1>
+
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10">
-            Campus2Career is your comprehensive platform for navigating the journey from 
-            academics to professional success. Discover opportunities, build skills, 
+            Campus2Career is your comprehensive platform for navigating the journey from
+            academics to professional success. Discover opportunities, build skills,
             and connect with mentors.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link to="/signup" className="btn-primary text-lg px-8 py-3">
-              Start Your Journey
-            </Link>
-            <Link to="/login" className="btn-secondary text-lg px-8 py-3">
-              Sign In
-            </Link>
-          </div>
+
+          {!isAuthenticated ? (
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Link to="/signup" className="btn-primary text-lg px-8 py-3">
+                Start Your Journey
+              </Link>
+              <Link to="/login" className="btn-secondary text-lg px-8 py-3">
+                Sign In
+              </Link>
+            </div>
+          ) : (
+            <button
+              onClick={() => navigate("/redirect")}
+              className="btn-primary text-lg px-8 py-3"
+            >
+              Continue to Dashboard
+            </button>
+          )}
         </div>
 
         {/* Features */}
         <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Feature 1 */}
           <div className="bg-white rounded-xl shadow-lg p-6 animate-slide-up">
             <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,12 +113,13 @@ const Home = () => {
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Course Catalog</h3>
             <p className="text-gray-600">
-              Access hundreds of courses designed to prepare you for your dream career. 
+              Access hundreds of courses designed to prepare you for your dream career.
               From coding to soft skills, we've got you covered.
             </p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          {/* Feature 2 */}
+          <div className="bg-white rounded-xl shadow-lg p-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
             <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -92,12 +127,13 @@ const Home = () => {
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Job Opportunities</h3>
             <p className="text-gray-600">
-              Find internships and job openings from top companies. Our AI-powered 
-              matching helps you discover the perfect opportunities.
+              Find internships and job openings from top companies. Our AI-powered
+              matching helps you discover perfect opportunities.
             </p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          {/* Feature 3 */}
+          <div className="bg-white rounded-xl shadow-lg p-6 animate-slide-up" style={{ animationDelay: "0.2s" }}>
             <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -105,8 +141,8 @@ const Home = () => {
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Mentorship</h3>
             <p className="text-gray-600">
-              Connect with experienced professionals who can guide you through your 
-              career journey and help you make informed decisions.
+              Connect with professionals who can guide you through your career journey
+              and help you make informed decisions.
             </p>
           </div>
         </div>
@@ -117,15 +153,17 @@ const Home = () => {
             Ready to Start Your Career Journey?
           </h2>
           <p className="text-primary-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of students who have already taken the first step towards 
-            their dream career. Create your free account today!
+            Join thousands of students who've already taken the first step.
           </p>
-          <Link
-            to="/signup"
-            className="inline-block bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-primary-50 transition-colors"
-          >
-            Create Free Account
-          </Link>
+
+          {!isAuthenticated && (
+            <Link
+              to="/signup"
+              className="inline-block bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-primary-50 transition-colors"
+            >
+              Create Free Account
+            </Link>
+          )}
         </div>
       </main>
 
@@ -152,4 +190,3 @@ const Home = () => {
 };
 
 export default Home;
-

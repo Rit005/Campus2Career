@@ -98,11 +98,12 @@ app.use(errorHandler);
 // ================== DATABASE CONNECTION ==================
 const connectDB = async () => {
   try {
-    // Priority: Local MongoDB first, then env var, then Atlas fallback
-    const mongoURI = 
-      "mongodb://127.0.0.1:27017/campus2career" ||
-      process.env.MONGO_URI ||
-      process.env.MONGODB_URI;
+    const mongoURI =
+      process.env.MONGO_URI || process.env.MONGODB_URI;
+
+    if (!mongoURI) {
+      throw new Error("MONGO_URI not defined in environment variables");
+    }
 
     const conn = await mongoose.connect(mongoURI);
 
@@ -112,6 +113,7 @@ const connectDB = async () => {
     process.exit(1);
   }
 };
+
 
 // ================== START SERVER ==================
 const PORT = 5001;
