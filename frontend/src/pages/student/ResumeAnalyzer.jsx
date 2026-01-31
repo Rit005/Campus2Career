@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState ,useEffect} from "react";
 import { studentAPI } from "../../api/student";
 import { Upload, FileText, Loader2 } from "lucide-react";
 
@@ -16,6 +16,27 @@ const ResumeAnalyzer = () => {
     e.stopPropagation();
     setDragActive(e.type === "dragenter" || e.type === "dragover");
   };
+
+  useEffect(() => {
+  const loadResume = async () => {
+    try {
+      const res = await studentAPI.getResume();
+      if (res.data.success && res.data.data) {
+        const data = res.data.data;
+        
+        setSkills(data.skills || []);
+        setSummary(data.experience_summary || "");
+        setEducation(data.education || "");
+        setRoles(data.suitable_roles || []);
+      }
+    } catch (err) {
+      console.error("Failed to load resume", err);
+    }
+  };
+
+  loadResume();
+}, []);
+
 
   const handleDrop = (e) => {
     e.preventDefault();
