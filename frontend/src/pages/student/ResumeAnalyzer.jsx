@@ -1,42 +1,44 @@
-import { useState ,useEffect} from "react";
+import { useState, useEffect } from "react";
 import { studentAPI } from "../../api/student";
 import { Upload, FileText, Loader2 } from "lucide-react";
 
 const ResumeAnalyzer = () => {
+  // ✅ SINGLE file state (FIXED)
   const [file, setFile] = useState(null);
+
+  const [loading, setLoading] = useState(false);
   const [skills, setSkills] = useState([]);
   const [summary, setSummary] = useState("");
   const [education, setEducation] = useState("");
   const [roles, setRoles] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
+  // 🔹 Load previously analyzed resume (if exists)
+  useEffect(() => {
+    const loadResume = async () => {
+      try {
+        const res = await studentAPI.getResume();
+        if (res.data.success && res.data.data) {
+          const data = res.data.data;
+          setSkills(data.skills || []);
+          setSummary(data.experience_summary || "");
+          setEducation(data.education || "");
+          setRoles(data.suitable_roles || []);
+        }
+      } catch (err) {
+        console.error("Failed to load resume", err);
+      }
+    };
+
+    loadResume();
+  }, []);
+
+  // 🔹 Drag handlers
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(e.type === "dragenter" || e.type === "dragover");
   };
-
-  useEffect(() => {
-  const loadResume = async () => {
-    try {
-      const res = await studentAPI.getResume();
-      if (res.data.success && res.data.data) {
-        const data = res.data.data;
-        
-        setSkills(data.skills || []);
-        setSummary(data.experience_summary || "");
-        setEducation(data.education || "");
-        setRoles(data.suitable_roles || []);
-      }
-    } catch (err) {
-      console.error("Failed to load resume", err);
-    }
-  };
-
-  loadResume();
-}, []);
-
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -49,18 +51,24 @@ const ResumeAnalyzer = () => {
   };
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    if (e.target.files?.[0]) {
+      setFile(e.target.files[0]);
+    }
   };
 
+  // 🔹 Resume analysis
   const analyzeResume = async () => {
-    if (!file) return alert("Please upload a resume file");
+    if (!file) {
+      alert("Please upload a resume file");
+      return;
+    }
 
     const formData = new FormData();
-    formData.append("resume", file);
-
-    setLoading(true);
+    formData.append("resume", file); // ✅ CORRECT KEY
 
     try {
+      setLoading(true);
+
       const res = await studentAPI.analyzeResume(formData);
       const data = res.data.data;
 
@@ -71,44 +79,53 @@ const ResumeAnalyzer = () => {
     } catch (err) {
       console.error(err);
       alert("Resume analysis failed");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-gray-900">📄 Resume Analyzer</h1>
 
+      {/* UPLOAD AREA */}
       <div
-        className={`border-2 border-dashed rounded-xl p-10 text-center transition-all 
+        className={`border-2 border-dashed rounded-xl p-10 text-center transition-all
           ${dragActive ? "border-blue-600 bg-blue-50" : "border-gray-300 bg-white"}`}
         onDragEnter={handleDrag}
         onDragOver={handleDrag}
         onDragLeave={handleDrag}
         onDrop={handleDrop}
       >
-        <Upload className="mx-auto h-12 w-12 text-primary-600" />
-        <h2 className="text-xl font-semibold mt-3">Drag & Drop Resume Here</h2>
+        <Upload className="mx-auto h-12 w-12 text-blue-600" />
+        <h2 className="text-xl font-semibold mt-3">
+          Drag & Drop Resume Here
+        </h2>
         <p className="text-gray-500">PDF, DOCX, or TXT</p>
 
-        <label className="mt-5 inline-block cursor-pointer text-white bg-primary-600 px-6 py-2 rounded-md">
+        <label className="mt-5 inline-block cursor-pointer text-white bg-blue-600 px-6 py-2 rounded-md">
           Browse Files
-          <input type="file" className="hidden" onChange={handleFileChange} />
+          <input
+            type="file"
+            accept=".pdf,.docx,.txt"
+            className="hidden"
+            onChange={handleFileChange}
+          />
         </label>
 
         {file && (
           <div className="mt-4 flex items-center justify-center gap-2 text-gray-700">
-            <FileText className="h-5 w-5 text-primary-600" />
+            <FileText className="h-5 w-5 text-blue-600" />
             <span>{file.name}</span>
           </div>
         )}
       </div>
 
+      {/* ANALYZE BUTTON */}
       <button
         onClick={analyzeResume}
         disabled={!file || loading}
-        className="bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2"
+        className="bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 disabled:opacity-60"
       >
         {loading && <Loader2 className="animate-spin h-5 w-5" />}
         Analyze Resume
@@ -124,7 +141,7 @@ const ResumeAnalyzer = () => {
             {skills.map((skill, idx) => (
               <span
                 key={idx}
-                className="bg-primary-100 px-4 py-2 rounded-md text-primary-700 text-sm text-center"
+                className="bg-blue-100 px-4 py-2 rounded-md text-blue-700 text-sm text-center"
               >
                 {skill}
               </span>
@@ -136,13 +153,17 @@ const ResumeAnalyzer = () => {
       {/* SUMMARY */}
       <div className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold mb-4">AI Summary</h2>
-        <p className="text-gray-700 whitespace-pre-line">{summary || "Summary will appear here."}</p>
+        <p className="text-gray-700 whitespace-pre-line">
+          {summary || "Summary will appear here."}
+        </p>
       </div>
 
       {/* EDUCATION */}
       <div className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold mb-4">Education</h2>
-        <p className="text-gray-700">{education || "Education details will appear here."}</p>
+        <p className="text-gray-700">
+          {education || "Education details will appear here."}
+        </p>
       </div>
 
       {/* ROLES */}
@@ -150,12 +171,14 @@ const ResumeAnalyzer = () => {
         <h2 className="text-xl font-semibold mb-4">Suggested Roles</h2>
         {roles.length > 0 ? (
           <ul className="list-disc ml-6 text-gray-700">
-            {roles.map((r, i) => (
-              <li key={i}>{r}</li>
+            {roles.map((role, i) => (
+              <li key={i}>{role}</li>
             ))}
           </ul>
         ) : (
-          <p className="text-gray-500">AI-recommended roles will appear here.</p>
+          <p className="text-gray-500">
+            AI-recommended roles will appear here.
+          </p>
         )}
       </div>
     </div>

@@ -14,12 +14,15 @@ import RouteRedirect from "./pages/RouteRedirect";
 
 /* STUDENT */
 import StudentLayout from "./pages/student/StudentLayout";
-import StudentDashboard from "./pages/StudentDashboard"; // correct
+import StudentDashboard from "./pages/StudentDashboard";
 import Analytics from "./pages/student/Analytics";
 import Career from "./pages/student/Career";
 import Profile from "./pages/student/Profile";
 import AiMentor from "./pages/student/AiMentor";
 import ResumeAnalyzer from "./pages/student/ResumeAnalyzer";
+import MarksheetUpload from "./pages/student/MarksheetUpload";
+import AcademicDashboard from "./pages/student/AcademicDashboard";
+import CareerGuidance from "./pages/student/CareerGuidance";
 
 /* RECRUITER */
 import RecruiterLayout from "./pages/recruiter/RecruiterLayout";
@@ -66,6 +69,9 @@ function App() {
             <Route path="dashboard" element={<StudentDashboard />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="resume-analyzer" element={<ResumeAnalyzer />} />
+            <Route path="marksheet-upload" element={<MarksheetUpload />} />
+            <Route path="academic-dashboard" element={<AcademicDashboard />} />
+            <Route path="career-guidance" element={<CareerGuidance />} />
             <Route path="career" element={<Career />} />
             <Route path="ai-mentor" element={<AiMentor />} />
             <Route path="profile" element={<Profile />} />

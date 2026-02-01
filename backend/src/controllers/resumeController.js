@@ -5,6 +5,9 @@ import Resume from "../models/Resume.js";
 
 export const analyzeResume = async (req, res) => {
   try {
+    console.log("🔍 USER:", req.user);
+    console.log("📄 FILE:", req.file);
+
     const studentId = req.user?._id;
     if (!studentId) return res.status(401).json({ error: "Unauthorized" });
 
