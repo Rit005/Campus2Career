@@ -1,3 +1,4 @@
+
 import mongoose from 'mongoose';
 
 /**
@@ -71,4 +72,3 @@ resumeAnalysisSchema.virtual('formattedDate').get(function() {
 const ResumeAnalysis = mongoose.model('ResumeAnalysis', resumeAnalysisSchema);
 
 export default ResumeAnalysis;
-

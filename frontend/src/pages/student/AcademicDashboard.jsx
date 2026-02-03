@@ -134,4 +134,3 @@ const AcademicDashboard = () => {
 };
 
 export default AcademicDashboard;
-

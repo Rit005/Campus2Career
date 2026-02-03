@@ -1,29 +1,45 @@
 import { groq } from "../groqClient.js";
+import { getHiringPipeline } from "../utils/getHiringPipeline.js";
+import { predictHiringSuccess } from "../ml/predictHiring.js";
 
 export const getHiringDashboard = async (req, res) => {
   try {
-    const { pipeline } = req.body;
+    const pipeline = await getHiringPipeline();
+    const ml = predictHiringSuccess(pipeline);
 
     const prompt = `
-      Generate hiring dashboard insights:
-      {
-        "pipeline_overview": "",
-        "funnel_metrics": [],
-        "bottlenecks": [],
-        "recommendations": []
-      }
+You are a strict JSON generator.
+Only output valid JSON.
 
-      Data: ${JSON.stringify(pipeline)}
-    `;
+{
+  "pipeline_overview": "",
+  "funnel_metrics": [],
+  "bottlenecks": [],
+  "recommendations": [],
+  "future_prediction": ""
+}
+
+Use this hiring pipeline:
+${JSON.stringify(pipeline, null, 2)}
+
+Also use this ML prediction:
+${JSON.stringify(ml, null, 2)}
+`;
 
     const response = await groq.chat.completions.create({
-      model: "llama3-8b-8192",
+      model: "llama-3.3-70b-versatile",
+      temperature: 0,
       messages: [{ role: "user", content: prompt }],
     });
 
-    res.json({
+    const raw = response.choices[0].message.content.trim();
+    const json = JSON.parse(raw.match(/\{[\s\S]*\}/)[0]);
+
+    return res.json({
       success: true,
-      data: JSON.parse(response.choices[0].message.content),
+      pipeline,
+      ml,
+      insights: json,
     });
 
   } catch (err) {

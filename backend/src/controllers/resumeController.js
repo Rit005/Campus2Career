@@ -2,12 +2,10 @@ import { groq } from "../groqClient.js";
 import mammoth from "mammoth";
 import pdfParse from "pdf-parse-fixed";
 import Resume from "../models/Resume.js";
+import Student from "../models/Student.js";
 
 export const analyzeResume = async (req, res) => {
   try {
-    console.log("🔍 USER:", req.user);
-    console.log("📄 FILE:", req.file);
-
     const studentId = req.user?._id;
     if (!studentId) return res.status(401).json({ error: "Unauthorized" });
 
@@ -21,18 +19,13 @@ export const analyzeResume = async (req, res) => {
       if (type === "application/pdf") {
         const pdfData = await pdfParse(buffer);
         resumeText = pdfData.text;
-      } else if (
-        type ===
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-      ) {
+      } else if (type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
         const docxData = await mammoth.extractRawText({ buffer });
         resumeText = docxData.value;
       } else if (type === "text/plain") {
         resumeText = buffer.toString("utf8");
       } else {
-        return res.status(400).json({
-          error: "Unsupported file format (PDF, DOCX, TXT)"
-        });
+        return res.status(400).json({ error: "Unsupported file format (PDF, DOCX, TXT)" });
       }
     }
 
@@ -41,8 +34,7 @@ export const analyzeResume = async (req, res) => {
 
     // ===== AI PROMPT =====
     const prompt = `
-You are a strict JSON generator.
-Return ONLY valid JSON.
+Strict JSON only.
 
 {
   "skills": [],
@@ -68,8 +60,12 @@ ${resumeText}
 
     const parsed = JSON.parse(jsonMatch[0]);
 
-    // ===== SAVE TO DB =====
-    const saved = await Resume.findOneAndUpdate(
+    // Extract Email or Phone from raw text
+    const extractedEmail = resumeText.match(/[a-zA-Z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/)?.[0] || "";
+    const extractedPhone = resumeText.match(/\+?\d[\d\s]{7,14}\d/)?.[0] || "";
+
+    // ===== SAVE RESUME =====
+    const savedResume = await Resume.findOneAndUpdate(
       { studentId },
       {
         studentId,
@@ -82,7 +78,21 @@ ${resumeText}
       { upsert: true, new: true }
     );
 
-    return res.json({ success: true, data: saved });
+    // ===== UPDATE STUDENT MODEL =====
+    await Student.findOneAndUpdate(
+      { userId: studentId },
+      {
+        skills: parsed.skills || [],
+        experienceSummary: parsed.experience_summary || "",
+        education: parsed.education || "",
+        suitableRoles: parsed.suitable_roles || [],
+        email: extractedEmail,
+        phone: extractedPhone
+      },
+      { upsert: true }
+    );
+
+    return res.json({ success: true, data: savedResume });
 
   } catch (err) {
     console.error("❌ Resume Analyzer Error:", err);
@@ -94,7 +104,6 @@ export const getStudentResume = async (req, res) => {
   try {
     const studentId = req.user._id;
     const resume = await Resume.findOne({ studentId });
-
     res.json({ success: true, data: resume || null });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch resume" });

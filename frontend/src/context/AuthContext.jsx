@@ -1,90 +1,132 @@
-import { createContext, useContext, useState, useCallback } from "react";
-import { authAPI } from "../api/api";
+// src/context/AuthContext.jsx
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
+import { authAPI } from "../api/api";  // MUST use withCredentials:true inside api.js
 
 const AuthContext = createContext(null);
 
+// Hook
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
   return ctx;
 };
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false); // ONLY during actions
-  const [authChecked, setAuthChecked] = useState(false); // 🔑 KEY FIX
 
-  /* ----------------------------------
-     🔄 Verify token (MANUAL / LAZY)
-  ---------------------------------- */
+  /* -----------------------------------------------------
+     REFRESH USER — Reads JWT COOKIE sent by backend
+  ------------------------------------------------------ */
   const refreshUser = useCallback(async () => {
     try {
-      const res = await authAPI.verifyToken();
-      setUser(res.data.data.user);
+      const res = await authAPI.verifyToken(); // cookie-based auth
+      const usr = res.data.data.user;
+
+      setUser(usr);
       setAuthChecked(true);
-      return res.data.data.user;
-    } catch {
+
+      // Save role only (role is harmless & needed in UI)
+      if (usr?.role) {
+        localStorage.setItem("role", usr.role);
+      }
+
+      return usr;
+    } catch (err) {
       setUser(null);
       setAuthChecked(true);
       return null;
     }
   }, []);
 
-  /* ----------------------------------
-     🔑 Email / Password Login
-  ---------------------------------- */
-  const login = useCallback(async (email, password) => {
-    try {
-      setLoading(true);
-      setError(null);
+  /* -----------------------------------------------------
+     LOGIN — COOKIE IS SET AUTOMATICALLY
+  ------------------------------------------------------ */
+  const login = useCallback(
+    async (email, password) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      await authAPI.login({ email, password });
-      const user = await refreshUser();
+        // Sends cookie due to withCredentials:true inside api.js
+        const res = await authAPI.login({ email, password });
 
-      return { success: true, user };
-    } catch (err) {
-      const msg = err.response?.data?.message || "Login failed";
-      setError(msg);
-      return { success: false, error: msg };
-    } finally {
-      setLoading(false);
-    }
-  }, [refreshUser]);
+        if (res.data.success) {
+          // user is stored in cookie, NOT localStorage
+          await refreshUser();
+          return { success: true };
+        }
 
-  /* ----------------------------------
-     📝 Signup
-  ---------------------------------- */
-  const signup = useCallback(async (name, email, password) => {
-    try {
-      setLoading(true);
-      setError(null);
+        return {
+          success: false,
+          error: res.data.message || "Login failed",
+        };
+      } catch (err) {
+        const msg = err.response?.data?.message || "Login failed";
+        setError(msg);
+        return { success: false, error: msg };
+      } finally {
+        setLoading(false);
+      }
+    },
+    [refreshUser]
+  );
 
-      await authAPI.signup({ name, email, password });
-      const user = await refreshUser();
+  /* -----------------------------------------------------
+     SIGNUP — Same logic as login
+  ------------------------------------------------------ */
+  const signup = useCallback(
+    async (name, email, password) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      return { success: true, user };
-    } catch (err) {
-      const msg = err.response?.data?.message || "Signup failed";
-      setError(msg);
-      return { success: false, error: msg };
-    } finally {
-      setLoading(false);
-    }
-  }, [refreshUser]);
+        const res = await authAPI.signup({ name, email, password });
 
-  /* ----------------------------------
-     🚪 Logout
-  ---------------------------------- */
+        if (res.data.success) {
+          await refreshUser();
+          return { success: true };
+        }
+
+        return {
+          success: false,
+          error: res.data.message || "Signup failed",
+        };
+      } catch (err) {
+        const msg = err.response?.data?.message || "Signup failed";
+        setError(msg);
+        return { success: false, error: msg };
+      } finally {
+        setLoading(false);
+      }
+    },
+    [refreshUser]
+  );
+
+  /* -----------------------------------------------------
+     LOGOUT — Clears cookie server-side
+  ------------------------------------------------------ */
   const logout = useCallback(async () => {
-    await authAPI.logout();
+    try {
+      await authAPI.logout(); // backend clears cookie
+    } catch {}
+
+    localStorage.removeItem("role");
     setUser(null);
     setAuthChecked(false);
   }, []);
 
-  /* ----------------------------------
-     🌐 OAuth
-  ---------------------------------- */
+  /* -----------------------------------------------------
+     OAUTH support
+  ------------------------------------------------------ */
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
   const loginWithGoogle = () => {
@@ -95,34 +137,42 @@ export const AuthProvider = ({ children }) => {
     window.location.href = `${API_BASE}/auth/github`;
   };
 
-  // 🔥 OAuth callback MUST verify token ONCE
   const handleOAuthCallback = useCallback(async () => {
-    const user = await refreshUser();
-    if (!user) {
-      window.location.href = "/login";
-      return;
-    }
-    window.location.href = "/choose-dashboard";
+    const usr = await refreshUser();
+    if (!usr) window.location.href = "/login";
+    else window.location.href = "/choose-dashboard";
   }, [refreshUser]);
 
   const clearError = () => setError(null);
 
+  /* -----------------------------------------------------
+     AUTO VERIFY ON PAGE LOAD
+  ------------------------------------------------------ */
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
+
+  /* -----------------------------------------------------
+     PROVIDER VALUE
+  ------------------------------------------------------ */
   return (
     <AuthContext.Provider
       value={{
         user,
-        error,
         loading,
-        authChecked,        // 🔑 exposed for ProtectedRoute
+        error,
+        authChecked,
         isAuthenticated: !!user,
+
         login,
         signup,
         logout,
+        refreshUser,
+        clearError,
+
         loginWithGoogle,
         loginWithGithub,
         handleOAuthCallback,
-        refreshUser,
-        clearError,
       }}
     >
       {children}

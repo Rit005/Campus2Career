@@ -1,38 +1,94 @@
-import { groq } from "../groqClient.js";
+import Resume from "../models/Resume.js";
 
-export const matchCandidate = async (req, res) => {
+export const matchCandidates = async (req, res) => {
   try {
-    const { resumeText, jobDescription } = req.body;
+    const { requiredSkills = [], jobDescription = "" } = req.body;
 
-    if (!resumeText || !jobDescription) {
-      return res.status(400).json({ error: "resumeText & jobDescription required" });
+    if (!requiredSkills.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Required skills are required",
+      });
     }
 
-    const prompt = `
-      Compare resume with job description and return JSON:
-      {
-        "match_score": "",
-        "strengths": [],
-        "skill_gaps": [],
-        "summary": ""
+    const normalizedSkills = requiredSkills.map((s) =>
+      String(s).toLowerCase().trim()
+    );
+
+    const descKeywords = jobDescription
+      .toLowerCase()
+      .split(/[\s,.-]+/)
+      .filter((w) => w.length > 3);
+
+    const resumes = await Resume.find().populate("studentId", "name email phone");
+
+    const rankedCandidates = [];
+
+    for (const resume of resumes) {
+      if (!resume || !resume.studentId) continue;
+
+      // 👍 FIXED: Always convert skills to array safely
+      let skillArr = [];
+
+      if (Array.isArray(resume.skills)) {
+        skillArr = resume.skills;
+      } else if (typeof resume.skills === "string") {
+        skillArr = resume.skills.split(",").map((s) => s.trim());
       }
 
-      Resume: ${resumeText}
-      Job: ${jobDescription}
-    `;
+      const candidateSkills = skillArr.map((s) => String(s).toLowerCase());
 
-    const response = await groq.chat.completions.create({
-      model: "llama3-70b-8192",
-      messages: [{ role: "user", content: prompt }],
-    });
+      // Skill match
+      const matchedSkills = normalizedSkills.filter((reqSkill) =>
+        candidateSkills.includes(reqSkill)
+      );
 
-    res.json({
+      const skillScore =
+        normalizedSkills.length > 0
+          ? Math.round((matchedSkills.length / normalizedSkills.length) * 100)
+          : 0;
+
+      // Experience
+      const expText = String(resume.experience_summary || "").toLowerCase();
+      const matchedExpWords = descKeywords.filter((w) => expText.includes(w));
+
+      const experienceScore =
+        descKeywords.length > 0
+          ? Math.min(
+              30,
+              Math.round((matchedExpWords.length / descKeywords.length) * 30)
+            )
+          : 0;
+
+      const finalScore = Math.min(skillScore + experienceScore, 100);
+
+      rankedCandidates.push({
+        studentId: resume.studentId._id,
+        name: resume.studentId.name,
+        email: resume.studentId.email,
+        phone: resume.studentId.phone,
+        skills: skillArr,
+        matchedSkills,
+        matchScore: finalScore,
+        summary: resume.experience_summary || "",
+        education: resume.education || "",
+        roles: resume.suitable_roles || [],
+      });
+    }
+
+    rankedCandidates.sort((a, b) => b.matchScore - a.matchScore);
+
+    return res.json({
       success: true,
-      data: JSON.parse(response.choices[0].message.content),
+      candidates: rankedCandidates,
     });
 
   } catch (err) {
-    console.error("Matching Error:", err);
-    res.status(500).json({ error: "Candidate matching failed" });
+    console.error("❌ Smart Matching Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Candidate matching failed",
+      error: err.message,
+    });
   }
 };

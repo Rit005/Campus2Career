@@ -2,6 +2,7 @@ import express from "express";
 import { protect, requireRole } from "../middleware/auth.js";
 import { uploadResume } from "../middleware/upload.js";
 import { uploadMarksheet } from "../middleware/uploadMarksheet.js";
+import {getAllStudents  } from "../controllers/studentController.js"
 
 import {
   analyzeResume,
@@ -31,5 +32,5 @@ router.get("/dashboard/academic", protect, requireRole("student"), getAcademicDa
 router.post("/career/analyze", protect, requireRole("student"), analyzeCareer);
 router.get("/career/profile", protect, requireRole("student"), getCareerProfile);
 
+router.get("/students", getAllStudents);
 export default router;
-

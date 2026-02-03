@@ -1,3 +1,4 @@
+
 import mongoose from 'mongoose';
 
 const subjectSchema = new mongoose.Schema({
@@ -28,4 +29,3 @@ marksheetSchema.index({ studentId: 1, semester: 1 }, { unique: true });
 marksheetSchema.index({ studentId: 1, createdAt: -1 });
 
 export default mongoose.model('Marksheet', marksheetSchema);
-

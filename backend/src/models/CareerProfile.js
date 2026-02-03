@@ -1,3 +1,4 @@
+
 import mongoose from 'mongoose';
 
 const careerProfileSchema = new mongoose.Schema({
@@ -48,4 +49,3 @@ const careerProfileSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 export default mongoose.model('CareerProfile', careerProfileSchema);
-

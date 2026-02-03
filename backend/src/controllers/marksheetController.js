@@ -316,4 +316,3 @@ export const getCareerProfile = async (req, res) => {
 };
 
 import CareerProfile from '../models/CareerProfile.js';
-
