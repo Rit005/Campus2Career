@@ -44,6 +44,8 @@ export const studentAPI = {
   // Students List (Recruiter View)
   // -------------------------
   getAllStudents: () => StudentAPI.get("/students"),
+
+  aiMentor: (data) => StudentAPI.post("/mentor-assistant", data),
 };
 
 export default studentAPI;

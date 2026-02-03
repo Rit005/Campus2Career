@@ -80,82 +80,87 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-10">
-      <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
-        📊 Hiring Dashboard
-      </h1>
+    <>
+      {/* ---- BLUR EVERYTHING WHEN MODAL IS OPEN ---- */}
+      <div
+        className={`space-y-10 transition-all duration-300 ${
+          jobsModalOpen || studentsModalOpen ? "blur-md pointer-events-none" : ""
+        }`}
+      >
+        <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+          📊 Hiring Dashboard
+        </h1>
 
-      {/* ACTION BUTTONS */}
-      <div className="flex gap-4">
-        <button
-          onClick={loadAllJobs}
-          className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
-        >
-          📄 View All Jobs
-        </button>
+        {/* ACTION BUTTONS */}
+        <div className="flex gap-4">
+          <button
+            onClick={loadAllJobs}
+            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
+          >
+            📄 View All Jobs
+          </button>
 
-        <button
-          onClick={loadAllStudents}
-          className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow"
-        >
-          👨‍🎓 View All Students
-        </button>
+          <button
+            onClick={loadAllStudents}
+            className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow"
+          >
+            👨‍🎓 View All Students
+          </button>
+        </div>
+
+        {/* PIPELINE CARDS */}
+        <div className="grid md:grid-cols-4 gap-6">
+          <Card title="🧑‍💼 Applicants" value={pipeline.applicants} color="blue" />
+          <Card title="📌 Shortlisted" value={pipeline.shortlisted} color="green" />
+          <Card title="🎤 Interviews" value={pipeline.interviews} color="orange" />
+          <Card title="📢 Jobs Posted" value={pipeline.jobsPosted} color="red" />
+        </div>
+
+        {/* SECTIONS */}
+        <FancySection title="Hiring Funnel" list={insights.funnel_metrics} />
+        <FancySection title="Process Bottlenecks" list={insights.bottlenecks} />
+        <FancySection title="AI Recommendations" list={insights.recommendations} />
+
+        {/* PREDICTION */}
+        <div className="bg-white shadow-lg rounded-xl p-6 border">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            📈 Future Hiring Prediction
+          </h2>
+
+          {(() => {
+            try {
+              const obj =
+                typeof insights.prediction === "string"
+                  ? JSON.parse(insights.prediction)
+                  : insights.prediction;
+
+              return (
+                <div className="text-gray-700 leading-relaxed space-y-1">
+                  <p>score : {obj.score}</p>
+                  <p>prediction : {obj.prediction}</p>
+                </div>
+              );
+            } catch {
+              return <p className="text-gray-700">{insights.prediction}</p>;
+            }
+          })()}
+        </div>
       </div>
 
-      {/* PIPELINE CARDS */}
-      <div className="grid md:grid-cols-4 gap-6">
-        <Card title="🧑‍💼 Applicants" value={pipeline.applicants} color="blue" />
-        <Card title="📌 Shortlisted" value={pipeline.shortlisted} color="green" />
-        <Card title="🎤 Interviews" value={pipeline.interviews} color="orange" />
-        <Card title="📢 Jobs Posted" value={pipeline.jobsPosted} color="red" />
-      </div>
-
-      {/* SECTION CARDS */}
-      <FancySection title="Hiring Funnel" list={insights.funnel_metrics} />
-      <FancySection title="Process Bottlenecks" list={insights.bottlenecks} />
-      <FancySection title="AI Recommendations" list={insights.recommendations} />
-
-      {/* PREDICTION CARD */}
-      <div className="bg-white shadow-lg rounded-xl p-6 border">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          📈 Future Hiring Prediction
-        </h2>
-
-        {(() => {
-          try {
-            const obj =
-              typeof insights.prediction === "string"
-                ? JSON.parse(insights.prediction)
-                : insights.prediction;
-
-            return (
-              <div className="text-gray-700 leading-relaxed space-y-1">
-                <p>score : {obj.score}</p>
-                <p>prediction : {obj.prediction}</p>
-              </div>
-            );
-          } catch {
-            return <p className="text-gray-700">{insights.prediction}</p>;
-          }
-        })()}
-      </div>
-
-      {/* MODALS */}
+      {/* ---- MODALS (overlay on top, no blur needed here) ---- */}
       {jobsModalOpen && (
         <JobsModal jobs={allJobs} close={() => setJobsModalOpen(false)} />
       )}
+
       {studentsModalOpen && (
-        <StudentsModal
-          students={allStudents}
-          close={() => setStudentsModalOpen(false)}
-        />
+        <StudentsModal students={allStudents} close={() => setStudentsModalOpen(false)} />
       )}
-    </div>
+    </>
   );
 };
 
 /* -----------------------------------------
-  METRIC CARD
+   METRIC CARD
 --------------------------------------------- */
 const Card = ({ title, value, color }) => (
   <div className="bg-white shadow-md border rounded-xl p-6 text-center hover:shadow-xl transition">
@@ -165,19 +170,16 @@ const Card = ({ title, value, color }) => (
 );
 
 /* -----------------------------------------
-  BEAUTIFUL SECTION WITH ICON + FORMATTED TEXT
+  SECTION WITH ICON + FORMATTED TEXT
 --------------------------------------------- */
 const FancySection = ({ title, list }) => {
   const getImage = () => {
     if (title.toLowerCase().includes("funnel"))
       return "https://cdn-icons-png.flaticon.com/512/924/924915.png";
-
     if (title.toLowerCase().includes("bottleneck"))
       return "https://cdn-icons-png.flaticon.com/512/992/992651.png";
-
     if (title.toLowerCase().includes("recommend"))
       return "https://cdn-icons-png.flaticon.com/512/1827/1827504.png";
-
     return "https://cdn-icons-png.flaticon.com/512/1828/1828884.png";
   };
 
@@ -211,7 +213,7 @@ const FancySection = ({ title, list }) => {
 };
 
 /* -----------------------------------------
-  FULL PAGE BLUR JOBS MODAL
+  JOBS MODAL – FULL PAGE OVERLAY
 --------------------------------------------- */
 const JobsModal = ({ jobs, close }) => {
   const [search, setSearch] = useState("");
@@ -226,7 +228,7 @@ const JobsModal = ({ jobs, close }) => {
   });
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-xl flex flex-col z-[9999] animate-fadeIn">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-xl flex flex-col z-[99999]">
       <div className="flex justify-between items-center px-6 py-4 bg-white shadow-lg border-b">
         <h2 className="text-2xl font-bold">📄 All Posted Jobs</h2>
         <button
@@ -237,11 +239,11 @@ const JobsModal = ({ jobs, close }) => {
         </button>
       </div>
 
-      <div className="p-6 bg-gray-50 border-b flex gap-4">
+      <div className="p-6 bg-gray-50 border-b">
         <input
           type="text"
           placeholder="🔍 Search jobs..."
-          className="flex-1 px-4 py-3 border rounded-xl shadow-sm"
+          className="w-full px-4 py-3 border rounded-xl shadow-sm"
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
@@ -281,11 +283,11 @@ const JobsModal = ({ jobs, close }) => {
 };
 
 /* -----------------------------------------
-  FULL PAGE BLUR STUDENTS MODAL (LARGE WINDOW)
+  STUDENTS MODAL – CENTERED BIG WINDOW
 --------------------------------------------- */
 const StudentsModal = ({ students, close }) => (
-  <div className="fixed inset-0 bg-black/50 backdrop-blur-xl flex justify-center items-center p-6 z-[9999]">
-    <div className="bg-white rounded-xl p-6 w-full max-w-5xl shadow-2xl border animate-scaleUp">
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-xl flex justify-center items-center p-6 z-[99999]">
+    <div className="bg-white rounded-xl p-6 w-full max-w-5xl shadow-2xl border">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-3xl font-bold">👨‍🎓 All Students</h2>
         <button
@@ -311,7 +313,9 @@ const StudentsModal = ({ students, close }) => (
             {students.map((s, i) => (
               <tr
                 key={s._id}
-                className={`${i % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50 transition`}
+                className={`${
+                  i % 2 === 0 ? "bg-white" : "bg-gray-50"
+                } hover:bg-blue-50 transition`}
               >
                 <td className="p-3 border">{s.name}</td>
                 <td className="p-3 border">{s.email}</td>
