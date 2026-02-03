@@ -3,7 +3,6 @@ import { studentAPI } from "../../api/student";
 import { Upload, FileText, Loader2 } from "lucide-react";
 
 const ResumeAnalyzer = () => {
-  // ✅ SINGLE file state (FIXED)
   const [file, setFile] = useState(null);
 
   const [loading, setLoading] = useState(false);
@@ -11,19 +10,31 @@ const ResumeAnalyzer = () => {
   const [summary, setSummary] = useState("");
   const [education, setEducation] = useState("");
   const [roles, setRoles] = useState([]);
+
+  // ⭐ NEW fields
+  const [projects, setProjects] = useState([]);
+  const [missingSkills, setMissingSkills] = useState([]);
+  const [recommendedProjects, setRecommendedProjects] = useState([]);
+
   const [dragActive, setDragActive] = useState(false);
 
-  // 🔹 Load previously analyzed resume (if exists)
+  // Load Previous Resume
   useEffect(() => {
     const loadResume = async () => {
       try {
         const res = await studentAPI.getResume();
         if (res.data.success && res.data.data) {
-          const data = res.data.data;
-          setSkills(data.skills || []);
-          setSummary(data.experience_summary || "");
-          setEducation(data.education || "");
-          setRoles(data.suitable_roles || []);
+          const d = res.data.data;
+
+          setSkills(d.skills || []);
+          setSummary(d.experience_summary || "");
+          setEducation(d.education || "");
+          setRoles(d.suitable_roles || []);
+
+          // ⭐ NEW
+          setProjects(d.projects || []);
+          setMissingSkills(d.missing_skills || []);
+          setRecommendedProjects(d.project_recommendations || []);
         }
       } catch (err) {
         console.error("Failed to load resume", err);
@@ -33,7 +44,7 @@ const ResumeAnalyzer = () => {
     loadResume();
   }, []);
 
-  // 🔹 Drag handlers
+  // Drag & Drop
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -56,29 +67,32 @@ const ResumeAnalyzer = () => {
     }
   };
 
-  // 🔹 Resume analysis
+  // Analyze Resume
   const analyzeResume = async () => {
-    if (!file) {
-      alert("Please upload a resume file");
-      return;
-    }
+    if (!file) return alert("Please upload a resume.");
 
     const formData = new FormData();
-    formData.append("resume", file); // ✅ CORRECT KEY
+    formData.append("resume", file);
 
     try {
       setLoading(true);
 
       const res = await studentAPI.analyzeResume(formData);
-      const data = res.data.data;
+      const d = res.data.data;
 
-      setSkills(data.skills || []);
-      setSummary(data.experience_summary || "");
-      setEducation(data.education || "");
-      setRoles(data.suitable_roles || []);
+      setSkills(d.skills || []);
+      setSummary(d.experience_summary || "");
+      setEducation(d.education || "");
+      setRoles(d.suitable_roles || []);
+
+      // ⭐ NEW
+      setProjects(d.projects || []);
+      setMissingSkills(d.missing_skills || []);
+      setRecommendedProjects(d.project_recommendations || []);
+
     } catch (err) {
       console.error(err);
-      alert("Resume analysis failed");
+      alert("Resume analysis failed.");
     } finally {
       setLoading(false);
     }
@@ -88,19 +102,17 @@ const ResumeAnalyzer = () => {
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-gray-900">📄 Resume Analyzer</h1>
 
-      {/* UPLOAD AREA */}
+      {/* Upload Box */}
       <div
         className={`border-2 border-dashed rounded-xl p-10 text-center transition-all
-          ${dragActive ? "border-blue-600 bg-blue-50" : "border-gray-300 bg-white"}`}
+        ${dragActive ? "border-blue-600 bg-blue-50" : "border-gray-300 bg-white"}`}
         onDragEnter={handleDrag}
         onDragOver={handleDrag}
         onDragLeave={handleDrag}
         onDrop={handleDrop}
       >
         <Upload className="mx-auto h-12 w-12 text-blue-600" />
-        <h2 className="text-xl font-semibold mt-3">
-          Drag & Drop Resume Here
-        </h2>
+        <h2 className="text-xl font-semibold mt-3">Drag & Drop Resume Here</h2>
         <p className="text-gray-500">PDF, DOCX, or TXT</p>
 
         <label className="mt-5 inline-block cursor-pointer text-white bg-blue-600 px-6 py-2 rounded-md">
@@ -114,14 +126,14 @@ const ResumeAnalyzer = () => {
         </label>
 
         {file && (
-          <div className="mt-4 flex items-center justify-center gap-2 text-gray-700">
+          <div className="mt-4 flex justify-center items-center gap-2 text-gray-700">
             <FileText className="h-5 w-5 text-blue-600" />
             <span>{file.name}</span>
           </div>
         )}
       </div>
 
-      {/* ANALYZE BUTTON */}
+      {/* Analyze Button */}
       <button
         onClick={analyzeResume}
         disabled={!file || loading}
@@ -131,58 +143,101 @@ const ResumeAnalyzer = () => {
         Analyze Resume
       </button>
 
-      {/* SKILLS */}
-      <div className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Extracted Skills</h2>
-        {skills.length === 0 ? (
-          <p className="text-gray-500">AI detected skills will appear here.</p>
-        ) : (
+      {/* Skills */}
+      <Section title="Extracted Skills">
+        {skills.length ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {skills.map((skill, idx) => (
-              <span
-                key={idx}
-                className="bg-blue-100 px-4 py-2 rounded-md text-blue-700 text-sm text-center"
-              >
-                {skill}
+            {skills.map((s, idx) => (
+              <span key={idx} className="bg-blue-100 px-4 py-2 rounded-md text-blue-700 text-sm text-center">
+                {s}
               </span>
             ))}
           </div>
+        ) : (
+          <Empty text="Skills will appear here." />
         )}
-      </div>
+      </Section>
 
-      {/* SUMMARY */}
-      <div className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold mb-4">AI Summary</h2>
+      {/* Projects ⭐ NEW */}
+      <Section title="Extracted Projects">
+        {projects.length ? (
+          <div className="space-y-4">
+            {projects.map((p, idx) => (
+              <div key={idx} className="p-4 border rounded-lg shadow-sm bg-gray-50">
+                <h3 className="font-semibold text-lg">{p.title}</h3>
+                <p className="text-gray-700 mt-1">{p.summary}</p>
+                {p.technologies?.length > 0 && (
+                  <p className="text-sm text-blue-600 mt-2">
+                    Tech Used: {p.technologies.join(", ")}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Empty text="No projects extracted." />
+        )}
+      </Section>
+
+      {/* Missing Skills ⭐ NEW */}
+      <Section title="Missing Skills (Recommended to Learn)">
+        {missingSkills.length ? (
+          <ul className="list-disc ml-6 text-gray-700">
+            {missingSkills.map((s, idx) => <li key={idx}>{s}</li>)}
+          </ul>
+        ) : (
+          <Empty text="AI did not detect missing skills." />
+        )}
+      </Section>
+
+      {/* Project Recommendations ⭐ NEW */}
+      <Section title="AI Recommended Projects">
+        {recommendedProjects.length ? (
+          <ul className="list-disc ml-6 text-gray-700">
+            {recommendedProjects.map((p, idx) => <li key={idx}>{p}</li>)}
+          </ul>
+        ) : (
+          <Empty text="AI recommendations will appear here." />
+        )}
+      </Section>
+
+      {/* Summary */}
+      <Section title="AI Summary">
         <p className="text-gray-700 whitespace-pre-line">
           {summary || "Summary will appear here."}
         </p>
-      </div>
+      </Section>
 
-      {/* EDUCATION */}
-      <div className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Education</h2>
+      {/* Education */}
+      <Section title="Education">
         <p className="text-gray-700">
           {education || "Education details will appear here."}
         </p>
-      </div>
+      </Section>
 
-      {/* ROLES */}
-      <div className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Suggested Roles</h2>
-        {roles.length > 0 ? (
+      {/* Roles */}
+      <Section title="Suggested Roles">
+        {roles.length ? (
           <ul className="list-disc ml-6 text-gray-700">
-            {roles.map((role, i) => (
-              <li key={i}>{role}</li>
-            ))}
+            {roles.map((role, i) => <li key={i}>{role}</li>)}
           </ul>
         ) : (
-          <p className="text-gray-500">
-            AI-recommended roles will appear here.
-          </p>
+          <Empty text="AI-suggested roles will appear here." />
         )}
-      </div>
+      </Section>
     </div>
   );
 };
+
+const Section = ({ title, children }) => (
+  <div className="bg-white shadow rounded-xl p-6">
+    <h2 className="text-xl font-semibold mb-4">{title}</h2>
+    {children}
+  </div>
+);
+
+const Empty = ({ text }) => (
+  <p className="text-gray-500 italic">{text}</p>
+);
 
 export default ResumeAnalyzer;

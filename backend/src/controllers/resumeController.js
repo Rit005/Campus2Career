@@ -7,11 +7,12 @@ import Student from "../models/Student.js";
 export const analyzeResume = async (req, res) => {
   try {
     const studentId = req.user?._id;
-    if (!studentId) return res.status(401).json({ error: "Unauthorized" });
+    if (!studentId)
+      return res.status(401).json({ error: "Unauthorized" });
 
     let resumeText = req.body.resumeText || "";
 
-    // ===== FILE PROCESSING =====
+    // ---------------- FILE PROCESSING -----------------
     if (req.file) {
       const buffer = req.file.buffer;
       const type = req.file.mimetype;
@@ -19,29 +20,50 @@ export const analyzeResume = async (req, res) => {
       if (type === "application/pdf") {
         const pdfData = await pdfParse(buffer);
         resumeText = pdfData.text;
-      } else if (type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      } else if (
+        type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ) {
         const docxData = await mammoth.extractRawText({ buffer });
         resumeText = docxData.value;
       } else if (type === "text/plain") {
         resumeText = buffer.toString("utf8");
       } else {
-        return res.status(400).json({ error: "Unsupported file format (PDF, DOCX, TXT)" });
+        return res.status(400).json({
+          error: "Unsupported file format (PDF, DOCX, TXT)",
+        });
       }
     }
 
     if (!resumeText.trim())
       return res.status(400).json({ error: "Resume text is empty" });
 
-    // ===== AI PROMPT =====
+    // ---------------- AI STRUCTURED EXTRACTION ----------------
     const prompt = `
-Strict JSON only.
+Extract structured details from the resume strictly in JSON format.
 
+JSON STRUCTURE (return ONLY this JSON):
 {
   "skills": [],
   "experience_summary": "",
   "education": "",
-  "suitable_roles": []
+  "suitable_roles": [],
+  "projects": [
+      {
+        "title": "",
+        "summary": "",
+        "technologies": []
+      }
+  ],
+  "missing_skills": [],
+  "project_recommendations": []
 }
+
+Rules:
+1. Detect all major RESUME PROJECTS with title, 2–3 line summary, technologies.
+2. Identify missing but IMPORTANT skills based on resume & job trends.
+3. Recommend 3–5 new project ideas that help the student grow technically.
+4. Keep JSON valid. No explanations.
 
 Resume:
 ${resumeText}
@@ -60,11 +82,16 @@ ${resumeText}
 
     const parsed = JSON.parse(jsonMatch[0]);
 
-    // Extract Email or Phone from raw text
-    const extractedEmail = resumeText.match(/[a-zA-Z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/)?.[0] || "";
-    const extractedPhone = resumeText.match(/\+?\d[\d\s]{7,14}\d/)?.[0] || "";
+    // ---------------- Extract Email & Phone ----------------
+    const extractedEmail =
+      resumeText.match(
+        /[a-zA-Z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/
+      )?.[0] || "";
 
-    // ===== SAVE RESUME =====
+    const extractedPhone =
+      resumeText.match(/\+?\d[\d\s]{7,15}\d/)?.[0] || "";
+
+    // ---------------- SAVE TO DB ----------------
     const savedResume = await Resume.findOneAndUpdate(
       { studentId },
       {
@@ -78,7 +105,7 @@ ${resumeText}
       { upsert: true, new: true }
     );
 
-    // ===== UPDATE STUDENT MODEL =====
+    // Update Student Model
     await Student.findOneAndUpdate(
       { userId: studentId },
       {
@@ -87,16 +114,20 @@ ${resumeText}
         education: parsed.education || "",
         suitableRoles: parsed.suitable_roles || [],
         email: extractedEmail,
-        phone: extractedPhone
+        phone: extractedPhone,
       },
       { upsert: true }
     );
 
-    return res.json({ success: true, data: savedResume });
-
+    return res.json({
+      success: true,
+      data: savedResume,
+    });
   } catch (err) {
     console.error("❌ Resume Analyzer Error:", err);
-    return res.status(500).json({ error: err.message });
+    return res
+      .status(500)
+      .json({ error: err.message });
   }
 };
 
@@ -104,8 +135,14 @@ export const getStudentResume = async (req, res) => {
   try {
     const studentId = req.user._id;
     const resume = await Resume.findOne({ studentId });
-    res.json({ success: true, data: resume || null });
+
+    return res.json({
+      success: true,
+      data: resume || null,
+    });
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch resume" });
+    return res
+      .status(500)
+      .json({ error: "Failed to fetch resume" });
   }
 };
