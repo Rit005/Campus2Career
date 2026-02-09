@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: {
-      values: ['student', 'recruiter', null],
+      values: ['student', 'recruiter', 'admin',null],
       message: 'Role must be either "student" or "recruiter"'
     },
     default: null,

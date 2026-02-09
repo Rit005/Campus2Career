@@ -8,12 +8,12 @@ import {
 
 export const signup = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide name, email, and password'
+        message: "Please provide name, email, and password"
       });
     }
 
@@ -21,16 +21,21 @@ export const signup = async (req, res, next) => {
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'User with this email already exists'
+        message: "User with this email already exists"
       });
     }
 
-    // Create account with role=null
+    // Only allow admin role if explicitly provided (for Postman / internal use)
+    const assignedRole =
+      role && ["admin", "student", "recruiter"].includes(role)
+        ? role
+        : null;
+
     const user = await User.create({
       name,
       email,
       password,
-      role: null,
+      role: assignedRole,
       isProfileCompleted: false
     });
 
@@ -39,7 +44,7 @@ export const signup = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: 'Registration successful',
+      message: "Registration successful",
       data: {
         user: user.toPublicProfile(),
         token
@@ -49,7 +54,7 @@ export const signup = async (req, res, next) => {
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message: 'User with this email already exists'
+        message: "User with this email already exists"
       });
     }
     next(error);
@@ -162,15 +167,15 @@ export const verifyToken = async (req, res, next) => {
 export const selectRole = async (req, res) => {
   const { role } = req.body;
 
-  if (!['student', 'recruiter'].includes(role)) {
+  if (!['student', 'recruiter', 'admin'].includes(role)) {
     return res.status(400).json({ success: false, message: 'Invalid role' });
   }
 
   req.user.role = role;
   await req.user.save();
 
-  // 🔥 REGENERATE TOKEN
-  const token = generateToken(req.user._id);
+  // Regenerate token with updated role
+  const token = generateToken(req.user._id, req.user.role);
   sendTokenCookie(res, token);
 
   return res.json({
@@ -179,10 +184,13 @@ export const selectRole = async (req, res) => {
       redirectPath:
         role === 'student'
           ? '/student/dashboard'
-          : '/recruiter/dashboard'
+          : role === 'recruiter'
+          ? '/recruiter/dashboard'
+          : '/admin/dashboard'
     }
   });
 };
+
 
 /**
  * @desc    Update user profile
