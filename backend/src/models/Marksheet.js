@@ -1,31 +1,31 @@
-
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const subjectSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
-  marks: { type: Number, required: true, min: 0 },
-  maxMarks: { type: Number, required: true, min: 1 },
-  grade: { type: String, trim: true }
-}, { _id: false });
+  name: String,
+  marks: Number,
+  maxMarks: Number,
+  grade: String,
+  credits: {type:Number},
+});
 
 const marksheetSchema = new mongoose.Schema({
-  studentId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    index: true
-  },
-  semester: { type: String, required: true, trim: true },
-  subjects: { type: [subjectSchema], required: true, validate: [arr => arr.length > 0, 'At least one subject required'] },
-  attendance: { type: Number, min: 0, max: 100, default: null },
-  overallPercentage: { type: Number, required: true, min: 0, max: 100 },
-  fileName: { type: String },
-  fileSize: { type: Number },
-  fileType: { type: String },
+  studentId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+
+  semester: { type: String, required: true },
+  year: { type: String },
+
+  // 🔥 MUST EXIST for your logic to work
+  cgpa: { type: String, default: "" },
+  percentage: { type: String, default: "" },
+
+  subjects: [subjectSchema],
+
+  filePath: String,
+  fileName: String,
+  fileType: String,
+  fileSize: Number,
+
   uploadedAt: { type: Date, default: Date.now }
-}, { timestamps: true });
+});
 
-marksheetSchema.index({ studentId: 1, semester: 1 }, { unique: true });
-marksheetSchema.index({ studentId: 1, createdAt: -1 });
-
-export default mongoose.model('Marksheet', marksheetSchema);
+export default mongoose.model("Marksheet", marksheetSchema);

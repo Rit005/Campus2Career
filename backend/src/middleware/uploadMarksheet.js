@@ -1,22 +1,32 @@
-import multer from 'multer';
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
-// Memory storage for file upload (to process with pdf-parse)
-const storage = multer.memoryStorage();
+// Ensure upload folder exists
+const uploadPath = "uploads/marksheets";
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+}
 
-// File filter to only accept PDFs
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadPath),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + "_" + file.originalname);
+  },
+});
+
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'application/pdf') {
-    cb(null, true);
-  } else {
-    cb(new Error('Only PDF files are allowed'), false);
-  }
+  const allowed = [
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
+  ];
+  cb(null, allowed.includes(file.mimetype));
 };
 
 export const uploadMarksheet = multer({
   storage,
   fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  }
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
-

@@ -10,7 +10,6 @@ const RecruiterNavbar = () => {
     user?.name
       ?.split(" ")
       .map((w) => w[0])
-      .slice(0, 2)
       .join("")
       .toUpperCase() || "R";
 
@@ -20,13 +19,13 @@ const RecruiterNavbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow sticky top-0 z-50">
+    <nav className="bg-white shadow sticky top-0 z-50 border-b">
       <div className="w-full px-10">
-        <div className="h-20 flex items-center">
+        <div className="h-20 flex items-center justify-between">
 
-          {/* LEFT Logo */}
-          <div className="flex items-center gap-4 mr-10">
-            <div className="flex flex-col">
+          {/* LEFT: Logo */}
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col leading-tight">
               <span className="text-2xl font-extrabold text-primary-600">
                 Campus2Career
               </span>
@@ -36,41 +35,40 @@ const RecruiterNavbar = () => {
             </div>
           </div>
 
-          {/* CENTER MENU */}
-          <div className="flex items-center gap-5 flex-1">
+          {/* CENTER: Menu */}
+          <div className="flex items-center gap-8">
             <NavItem to="/recruiter/dashboard" label="📊 Dashboard" end />
-            <NavItem to="/recruiter/matching" label="🤝 Candidate Matching" />
+            <NavItem to="/recruiter/matching" label="🤝 Matching" />
             <NavItem to="/recruiter/analytics" label="📈 Analytics" />
             <NavItem to="/recruiter/hr-assistant" label="🤖 HR Assistant" />
           </div>
 
-          {/* RIGHT AREA */}
+          {/* RIGHT: Profile & Logout */}
           <div className="flex items-center gap-6">
 
-            {/* Switch Dashboard */}
+            {/* Switch Dashboard Button */}
             <button
               onClick={() => navigate("/choose-dashboard")}
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold"
             >
               <Gift size={18} />
               Switch Dashboard
             </button>
 
-            {/* Avatar */}
+            {/* Profile Dropdown */}
             <div className="relative group">
-              <div className="w-10 h-10 rounded-full bg-primary-600 text-white
-                              flex items-center justify-center font-bold cursor-pointer">
+              <div className="w-10 h-10 rounded-full bg-primary-600 text-white 
+                flex items-center justify-center font-bold cursor-pointer">
                 {initials}
               </div>
 
-              {/* Dropdown */}
               <div
-                className="absolute right-0 mt-3 w-48 bg-white rounded-lg shadow-lg border
-                           opacity-0 invisible group-hover:opacity-100 group-hover:visible
-                           transition-all duration-200 z-50"
+                className="absolute right-0 mt-3 w-48 bg-white rounded-lg shadow-md border
+                  opacity-0 invisible group-hover:opacity-100 group-hover:visible
+                  transition-all duration-200 z-50"
               >
                 <div className="px-4 py-3 border-b">
-                  <p className="text-sm font-semibold">{user?.name}</p>
+                  <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
                   <p className="text-xs text-gray-500">Recruiter</p>
                 </div>
 
@@ -86,7 +84,7 @@ const RecruiterNavbar = () => {
             {/* Logout */}
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1 text-red-600 hover:text-red-800 font-medium"
+              className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold"
             >
               <LogOut size={18} />
               Logout
@@ -106,7 +104,7 @@ const NavItem = ({ to, label, end = false }) => (
     className={({ isActive }) =>
       `text-base font-semibold pb-1 transition ${
         isActive
-          ? "text-primary-900 border-b-2 border-primary-500"
+          ? "text-primary-700 border-b-2 border-primary-500"
           : "text-gray-500 hover:text-gray-700"
       }`
     }

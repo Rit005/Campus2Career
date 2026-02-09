@@ -38,16 +38,15 @@ const StudentNavbar = () => {
 
           {/* CENTER NAV */}
           <div className="flex items-center gap-6 flex-1">
-            <NavItem to="/student/dashboard" label="📊 Academic Dashboard" end />
+            <NavItem to="/student/dashboard" label="📊Dashboard" end />
             <NavItem to="/student/marksheet-upload" label="📤 Upload Marksheet" />
-            <NavItem to="/student/analytics" label="📈 Analytics" />
             <NavItem to="/student/resume-analyzer" label="📄 Resume Analyzer" />
             <NavItem to="/student/career-guidance" label="🎯 Career Guidance" />
             <NavItem to="/student/ai-mentor" label="🤖 AI Mentor" />
           </div>
 
           {/* RIGHT */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-8">
             <button
               onClick={() => navigate("/choose-dashboard")}
               className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"

@@ -8,13 +8,17 @@ const API = axios.create({
 const recruiterAPI = {
   postJob: (data) => API.post("/post-job", data),
   getMyJobs: () => API.get("/jobs"),
-  deleteJob: (id) => API.delete(`/job/${id}`),   // ✅ Added
+  deleteJob: (id) => API.delete(`/job/${id}`),
   matchCandidates: (data) => API.post("/match", data),
   dashboard: (data) => API.post("/dashboard", data),
-  analytics: (data) => API.post("/analytics", data),
+
+  // ✅ Correct GET request
+  getAnalytics: () => API.get("/analytics"),
+
   hrAssistant: (data) => API.post("/hr-assistant", data),
+  
   updateJob: (id, data) => API.put(`/job/${id}`, data),
-getAllJobs: () => API.get("/all-jobs"),
+  getAllJobs: () => API.get("/all-jobs"),
 };
 
 export default recruiterAPI;

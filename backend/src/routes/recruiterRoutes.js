@@ -1,5 +1,6 @@
 import express from "express";
 import { protect, requireRole } from "../middleware/auth.js";
+import { getRecruiterAnalytics } from "../controllers/recruiterAnalyticsController.js";
 
 import { 
   postJob, 
@@ -11,7 +12,6 @@ import {
 
 import { matchCandidates } from "../controllers/matchingController.js";
 import { getHiringDashboard } from "../controllers/dashboardController.js";
-import { analyzeWorkforce } from "../controllers/analyticsController.js";
 import { hrAssistantChat } from "../controllers/hrAssistantController.js";
 
 const router = express.Router();
@@ -34,10 +34,10 @@ router.post("/match", matchCandidates);
 // DASHBOARD
 router.post("/dashboard", getHiringDashboard);
 
-// ANALYTICS
-router.post("/analytics", analyzeWorkforce);
 
 // HR Chatbot
 router.post("/hr-assistant", hrAssistantChat);
+
+router.get("/analytics", protect, requireRole("recruiter"), getRecruiterAnalytics);
 
 export default router;

@@ -8,6 +8,7 @@ const StudentAPI = axios.create({
 });
 
 export const studentAPI = {
+
   // -------------------------
   // Resume
   // -------------------------
@@ -41,11 +42,33 @@ export const studentAPI = {
   getCareerProfile: () => StudentAPI.get("/career/profile"),
 
   // -------------------------
-  // Students List (Recruiter View)
+  // Students (Recruiter Dashboard)
   // -------------------------
   getAllStudents: () => StudentAPI.get("/students"),
 
+  // -------------------------
+  // AI Mentor
+  // -------------------------
   aiMentor: (data) => StudentAPI.post("/mentor-assistant", data),
+
+  // -------------------------
+  // ✅ APPLY FOR JOB
+  // -------------------------
+  applyForJob: (formData) =>
+    StudentAPI.post("/apply", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+
+  // =========================
+  // ⭐ NEW: VIEW ALL JOBS
+  // =========================
+  getAllJobs: () => StudentAPI.get("/jobs"),
+
+  getAcademicAnalytics: () => StudentAPI.get("/dashboard/analytics"),
+
+  getSemesterWise: () => StudentAPI.get("/marksheet/semester-wise"),
+
 };
+
 
 export default studentAPI;

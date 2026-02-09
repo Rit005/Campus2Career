@@ -1,14 +1,13 @@
-import { useState, useRef } from 'react';
-import { studentAPI } from '../../api/student';
-import { useEffect } from 'react';
+import { useState, useEffect, useRef } from "react";
+import { studentAPI } from "../../api/student";
 
 const MarksheetUpload = () => {
   const [file, setFile] = useState(null);
-  const [semester, setSemester] = useState('');
+  const [semester, setSemester] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [marksheets, setMarksheets] = useState([]);
-  const fileInputRef = useRef(null);
+  const fileRef = useRef(null);
 
   useEffect(() => {
     loadMarksheets();
@@ -19,137 +18,185 @@ const MarksheetUpload = () => {
       const res = await studentAPI.getAllMarksheets();
       if (res.data.success) setMarksheets(res.data.data);
     } catch (err) {
-      console.error('Failed to load marksheets');
+      console.error("Failed to load marksheets");
     }
   };
 
   const handleFileChange = (e) => {
-    const selected = e.target.files[0];
-    if (selected) {
-      if (selected.type !== 'application/pdf' && 
-          !selected.name.endsWith('.docx') && 
-          selected.type !== 'text/plain') {
-        setMessage({ type: 'error', text: 'Only PDF, DOCX, or TXT files allowed' });
-        return;
-      }
-      setFile(selected);
-      setMessage(null);
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+
+    const valid =
+      selectedFile.type === "application/pdf" ||
+      selectedFile.name.endsWith(".docx") ||
+      selectedFile.type === "text/plain";
+
+    if (!valid) {
+      setMessage({
+        type: "error",
+        text: "Only PDF, DOCX, or TXT files allowed",
+      });
+      return;
     }
+
+    setFile(selectedFile);
+    setMessage(null);
   };
 
   const handleUpload = async (e) => {
     e.preventDefault();
+
     if (!file || !semester) {
-      setMessage({ type: 'error', text: 'Please select file and semester' });
+      setMessage({ type: "error", text: "Please select semester and file" });
       return;
     }
 
     const formData = new FormData();
-    formData.append('marksheet', file);
-    formData.append('semester', semester);
+    formData.append("marksheet", file);
+    formData.append("semester", semester);
 
     setLoading(true);
-    setMessage(null);
 
     try {
       const res = await studentAPI.uploadMarksheet(formData);
       if (res.data.success) {
-        setMessage({ type: 'success', text: 'Marksheet uploaded successfully!' });
+        setMessage({
+          type: "success",
+          text: "Marksheet uploaded successfully!",
+        });
+
         setFile(null);
-        setSemester('');
-        if (fileInputRef.current) fileInputRef.current.value = '';
+        setSemester("");
+        if (fileRef.current) fileRef.current.value = "";
+
         loadMarksheets();
-      } else {
-        setMessage({ type: 'error', text: res.data.message });
       }
     } catch (err) {
-      setMessage({ type: 'error', text: err.response?.data?.message || 'Upload failed' });
-    } finally {
-      setLoading(false);
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Upload failed",
+      });
     }
+
+    setLoading(false);
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this marksheet?')) return;
+    if (!confirm("Delete this marksheet?")) return;
     try {
-      const res = await studentAPI.deleteMarksheet(id);
-      if (res.data.success) loadMarksheets();
+      await studentAPI.deleteMarksheet(id);
+      loadMarksheets();
     } catch (err) {
-      console.error('Delete failed');
+      console.error("Failed to delete marksheet");
     }
   };
 
-  const semesters = ['Semester 1', 'Semester 2', 'Semester 3', 'Semester 4', 
-                     'Semester 5', 'Semester 6', 'Semester 7', 'Semester 8',
-                     'Fall 2023', 'Spring 2024', 'Year 1', 'Year 2', 'Year 3', 'Year 4'];
+  const semesterOptions = [
+    "Semester 1", "Semester 2", "Semester 3", "Semester 4",
+    "Semester 5", "Semester 6", "Semester 7", "Semester 8",
+    "Year 1", "Year 2", "Year 3", "Year 4",
+    "12th", "10th"
+  ];
+
+  /* ================================================================
+     UTIL: DISPLAY SCORE (CGPA or Percentage)
+  ================================================================= */
+  const displayScore = (m) => {
+    if (m.cgpa && m.cgpa !== "") return `CGPA: ${m.cgpa}`;
+    if (m.percentage && m.percentage !== "") return `${m.percentage}%`;
+    return "Score not available";
+  };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Upload Marksheet</h2>
+    <div className="max-w-4xl mx-auto pt-6">
+      <h2 className="text-3xl font-bold mb-6">Upload Marksheet</h2>
 
       {message && (
-        <div className={`p-4 rounded-lg mb-4 ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+        <div
+          className={`p-3 rounded mb-4 ${
+            message.type === "success"
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
+          }`}
+        >
           {message.text}
         </div>
       )}
 
-      <form onSubmit={handleUpload} className="bg-white rounded-xl shadow-md p-6 mb-8">
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Semester</label>
-          <select
-            value={semester}
-            onChange={(e) => setSemester(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus ring-2 focus ring-blue-500"
-          >
-            <option value="">Select semester</option>
-            {semesters.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
+      {/* Upload Form */}
+      <form className="bg-white shadow p-6 rounded-xl mb-8" onSubmit={handleUpload}>
+        <label className="block mb-2 font-medium">Semester *</label>
+        <select
+          value={semester}
+          onChange={(e) => setSemester(e.target.value)}
+          className="w-full border p-3 rounded mb-4"
+        >
+          <option value="">Select semester</option>
+          {semesterOptions.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Marksheet File (PDF/DOCX/TXT)</label>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept=".pdf,.docx,.txt"
-            className="w-full p-3 border border-gray-300 rounded-lg"
-          />
-        </div>
+        <label className="block mb-2 font-medium">Upload File *</label>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,.docx,.txt"
+          className="w-full border p-3 rounded mb-4"
+          onChange={handleFileChange}
+        />
 
         {file && (
-          <div className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 mb-4">
             Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
-          </div>
+          </p>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="w-full bg-blue-600 text-white py-3 rounded-lg"
         >
-          {loading ? 'Uploading...' : 'Upload Marksheet'}
+          {loading ? "Uploading…" : "Upload"}
         </button>
       </form>
 
-      <h3 className="text-xl font-semibold mb-4">Uploaded Marksheets</h3>
+      {/* Uploaded Marksheets */}
+      <h3 className="text-xl font-semibold mb-3">Uploaded Marksheets</h3>
+
       {marksheets.length === 0 ? (
-        <p className="text-gray-500">No marksheets uploaded yet.</p>
+        <p className="text-gray-500">No marksheets uploaded.</p>
       ) : (
-        <div className="grid gap-4">
-          {marksheets.map(ms => (
-            <div key={ms._id} className="bg-white rounded-lg shadow p-4 flex justify-between items-center">
+        <div className="space-y-4">
+          {marksheets.map((m) => (
+            <div
+              key={m._id}
+              className="bg-white shadow p-4 rounded flex justify-between"
+            >
               <div>
-                <p className="font-medium">{ms.semester}</p>
-                <p className="text-sm text-gray-500">{ms.institution || 'Unknown Institution'}</p>
+                <p className="font-semibold">{m.semester}</p>
+
                 <p className="text-sm text-gray-500">
-                  {ms.subjects?.length || 0} subjects | {ms.overallPercentage}% | {ms.fileName}
+                  {m.subjects.length} subjects | {displayScore(m)}
                 </p>
-                <p className="text-xs text-gray-400">{new Date(ms.uploadedAt).toLocaleDateString()}</p>
+
+                <a
+                  href={`http://localhost:5001/${m.filePath}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 text-sm underline"
+                >
+                  View File
+                </a>
+
+                <p className="text-xs text-gray-400 mt-1">
+                  Uploaded: {new Date(m.uploadedAt).toLocaleDateString()}
+                </p>
               </div>
+
               <button
-                onClick={() => handleDelete(ms._id)}
-                className="text-red-600 hover:text-red-800 text-sm"
+                onClick={() => handleDelete(m._id)}
+                className="text-red-600 hover:underline"
               >
                 Delete
               </button>
@@ -162,4 +209,3 @@ const MarksheetUpload = () => {
 };
 
 export default MarksheetUpload;
-

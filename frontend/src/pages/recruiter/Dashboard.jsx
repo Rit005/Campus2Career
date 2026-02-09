@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import recruiterAPI from "../../api/recruiter";
 import { studentAPI } from "../../api/student";
+import ApplyJobModal from "../student/ApplyJobModal.jsx";
+
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -15,13 +17,16 @@ const Dashboard = () => {
   const [jobsModalOpen, setJobsModalOpen] = useState(false);
   const [studentsModalOpen, setStudentsModalOpen] = useState(false);
 
+  const [applyModalOpen, setApplyModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+
   const [allJobs, setAllJobs] = useState([]);
   const [allStudents, setAllStudents] = useState([]);
 
-  const cleanValue = (val) => {
-    if (Array.isArray(val)) return val.map(cleanValue);
-    if (typeof val === "object" && val !== null) return JSON.stringify(val);
-    return val;
+  const cleanValue = (v) => {
+    if (Array.isArray(v)) return v.map(cleanValue);
+    if (typeof v === "object" && v !== null) return JSON.stringify(v);
+    return v;
   };
 
   useEffect(() => {
@@ -31,18 +36,19 @@ const Dashboard = () => {
   const loadDashboard = async () => {
     try {
       setLoading(true);
-      const res = await recruiterAPI.dashboard({});
-      const data = res.data;
 
-      setPipeline(data.pipeline || {});
+      const res = await recruiterAPI.dashboard({});
+      const d = res.data;
+
+      setPipeline(d.pipeline || {});
       setInsights({
-        funnel_metrics: cleanValue(data.insights?.funnel_metrics || []),
-        bottlenecks: cleanValue(data.insights?.bottlenecks || []),
-        recommendations: cleanValue(data.insights?.recommendations || []),
-        prediction: cleanValue(data.insights?.future_prediction || ""),
+        funnel_metrics: cleanValue(d.insights?.funnel_metrics || []),
+        bottlenecks: cleanValue(d.insights?.bottlenecks || []),
+        recommendations: cleanValue(d.insights?.recommendations || []),
+        prediction: cleanValue(d.insights?.future_prediction || ""),
       });
     } catch (err) {
-      console.error("Dashboard error:", err);
+      console.error(err);
     }
     setLoading(false);
   };
@@ -55,7 +61,7 @@ const Dashboard = () => {
         setJobsModalOpen(true);
       }
     } catch (err) {
-      console.error("Jobs Load Error:", err);
+      console.error(err);
     }
   };
 
@@ -67,31 +73,46 @@ const Dashboard = () => {
         setStudentsModalOpen(true);
       }
     } catch (err) {
-      console.error("Students Load Error:", err);
+      console.error(err);
+    }
+  };
+
+  const submitJobApplication = async ({ jobId, jobRole, message, resume }) => {
+    try {
+      const form = new FormData();
+      form.append("jobId", jobId);
+      form.append("jobRole", jobRole);
+      form.append("message", message);
+      form.append("resume", resume);
+
+      const res = await studentAPI.applyForJob(form);
+
+      if (res.data.success) {
+        alert("Application Submitted!");
+        setApplyModalOpen(false);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to apply.");
     }
   };
 
   if (loading) {
     return (
-      <div className="text-center py-20 text-gray-600 text-xl">
-        Loading dashboard...
-      </div>
+      <div className="text-center py-20 text-gray-600 text-xl">Loading...</div>
     );
   }
 
   return (
     <>
-      {/* ---- BLUR EVERYTHING WHEN MODAL IS OPEN ---- */}
+      {/* MAIN DASHBOARD */}
       <div
-        className={`space-y-10 transition-all duration-300 ${
-          jobsModalOpen || studentsModalOpen ? "blur-md pointer-events-none" : ""
+        className={`space-y-10 transition-all ${
+          jobsModalOpen || studentsModalOpen ? "blur-sm pointer-events-none" : ""
         }`}
       >
-        <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
-          📊 Hiring Dashboard
-        </h1>
+        <h1 className="text-4xl font-bold">📊 Hiring Dashboard</h1>
 
-        {/* ACTION BUTTONS */}
         <div className="flex gap-4">
           <button
             onClick={loadAllJobs}
@@ -108,7 +129,7 @@ const Dashboard = () => {
           </button>
         </div>
 
-        {/* PIPELINE CARDS */}
+        {/* CARDS */}
         <div className="grid md:grid-cols-4 gap-6">
           <Card title="🧑‍💼 Applicants" value={pipeline.applicants} color="blue" />
           <Card title="📌 Shortlisted" value={pipeline.shortlisted} color="green" />
@@ -116,191 +137,144 @@ const Dashboard = () => {
           <Card title="📢 Jobs Posted" value={pipeline.jobsPosted} color="red" />
         </div>
 
-        {/* SECTIONS */}
         <FancySection title="Hiring Funnel" list={insights.funnel_metrics} />
         <FancySection title="Process Bottlenecks" list={insights.bottlenecks} />
         <FancySection title="AI Recommendations" list={insights.recommendations} />
-
-        {/* PREDICTION */}
-        <div className="bg-white shadow-lg rounded-xl p-6 border">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            📈 Future Hiring Prediction
-          </h2>
-
-          {(() => {
-            try {
-              const obj =
-                typeof insights.prediction === "string"
-                  ? JSON.parse(insights.prediction)
-                  : insights.prediction;
-
-              return (
-                <div className="text-gray-700 leading-relaxed space-y-1">
-                  <p>score : {obj.score}</p>
-                  <p>prediction : {obj.prediction}</p>
-                </div>
-              );
-            } catch {
-              return <p className="text-gray-700">{insights.prediction}</p>;
-            }
-          })()}
-        </div>
       </div>
 
-      {/* ---- MODALS (overlay on top, no blur needed here) ---- */}
+      {/* JOBS MODAL */}
       {jobsModalOpen && (
-        <JobsModal jobs={allJobs} close={() => setJobsModalOpen(false)} />
+        <JobsModal
+          jobs={allJobs}
+          close={() => setJobsModalOpen(false)}
+          onApply={(job) => {
+            setSelectedJob(job);
+            setApplyModalOpen(true);
+          }}
+        />
       )}
 
+      {/* STUDENTS MODAL */}
       {studentsModalOpen && (
-        <StudentsModal students={allStudents} close={() => setStudentsModalOpen(false)} />
+        <StudentsModal
+          students={allStudents}
+          close={() => setStudentsModalOpen(false)}
+        />
+      )}
+
+      {/* APPLY JOB MODAL – HIGHEST LAYER */}
+      {applyModalOpen && selectedJob && (
+        <ApplyJobModal
+          job={selectedJob}
+          onClose={() => setApplyModalOpen(false)}
+          onSubmit={submitJobApplication}
+        />
       )}
     </>
   );
 };
 
-/* -----------------------------------------
-   METRIC CARD
---------------------------------------------- */
+/* CARD */
 const Card = ({ title, value, color }) => (
-  <div className="bg-white shadow-md border rounded-xl p-6 text-center hover:shadow-xl transition">
-    <h3 className="text-gray-600 text-l">{title}</h3>
+  <div className="bg-white shadow-md border rounded-xl p-6 text-center">
+    <h3 className="text-gray-600">{title}</h3>
     <p className={`text-4xl font-bold mt-2 text-${color}-600`}>{value ?? 0}</p>
   </div>
 );
 
-/* -----------------------------------------
-  SECTION WITH ICON + FORMATTED TEXT
---------------------------------------------- */
-const FancySection = ({ title, list }) => {
-  const getImage = () => {
-    if (title.toLowerCase().includes("funnel"))
-      return "https://cdn-icons-png.flaticon.com/512/924/924915.png";
-    if (title.toLowerCase().includes("bottleneck"))
-      return "https://cdn-icons-png.flaticon.com/512/992/992651.png";
-    if (title.toLowerCase().includes("recommend"))
-      return "https://cdn-icons-png.flaticon.com/512/1827/1827504.png";
-    return "https://cdn-icons-png.flaticon.com/512/1828/1828884.png";
-  };
+/* SECTION */
+const FancySection = ({ title, list }) => (
+  <div className="bg-white shadow-lg rounded-xl p-6 border">
+    <h2 className="text-xl font-semibold mb-4">{title}</h2>
+    {list.length === 0 ? (
+      <p className="text-gray-500 italic">AI is analyzing…</p>
+    ) : (
+      <ul className="list-disc ml-6 space-y-2 text-gray-700">
+        {list.map((line, i) => (
+          <li key={i}>{line}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+);
 
-  const formatted = list.map((item) => {
-    try {
-      if (typeof item === "string") item = JSON.parse(item);
-      return `stage : ${item.stage} , value : ${item.value}`;
-    } catch {
-      return item;
-    }
-  });
-
-  return (
-    <div className="bg-white shadow-lg rounded-xl p-6 border hover:shadow-2xl transition">
-      <div className="flex items-center gap-3 mb-4">
-        <img src={getImage()} className="w-8 h-8" />
-        <h2 className="text-xl font-semibold">{title}</h2>
-      </div>
-
-      {formatted.length === 0 ? (
-        <p className="text-gray-500 italic">AI is analyzing…</p>
-      ) : (
-        <ul className="list-disc ml-6 space-y-2 text-gray-700">
-          {formatted.map((line, i) => (
-            <li key={i}>{line}</li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-};
-
-/* -----------------------------------------
-  JOBS MODAL – FULL PAGE OVERLAY
---------------------------------------------- */
-const JobsModal = ({ jobs, close }) => {
+/* JOBS MODAL */
+const JobsModal = ({ jobs, close, onApply }) => {
   const [search, setSearch] = useState("");
 
-  const filteredJobs = jobs.filter((job) => {
-    const s = search.toLowerCase();
-    return (
-      job.jobTitle.toLowerCase().includes(s) ||
-      job.company.toLowerCase().includes(s) ||
-      job.jobLocation.toLowerCase().includes(s)
-    );
-  });
+  const filtered = jobs.filter((job) =>
+    (job.jobTitle + job.company + job.jobLocation)
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-xl flex flex-col z-[99999]">
-      <div className="flex justify-between items-center px-6 py-4 bg-white shadow-lg border-b">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[99999] flex flex-col">
+      <div className="bg-white px-6 py-4 flex justify-between items-center border-b shadow">
         <h2 className="text-2xl font-bold">📄 All Posted Jobs</h2>
-        <button
-          onClick={close}
-          className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl shadow"
-        >
+        <button onClick={close} className="px-4 py-2 bg-red-500 text-white rounded-lg">
           Close
         </button>
       </div>
 
-      <div className="p-6 bg-gray-50 border-b">
+      <div className="p-4 border-b bg-gray-50">
         <input
           type="text"
-          placeholder="🔍 Search jobs..."
-          className="w-full px-4 py-3 border rounded-xl shadow-sm"
+          placeholder="Search jobs..."
+          className="w-full p-3 border rounded-lg"
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="bg-white shadow-xl rounded-xl overflow-hidden border">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-100 text-gray-700">
-              <tr>
-                <th className="p-3 border">Job Title</th>
-                <th className="p-3 border">Company</th>
-                <th className="p-3 border">Location</th>
-                <th className="p-3 border">Skills</th>
-                <th className="p-3 border text-center">Action</th>
+        <table className="w-full border bg-white rounded-xl shadow">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-3 border">Job Title</th>
+              <th className="p-3 border">Company</th>
+              <th className="p-3 border">Location</th>
+              <th className="p-3 border">Skills</th>
+              <th className="p-3 border text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((job) => (
+              <tr key={job._id} className="hover:bg-gray-50">
+                <td className="p-3 border">{job.jobTitle}</td>
+                <td className="p-3 border">{job.company}</td>
+                <td className="p-3 border">{job.jobLocation}</td>
+                <td className="p-3 border">{job.requiredSkills.join(", ")}</td>
+                <td className="p-3 border text-center">
+                  <button
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                    onClick={() => onApply(job)}
+                  >
+                    Apply
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredJobs.map((job) => (
-                <tr key={job._id} className="hover:bg-gray-50 transition">
-                  <td className="p-3 border font-medium">{job.jobTitle}</td>
-                  <td className="p-3 border">{job.company}</td>
-                  <td className="p-3 border">{job.jobLocation}</td>
-                  <td className="p-3 border">{job.requiredSkills.join(", ")}</td>
-                  <td className="p-3 border text-center">
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                      Apply
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 };
 
-/* -----------------------------------------
-  STUDENTS MODAL – CENTERED BIG WINDOW
---------------------------------------------- */
+/* STUDENTS MODAL */
 const StudentsModal = ({ students, close }) => (
-  <div className="fixed inset-0 bg-black/50 backdrop-blur-xl flex justify-center items-center p-6 z-[99999]">
-    <div className="bg-white rounded-xl p-6 w-full max-w-5xl shadow-2xl border">
-      <div className="flex justify-between items-center mb-4">
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90000] flex justify-center items-center">
+    <div className="bg-white rounded-xl p-6 max-w-4xl w-full shadow-xl border">
+      <div className="flex justify-between mb-4">
         <h2 className="text-3xl font-bold">👨‍🎓 All Students</h2>
-        <button
-          onClick={close}
-          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow"
-        >
+        <button onClick={close} className="px-4 py-2 bg-red-500 text-white rounded-lg">
           Close
         </button>
       </div>
 
       <div className="max-h-[70vh] overflow-y-auto">
-        <table className="w-full border rounded-xl shadow-md overflow-hidden">
-          <thead className="bg-gray-200 text-gray-700">
+        <table className="w-full border bg-white rounded-lg shadow">
+          <thead className="bg-gray-100">
             <tr>
               <th className="p-3 border">Name</th>
               <th className="p-3 border">Email</th>
@@ -311,12 +285,7 @@ const StudentsModal = ({ students, close }) => (
 
           <tbody>
             {students.map((s, i) => (
-              <tr
-                key={s._id}
-                className={`${
-                  i % 2 === 0 ? "bg-white" : "bg-gray-50"
-                } hover:bg-blue-50 transition`}
-              >
+              <tr key={s._id} className="hover:bg-gray-50">
                 <td className="p-3 border">{s.name}</td>
                 <td className="p-3 border">{s.email}</td>
                 <td className="p-3 border">{s.branch}</td>

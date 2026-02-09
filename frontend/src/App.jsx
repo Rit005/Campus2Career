@@ -15,7 +15,6 @@ import RouteRedirect from "./pages/RouteRedirect";
 /* STUDENT */
 import StudentLayout from "./pages/student/StudentLayout";
 import StudentDashboard from "./pages/StudentDashboard";
-import Analytics from "./pages/student/Analytics";
 import Career from "./pages/student/Career";
 import Profile from "./pages/student/Profile";
 import AiMentor from "./pages/student/AiMentor";
@@ -23,12 +22,11 @@ import ResumeAnalyzer from "./pages/student/ResumeAnalyzer";
 import MarksheetUpload from "./pages/student/MarksheetUpload";
 import AcademicDashboard from "./pages/student/AcademicDashboard";
 import CareerGuidance from "./pages/student/CareerGuidance";
-
 /* RECRUITER */
 import RecruiterLayout from "./pages/recruiter/RecruiterLayout";
 import Dashboard from "./pages/recruiter/Dashboard";
 import Matching from "./pages/recruiter/Matching";
-import AnalyticsRecruiter from "./pages/recruiter/Analytics";
+import RecruiterAnalytics from "./pages/recruiter/Analytics";
 import HrAssistant from "./pages/recruiter/HrAssistant";
 
 function App() {
@@ -37,13 +35,11 @@ function App() {
       <Router>
         <Routes>
 
-          {/* PUBLIC */}
+          {/* PUBLIC ROUTES */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/auth/callback" element={<OAuthCallback />} />
-
-          {/* LOGIN LOGIC */}
           <Route path="/redirect" element={<RouteRedirect />} />
 
           {/* CHOOSE DASHBOARD */}
@@ -56,7 +52,7 @@ function App() {
             }
           />
 
-          {/* ================= STUDENT ROUTES ================= */}
+          {/* ---------------- STUDENT ROUTES ---------------- */}
           <Route
             path="/student"
             element={
@@ -65,9 +61,10 @@ function App() {
               </ProtectedRoute>
             }
           >
+
+            {/* Dashboard & Other Pages */}
             <Route index element={<StudentDashboard />} />
             <Route path="dashboard" element={<StudentDashboard />} />
-            <Route path="analytics" element={<Analytics />} />
             <Route path="resume-analyzer" element={<ResumeAnalyzer />} />
             <Route path="marksheet-upload" element={<MarksheetUpload />} />
             <Route path="academic-dashboard" element={<AcademicDashboard />} />
@@ -75,9 +72,10 @@ function App() {
             <Route path="career" element={<Career />} />
             <Route path="ai-mentor" element={<AiMentor />} />
             <Route path="profile" element={<Profile />} />
+
           </Route>
 
-          {/* ================= RECRUITER ROUTES ================= */}
+          {/* ---------------- RECRUITER ROUTES ---------------- */}
           <Route
             path="/recruiter"
             element={
@@ -88,10 +86,8 @@ function App() {
           >
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="matching" element={<Matching />} />
-            <Route path="analytics" element={<AnalyticsRecruiter />} />
+            <Route path="analytics" element={<RecruiterAnalytics />} />
             <Route path="hr-assistant" element={<HrAssistant />} />
-            {/* If you later create: RecruiterProfile.jsx */}
-            {/* <Route path="profile" element={<RecruiterProfile />} /> */}
           </Route>
 
         </Routes>
