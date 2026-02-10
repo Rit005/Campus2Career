@@ -5,60 +5,74 @@ import mammoth from "mammoth";
 import fs from "fs";
 import Marksheet from "../models/Marksheet.js";
 
-/* ============================================================
-   STEP 1: Extract raw text from uploaded files
-   ============================================================ */
+/*============================================================
+  RAW TEXT EXTRACTOR
+============================================================*/
 const extractTextFromFile = async (buffer, mimeType) => {
   if (mimeType === "application/pdf") {
     const data = await pdfParse(buffer);
     return data.text;
   }
-
   if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
     const result = await mammoth.extractRawText({ buffer });
     return result.value;
   }
-
   if (mimeType === "text/plain") {
     return buffer.toString("utf8");
   }
-
   throw new Error("Unsupported file type");
 };
 
-/* ============================================================
-   STEP 2: AI-Powered Marksheet Parsing
-   ============================================================ */
+/*============================================================
+  AUTO GRADE (Manual Rules)
+============================================================*/
+const autoAssignGrade = (percentage) => {
+  if (percentage >= 80) return "A";
+  if (percentage >= 70) return "B";
+  if (percentage >= 60) return "C";
+  if (percentage >= 50) return "D";
+  return "F";
+};
+
+/*============================================================
+  AI PARSER (STRICT JSON + FIRST COLUMN SUBJECTS)
+============================================================*/
 const parseMarksheetWithAI = async (text) => {
+  // Extract first-column subjects via regex fallback (Sem 4 needs this)
+  const detectedSubjects =
+    text.match(/^[A-Z]{2,4}\s*\d{3}[-A-Za-z0-9\s&()]*/gm) || [];
+
   const prompt = `
-Extract marksheet details STRICTLY as JSON:
+You MUST return ONLY valid JSON. No explanation. No markdown. No extra text.
 
-RULES:
-- Detect semester EXACTLY as written.
-- Detect CGPA in ANY format:
-    CGPA 9.04
-    CGPA : 9.04
-    Overall CGPA – 9.04
-- Detect Percentage fields:
-    Percentage: 83%
-    Overall %: 78
-    Marks 430/500
-- If CGPA exists → DO NOT calculate percentage.
-- If Percentage exists → DO NOT calculate CGPA.
-- If both missing → calculate percentage from marks.
+STRICT RULE:
+Return ONLY a JSON object.
 
-Return JSON ONLY:
+TASK:
+1. Extract subject names ONLY from the FIRST COLUMN of Page 1 & Page 2.
+2. Ignore component names (Case Discussion, Quiz, Project 1, etc).
+3. Extract FINAL TOTAL MARKS + FINAL GRADES from Page 3.
+4. Match subjects and marks by ORDER.
+5. Use these regex-detected subjects (in order) as the TRUE subjects:
+${detectedSubjects.join("\n")}
+
+OUTPUT FORMAT:
 {
   "semester": "",
   "year": "",
   "cgpa": "",
   "percentage": "",
   "subjects": [
-    { "name": "", "marks": 0, "maxMarks": 0, "grade": "" }
+    { "name": "", "marks": "", "maxMarks": "", "grade": "" }
   ]
 }
 
-Extract from the text below:
+RULES:
+- If final marks appear like "80.25/100.00", split correctly.
+- If grade missing → grade = null.
+- Return EXACT JSON ONLY — no other text.
+
+NOW RETURN THE JSON OBJECT FOR THIS TEXT:
 ${text}
 `;
 
@@ -68,15 +82,25 @@ ${text}
     temperature: 0,
   });
 
-  const jsonMatch = response.choices[0].message.content.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("AI returned invalid JSON");
+  /*---------------------------------------------------------
+    CLEAN RAW OUTPUT → keep only text from first { to last }
+  ----------------------------------------------------------*/
+  let raw = response.choices[0].message.content;
 
-  return JSON.parse(jsonMatch[0]);
+  raw = raw.substring(raw.indexOf("{"));
+  raw = raw.substring(0, raw.lastIndexOf("}") + 1);
+
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    console.log("\n🔥 AI RAW OUTPUT (Debug) 🔥\n", response.choices[0].message.content);
+    throw new Error("AI returned invalid JSON – parsing failed.");
+  }
 };
 
-/* ============================================================
-   STEP 3: Upload Marksheet
-   ============================================================ */
+/*============================================================
+  UPLOAD MARKSHEET CONTROLLER
+============================================================*/
 export const uploadMarksheetController = async (req, res) => {
   try {
     if (!req.file)
@@ -84,30 +108,52 @@ export const uploadMarksheetController = async (req, res) => {
 
     const buffer = fs.readFileSync(req.file.path);
     const rawText = await extractTextFromFile(buffer, req.file.mimetype);
-
     const parsed = await parseMarksheetWithAI(rawText);
 
     let cgpa = parsed.cgpa?.trim() || "";
     let percentage = parsed.percentage?.trim() || "";
 
-    // If both are missing → compute percentage
-    if (!cgpa && !percentage && parsed.subjects.length > 0) {
-      let total = 0;
-      let max = 0;
+    /*----------------------------------------------------------
+      PROCESS FINAL SUBJECT RESULTS (Marks & Grades)
+    -----------------------------------------------------------*/
+    const subjects = parsed.subjects.map((sub) => {
+      let obtained = 0,
+        max = 0;
 
-      parsed.subjects.forEach((sub) => {
-        total += Number(sub.marks || 0);
-        max += Number(sub.maxMarks || 0);
-      });
+      if (String(sub.marks).includes("/")) {
+        const parts = sub.marks.split("/");
+        obtained = Number(parts[0]);
+        max = Number(parts[1]);
+      } else {
+        obtained = Number(sub.marks);
+        max = Number(sub.maxMarks);
+      }
 
-      if (max > 0) percentage = ((total / max) * 100).toFixed(2);
+      const pct = (obtained / max) * 100;
+      const grade = sub.grade || autoAssignGrade(pct);
+
+      return {
+        name: sub.name,
+        marks: obtained,
+        maxMarks: max,
+        grade,
+      };
+    });
+
+    /*----------------------------------------------------------
+      AUTO CALCULATE % IF MISSING
+    -----------------------------------------------------------*/
+    if (!percentage && subjects.length > 0) {
+      const total = subjects.reduce((sum, s) => sum + s.marks, 0);
+      const totalMax = subjects.reduce((sum, s) => sum + s.maxMarks, 0);
+      percentage = ((total / totalMax) * 100).toFixed(2);
     }
 
     const saved = await Marksheet.create({
       studentId: req.user._id,
       semester: parsed.semester || req.body.semester,
       year: parsed.year || "",
-      subjects: parsed.subjects,
+      subjects,
       cgpa,
       percentage,
       filePath: req.file.path,
@@ -122,9 +168,9 @@ export const uploadMarksheetController = async (req, res) => {
   }
 };
 
-/* ============================================================
-   STEP 4: Get All Marksheets
-   ============================================================ */
+/*============================================================
+  GET ALL MARKSHEETS
+============================================================*/
 export const getAllMarksheets = async (req, res) => {
   try {
     const list = await Marksheet.find({ studentId: req.user._id }).sort({
@@ -136,28 +182,31 @@ export const getAllMarksheets = async (req, res) => {
   }
 };
 
-/* ============================================================
-   STEP 5: Delete a Marksheet
-   ============================================================ */
+/*============================================================
+  DELETE MARKSHEET
+============================================================*/
 export const deleteMarksheet = async (req, res) => {
   try {
     await Marksheet.findOneAndDelete({
       _id: req.params.id,
       studentId: req.user._id,
     });
+
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: "Delete failed" });
   }
 };
 
-/* ============================================================
-   STEP 6: Academic Dashboard Analytics
-   ============================================================ */
+/*============================================================
+  DASHBOARD ANALYTICS
+============================================================*/
 export const getAcademicDashboard = async (req, res) => {
   try {
     const studentId = req.user._id;
-    const marksheets = await Marksheet.find({ studentId }).sort({ semester: 1 });
+    const marksheets = await Marksheet.find({ studentId }).sort({
+      semester: 1,
+    });
 
     if (!marksheets.length) {
       return res.json({
@@ -165,12 +214,11 @@ export const getAcademicDashboard = async (req, res) => {
         data: {
           overallPerformance: null,
           subjectWisePerformance: [],
-          semesterTrend: []
-        }
+          semesterTrend: [],
+        },
       });
     }
 
-    /* -------------------- Subject Wise Performance -------------------- */
     const subjectStats = {};
 
     marksheets.forEach((m) => {
@@ -188,19 +236,15 @@ export const getAcademicDashboard = async (req, res) => {
       average: (subjectStats[name].total / subjectStats[name].count).toFixed(2),
     }));
 
-    /* -------------------- Overall Performance -------------------- */
     const overallPerformance = (
-      marksheets.reduce(
-        (s, m) => s + Number(m.percentage || 0),
-        0
-      ) / marksheets.length
+      marksheets.reduce((sum, m) => sum + Number(m.percentage), 0) /
+      marksheets.length
     ).toFixed(2);
 
-    /* -------------------- Semester Trend -------------------- */
     const semesterTrend = marksheets.map((m) => ({
       semester: m.semester,
-      cgpa: m.cgpa || "",
-      percentage: m.percentage || "",
+      cgpa: m.cgpa,
+      percentage: m.percentage,
     }));
 
     res.json({
@@ -215,4 +259,3 @@ export const getAcademicDashboard = async (req, res) => {
     res.status(500).json({ success: false, message: "Dashboard error" });
   }
 };
-

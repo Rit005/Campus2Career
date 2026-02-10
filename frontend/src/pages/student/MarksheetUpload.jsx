@@ -16,9 +16,14 @@ const MarksheetUpload = () => {
   const loadMarksheets = async () => {
     try {
       const res = await studentAPI.getAllMarksheets();
-      if (res.data.success) setMarksheets(res.data.data);
+      if (res.data.success) {
+        setMarksheets(res.data.data);
+      }
     } catch (err) {
-      console.error("Failed to load marksheets");
+      setMessage({
+        type: "error",
+        text: "Failed to load marksheets",
+      });
     }
   };
 
@@ -34,7 +39,7 @@ const MarksheetUpload = () => {
     if (!valid) {
       setMessage({
         type: "error",
-        text: "Only PDF, DOCX, or TXT files allowed",
+        text: "Only PDF, DOCX, or TXT files are allowed",
       });
       return;
     }
@@ -47,7 +52,10 @@ const MarksheetUpload = () => {
     e.preventDefault();
 
     if (!file || !semester) {
-      setMessage({ type: "error", text: "Please select semester and file" });
+      setMessage({
+        type: "error",
+        text: "Please select a semester and a valid marksheet file",
+      });
       return;
     }
 
@@ -59,6 +67,7 @@ const MarksheetUpload = () => {
 
     try {
       const res = await studentAPI.uploadMarksheet(formData);
+
       if (res.data.success) {
         setMessage({
           type: "success",
@@ -67,6 +76,7 @@ const MarksheetUpload = () => {
 
         setFile(null);
         setSemester("");
+
         if (fileRef.current) fileRef.current.value = "";
 
         loadMarksheets();
@@ -74,7 +84,9 @@ const MarksheetUpload = () => {
     } catch (err) {
       setMessage({
         type: "error",
-        text: err.response?.data?.message || "Upload failed",
+        text:
+          err.response?.data?.message ||
+          "AI could not extract data properly. Try again with a clearer file.",
       });
     }
 
@@ -83,27 +95,35 @@ const MarksheetUpload = () => {
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this marksheet?")) return;
+
     try {
       await studentAPI.deleteMarksheet(id);
       loadMarksheets();
     } catch (err) {
-      console.error("Failed to delete marksheet");
+      setMessage({ type: "error", text: "Failed to delete marksheet" });
     }
   };
 
   const semesterOptions = [
-    "Semester 1", "Semester 2", "Semester 3", "Semester 4",
-    "Semester 5", "Semester 6", "Semester 7", "Semester 8",
-    "Year 1", "Year 2", "Year 3", "Year 4",
-    "12th", "10th"
+    "Semester 1",
+    "Semester 2",
+    "Semester 3",
+    "Semester 4",
+    "Semester 5",
+    "Semester 6",
+    "Semester 7",
+    "Semester 8",
+    "Year 1",
+    "Year 2",
+    "Year 3",
+    "Year 4",
+    "12th",
+    "10th",
   ];
 
-  /* ================================================================
-     UTIL: DISPLAY SCORE (CGPA or Percentage)
-  ================================================================= */
   const displayScore = (m) => {
-    if (m.cgpa && m.cgpa !== "") return `CGPA: ${m.cgpa}`;
-    if (m.percentage && m.percentage !== "") return `${m.percentage}%`;
+    if (m.cgpa) return `CGPA: ${m.cgpa}`;
+    if (m.percentage) return `${m.percentage}%`;
     return "Score not available";
   };
 
@@ -123,8 +143,10 @@ const MarksheetUpload = () => {
         </div>
       )}
 
-      {/* Upload Form */}
-      <form className="bg-white shadow p-6 rounded-xl mb-8" onSubmit={handleUpload}>
+      <form
+        className="bg-white shadow p-6 rounded-xl mb-8"
+        onSubmit={handleUpload}
+      >
         <label className="block mb-2 font-medium">Semester *</label>
         <select
           value={semester}
@@ -133,7 +155,9 @@ const MarksheetUpload = () => {
         >
           <option value="">Select semester</option>
           {semesterOptions.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
 
@@ -161,11 +185,10 @@ const MarksheetUpload = () => {
         </button>
       </form>
 
-      {/* Uploaded Marksheets */}
       <h3 className="text-xl font-semibold mb-3">Uploaded Marksheets</h3>
 
       {marksheets.length === 0 ? (
-        <p className="text-gray-500">No marksheets uploaded.</p>
+        <p className="text-gray-500">No marksheets uploaded yet.</p>
       ) : (
         <div className="space-y-4">
           {marksheets.map((m) => (

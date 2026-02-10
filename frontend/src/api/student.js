@@ -8,10 +8,9 @@ const StudentAPI = axios.create({
 });
 
 export const studentAPI = {
-
-  // -------------------------
-  // Resume
-  // -------------------------
+  /* ============================================================
+     RESUME
+  ============================================================ */
   analyzeResume: (formData) =>
     StudentAPI.post("/resume", formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -19,56 +18,53 @@ export const studentAPI = {
 
   getResume: () => StudentAPI.get("/resume"),
 
-  // -------------------------
-  // Marksheet
-  // -------------------------
+  /* ============================================================
+     MARKSHEET
+  ============================================================ */
   uploadMarksheet: (formData) =>
     StudentAPI.post("/marksheet", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
 
   getAllMarksheets: () => StudentAPI.get("/marksheet"),
+
   deleteMarksheet: (id) => StudentAPI.delete(`/marksheet/${id}`),
 
-  // -------------------------
-  // Academic Dashboard
-  // -------------------------
+  getSemesterWise: () => StudentAPI.get("/marksheet/semester-wise"),
+
+  /* ============================================================
+     ACADEMIC DASHBOARD
+  ============================================================ */
   getAcademicDashboard: () => StudentAPI.get("/dashboard/academic"),
 
-  // -------------------------
-  // Career
-  // -------------------------
+  getAcademicAnalytics: () => StudentAPI.get("/dashboard/analytics"),
+
+  /* ============================================================
+     CAREER GUIDANCE
+  ============================================================ */
   analyzeCareer: () => StudentAPI.post("/career/analyze"),
+
   getCareerProfile: () => StudentAPI.get("/career/profile"),
 
-  // -------------------------
-  // Students (Recruiter Dashboard)
-  // -------------------------
-  getAllStudents: () => StudentAPI.get("/students"),
+  /* ============================================================
+     JOBS (Student + Recruiter)
+  ============================================================ */
+  getAllJobs: () => StudentAPI.get("/jobs"),
 
-  // -------------------------
-  // AI Mentor
-  // -------------------------
-  aiMentor: (data) => StudentAPI.post("/mentor-assistant", data),
-
-  // -------------------------
-  // ✅ APPLY FOR JOB
-  // -------------------------
   applyForJob: (formData) =>
     StudentAPI.post("/apply", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
 
-  // =========================
-  // ⭐ NEW: VIEW ALL JOBS
-  // =========================
-  getAllJobs: () => StudentAPI.get("/jobs"),
+  /* ============================================================
+     STUDENTS (Recruiter Dashboard)
+  ============================================================ */
+  getAllStudents: () => StudentAPI.get("/students"),
 
-  getAcademicAnalytics: () => StudentAPI.get("/dashboard/analytics"),
-
-  getSemesterWise: () => StudentAPI.get("/marksheet/semester-wise"),
-
+  /* ============================================================
+     AI MENTOR
+  ============================================================ */
+  aiMentor: (data) => StudentAPI.post("/mentor-assistant", data),
 };
-
 
 export default studentAPI;
