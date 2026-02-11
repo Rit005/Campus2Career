@@ -1,34 +1,25 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 
-// Ensure uploads/resumes folder exists
-const uploadDir = "uploads/resumes";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// ⭐ Store files directly in memory (not on disk)
+const storage = multer.memoryStorage();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + "-" + file.originalname;
-    cb(null, uniqueName);
-  }
-});
+// ⭐ Allowed MIME types
+const ALLOWED_TYPES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "text/plain",
+];
 
 const fileFilter = (req, file, cb) => {
-  const allowed = [
-    "application/pdf",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "text/plain",
-  ];
-  cb(null, allowed.includes(file.mimetype));
+  if (ALLOWED_TYPES.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only PDF, DOCX, and TXT files are allowed"), false);
+  }
 };
 
 export const uploadResume = multer({
-  storage,
+  storage, // ⬅️ Store file in Buffer (MongoDB friendly)
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
 });

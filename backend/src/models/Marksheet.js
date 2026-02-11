@@ -5,27 +5,55 @@ const subjectSchema = new mongoose.Schema({
   marks: Number,
   maxMarks: Number,
   grade: String,
-  credits: {type:Number},
+  credits: Number,
 });
 
-const marksheetSchema = new mongoose.Schema({
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+const marksheetSchema = new mongoose.Schema(
+  {
+    studentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
 
-  semester: { type: String, required: true },
-  year: { type: String },
+    semester: { type: String, required: true },
+    year: { type: String },
 
-  // 🔥 MUST EXIST for your logic to work
-  cgpa: { type: String, default: "" },
-  percentage: { type: String, default: "" },
+    // Academic fields
+    cgpa: { type: String, default: "" },
+    percentage: { type: String, default: "" },
 
-  subjects: [subjectSchema],
+    subjects: [subjectSchema],
 
-  filePath: String,
-  fileName: String,
-  fileType: String,
-  fileSize: Number,
+    // ---------------------
+    // STORE FILE IN DATABASE
+    // ---------------------
+    fileName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    fileType: {
+      type: String,
+      required: true,
+    },
+    fileSize: {
+      type: Number,
+      required: true,
+    },
 
-  uploadedAt: { type: Date, default: Date.now }
-});
+    fileData: {
+      type: Buffer,   // ⬅️ MAIN FIX — file stored inside MongoDB
+      required: true,
+    },
+
+    uploadedAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
+// Fast lookups
+marksheetSchema.index({ studentId: 1, uploadedAt: -1 });
 
 export default mongoose.model("Marksheet", marksheetSchema);
