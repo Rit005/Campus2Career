@@ -2,7 +2,11 @@ import mongoose from "mongoose";
 
 const applicationSchema = new mongoose.Schema(
   {
-    jobId: { type: mongoose.Schema.Types.ObjectId, ref: "Job", required: true },
+    jobId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Job",
+      required: true,
+    },
 
     studentId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -11,7 +15,6 @@ const applicationSchema = new mongoose.Schema(
     },
 
     jobRole: { type: String, required: true },
-
     message: { type: String },
 
     name: { type: String, required: true },
@@ -19,7 +22,11 @@ const applicationSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     expectedSalary: { type: String },
 
-    resume: { type: String, required: true },
+    // ✅ STORE FILE IN DB
+    resumeData: { type: Buffer, required: true },
+    resumeName: { type: String, required: true },
+    resumeType: { type: String, required: true },
+    resumeSize: { type: Number, required: true },
 
     status: {
       type: String,

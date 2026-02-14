@@ -13,12 +13,10 @@ const CareerGuidance = () => {
   const [applyModalOpen, setApplyModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
 
-  // Load & Analyze Career Immediately
   useEffect(() => {
     analyzeCareer();
   }, []);
 
-  // ================= ANALYZE CAREER (Auto Runs) =================
   const analyzeCareer = async () => {
     try {
       const res = await studentAPI.analyzeCareer();
@@ -30,7 +28,6 @@ const CareerGuidance = () => {
     }
   };
 
-  // ================= VIEW JOBS =================
   const handleViewJobs = async () => {
     setLoadingJobs(true);
     try {
@@ -46,28 +43,34 @@ const CareerGuidance = () => {
     }
   };
 
-  // ================= APPLY =================
-  const submitJobApplication = async ({ jobId, jobRole, message, resume }) => {
-    try {
-      const form = new FormData();
-      form.append("jobId", jobId);
-      form.append("jobRole", jobRole);
-      form.append("message", message);
-      form.append("resume", resume);
+const submitJobApplication = async ({
+  jobId,
+  message,
+  resume,
+  expectedSalary,
+}) => {
+  try {
+    const form = new FormData();
 
-      const res = await studentAPI.applyForJob(form);
+    form.append("jobId", jobId);
+    form.append("jobRole", selectedJob.jobTitle); // ✅ FIX
+    form.append("message", message || "");
+    form.append("expectedSalary", expectedSalary || "");
+    form.append("resume", resume);
 
-      if (res.data.success) {
-        alert("Application Submitted!");
-        setApplyModalOpen(false);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Failed to apply.");
+    const res = await studentAPI.applyForJob(form);
+
+    if (res.data.success) {
+      alert("Application Submitted!");
+      setApplyModalOpen(false);
     }
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Failed to apply.");
+  }
+};
 
-  // ================= LOADING SCREEN =================
+
   if (loadingProfile)
     return (
       <div className="flex justify-center p-10">
@@ -78,7 +81,6 @@ const CareerGuidance = () => {
   return (
     <div className="max-w-7xl mx-auto py-6">
 
-      {/* ================= HEADER ================= */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold">Career Guidance</h2>
 
@@ -91,11 +93,9 @@ const CareerGuidance = () => {
         </button>
       </div>
 
-      {/* ================= SHOW CAREER RESULTS ================= */}
       {profile ? (
         <div className="space-y-10">
 
-          {/* ---- CAREER DOMAINS ---- */}
           <Section title="🎯 Best Career Domains for You">
             <Grid>
               {profile.careerDomains?.map((d, i) => (
@@ -110,7 +110,6 @@ const CareerGuidance = () => {
             </Grid>
           </Section>
 
-          {/* ---- ROLES ---- */}
           <Section title="💼 Recommended Job Roles">
             <Grid>
               {profile.recommendedRoles?.map((r, i) => (
@@ -124,7 +123,7 @@ const CareerGuidance = () => {
             </Grid>
           </Section>
 
-          {/* ---- HIGHER STUDIES ---- */}
+ {/* ---- HIGHER STUDIES ---- */}
           <Section title="🎓 Higher Studies Recommendations">
             <h3 className="text-xl font-semibold mb-3">India (M.Tech)</h3>
             <Grid>
@@ -157,8 +156,7 @@ const CareerGuidance = () => {
               ))}
             </Grid>
           </Section>
-
-          {/* ---- RECOMMENDED COLLEGES ---- */}
+ {/* ---- RECOMMENDED COLLEGES ---- */}
           <Section title="🏫 Recommended Colleges">
             <Grid>
               {profile.recommendedColleges?.map((c, i) => (
@@ -235,14 +233,15 @@ const CareerGuidance = () => {
             </div>
           </Section>
 
+
         </div>
       ) : (
         <div className="p-10 text-center text-gray-500">
-          No career data available. Please upload your marksheets and resume.
+          No career data available.Please upload your marksheets and resume.
+
         </div>
       )}
 
-      {/* JOBS MODAL */}
       {jobsModalOpen && (
         <JobsModal
           jobs={jobs}
@@ -254,7 +253,6 @@ const CareerGuidance = () => {
         />
       )}
 
-      {/* APPLY JOB MODAL */}
       {applyModalOpen && selectedJob && (
         <ApplyJobModal
           job={selectedJob}
@@ -266,7 +264,7 @@ const CareerGuidance = () => {
   );
 };
 
-/* ================= COMPONENT HELPERS ================= */
+/* ================= HELPERS ================= */
 const Section = ({ title, children }) => (
   <div>
     <h2 className="text-2xl font-bold mb-4">{title}</h2>
@@ -281,5 +279,80 @@ const Grid = ({ children }) => (
 const Card = ({ children }) => (
   <div className="bg-white border shadow p-5 rounded-lg">{children}</div>
 );
+
+/* ================= JOBS MODAL ================= */
+const JobsModal = ({ jobs, close, onApply }) => {
+  const [search, setSearch] = useState("");
+
+  const filtered = jobs.filter((job) =>
+    (job.jobTitle + job.company + job.jobLocation)
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[99999] flex flex-col">
+
+      <div className="bg-white px-6 py-4 flex justify-between items-center border-b shadow">
+        <h2 className="text-2xl font-bold">📄 All Posted Jobs</h2>
+        <button
+          onClick={close}
+          className="px-4 py-2 bg-red-500 text-white rounded-lg"
+        >
+          Close
+        </button>
+      </div>
+
+      <div className="p-4 border-b bg-gray-50">
+        <input
+          type="text"
+          placeholder="Search jobs..."
+          className="w-full p-3 border rounded-lg"
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6">
+        <table className="w-full border bg-white rounded-xl shadow">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-3 border">Job Title</th>
+              <th className="p-3 border">Company</th>
+              <th className="p-3 border">Location</th>
+              <th className="p-3 border">Skills</th>
+              <th className="p-3 border text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((job) => (
+              <tr key={job._id} className="hover:bg-gray-50">
+                <td className="p-3 border">{job.jobTitle}</td>
+                <td className="p-3 border">{job.company}</td>
+                <td className="p-3 border">{job.jobLocation}</td>
+                <td className="p-3 border">
+                  {job.requiredSkills?.join(", ")}
+                </td>
+                <td className="p-3 border text-center">
+                  <button
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    onClick={() => onApply(job)}
+                  >
+                    Apply
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {filtered.length === 0 && (
+          <div className="text-center text-gray-500 mt-10">
+            No jobs found.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default CareerGuidance;

@@ -7,6 +7,7 @@ const MarksheetUpload = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [marksheets, setMarksheets] = useState([]);
+  const [mlInsights, setMlInsights] = useState(null);
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -27,34 +28,13 @@ const MarksheetUpload = () => {
     }
   };
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (!selectedFile) return;
-
-    const valid =
-      selectedFile.type === "application/pdf" ||
-      selectedFile.name.endsWith(".docx") ||
-      selectedFile.type === "text/plain";
-
-    if (!valid) {
-      setMessage({
-        type: "error",
-        text: "Only PDF, DOCX, or TXT files are allowed",
-      });
-      return;
-    }
-
-    setFile(selectedFile);
-    setMessage(null);
-  };
-
   const handleUpload = async (e) => {
     e.preventDefault();
 
     if (!file || !semester) {
       setMessage({
         type: "error",
-        text: "Please select a semester and a valid marksheet file",
+        text: "Please select semester and file",
       });
       return;
     }
@@ -74,6 +54,9 @@ const MarksheetUpload = () => {
           text: "Marksheet uploaded successfully!",
         });
 
+        // 🔥 Capture ML results
+        setMlInsights(res.data.mlInsights);
+
         setFile(null);
         setSemester("");
 
@@ -86,7 +69,7 @@ const MarksheetUpload = () => {
         type: "error",
         text:
           err.response?.data?.message ||
-          "AI could not extract data properly. Try again with a clearer file.",
+          "Upload failed",
       });
     }
 
@@ -94,46 +77,25 @@ const MarksheetUpload = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this marksheet?")) return;
+    if (!window.confirm("Delete this marksheet?")) return;
 
-    try {
-      await studentAPI.deleteMarksheet(id);
-      loadMarksheets();
-    } catch (err) {
-      setMessage({ type: "error", text: "Failed to delete marksheet" });
-    }
+    await studentAPI.deleteMarksheet(id);
+    loadMarksheets();
   };
 
   const semesterOptions = [
-    "Semester 1",
-    "Semester 2",
-    "Semester 3",
-    "Semester 4",
-    "Semester 5",
-    "Semester 6",
-    "Semester 7",
-    "Semester 8",
-    "Year 1",
-    "Year 2",
-    "Year 3",
-    "Year 4",
-    "12th",
-    "10th",
+    "Semester 1","Semester 2","Semester 3","Semester 4",
+    "Semester 5","Semester 6","Semester 7","Semester 8"
   ];
 
-  const displayScore = (m) => {
-    if (m.cgpa) return `CGPA: ${m.cgpa}`;
-    if (m.percentage) return `${m.percentage}%`;
-    return "Score not available";
-  };
-
   return (
-    <div className="max-w-4xl mx-auto pt-6">
-      <h2 className="text-3xl font-bold mb-6">Upload Marksheet</h2>
+    <div className="max-w-5xl mx-auto pt-6 space-y-8">
+      <h2 className="text-3xl font-bold">Upload Marksheet</h2>
 
+      {/* MESSAGE */}
       {message && (
         <div
-          className={`p-3 rounded mb-4 ${
+          className={`p-3 rounded ${
             message.type === "success"
               ? "bg-green-100 text-green-800"
               : "bg-red-100 text-red-800"
@@ -143,8 +105,9 @@ const MarksheetUpload = () => {
         </div>
       )}
 
+      {/* ================= UPLOAD FORM ================= */}
       <form
-        className="bg-white shadow p-6 rounded-xl mb-8"
+        className="bg-white shadow p-6 rounded-xl"
         onSubmit={handleUpload}
       >
         <label className="block mb-2 font-medium">Semester *</label>
@@ -167,12 +130,12 @@ const MarksheetUpload = () => {
           type="file"
           accept=".pdf,.docx,.txt"
           className="w-full border p-3 rounded mb-4"
-          onChange={handleFileChange}
+          onChange={(e) => setFile(e.target.files[0])}
         />
 
         {file && (
           <p className="text-sm text-gray-600 mb-4">
-            Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
+            Selected: {file.name}
           </p>
         )}
 
@@ -181,52 +144,145 @@ const MarksheetUpload = () => {
           disabled={loading}
           className="w-full bg-blue-600 text-white py-3 rounded-lg"
         >
-          {loading ? "Uploading…" : "Upload"}
+          {loading ? "Uploading..." : "Upload"}
         </button>
       </form>
 
-      <h3 className="text-xl font-semibold mb-3">Uploaded Marksheets</h3>
+      {/* ================= ML RESULTS SECTION ================= */}
+      {mlInsights && (
+        <div className="bg-white p-6 rounded-xl shadow space-y-6">
+          <h3 className="text-xl font-bold">
+            🤖 AI Academic Insights
+          </h3>
 
-      {marksheets.length === 0 ? (
-        <p className="text-gray-500">No marksheets uploaded yet.</p>
-      ) : (
-        <div className="space-y-4">
-          {marksheets.map((m) => (
-            <div
-              key={m._id}
-              className="bg-white shadow p-4 rounded flex justify-between"
-            >
-              <div>
-                <p className="font-semibold">{m.semester}</p>
+          <div className="grid md:grid-cols-2 gap-6">
 
-                <p className="text-sm text-gray-500">
-                  {m.subjects.length} subjects | {displayScore(m)}
-                </p>
-
-                <a
-                  href={`http://localhost:5001/${m.filePath}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 text-sm underline"
-                >
-                  View File
-                </a>
-
-                <p className="text-xs text-gray-400 mt-1">
-                  Uploaded: {new Date(m.uploadedAt).toLocaleDateString()}
-                </p>
-              </div>
-
-              <button
-                onClick={() => handleDelete(m._id)}
-                className="text-red-600 hover:underline"
-              >
-                Delete
-              </button>
+            <div>
+              <p className="text-gray-500">Predicted Strong Domain</p>
+              <h4 className="text-2xl font-bold text-green-600">
+                {mlInsights.predictedStrongDomain?.domain}
+              </h4>
             </div>
-          ))}
+
+            <div>
+              <p className="text-gray-500">Academic Trend</p>
+              <h4 className="text-2xl font-bold text-blue-600">
+                {mlInsights.academicTrend}
+              </h4>
+            </div>
+
+            <div>
+              <p className="text-gray-500">Next Semester Prediction</p>
+              <h4 className="text-2xl font-bold text-indigo-600">
+                {mlInsights.nextSemesterPrediction}%
+              </h4>
+            </div>
+
+            <div>
+              <p className="text-gray-500">Placement Probability</p>
+              <h4 className="text-2xl font-bold text-purple-600">
+                {mlInsights.placementProbability}%
+              </h4>
+            </div>
+          </div>
+
+          {/* Weak Subjects */}
+          <div>
+            <p className="font-semibold text-red-600">
+              Weak Subjects
+            </p>
+            {mlInsights.weakSubjects?.length ? (
+              <ul className="list-disc ml-6 text-red-600">
+                {mlInsights.weakSubjects.map((s, i) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-green-600">None 🎉</p>
+            )}
+          </div>
+
+          {/* Improvement Roadmap */}
+          <div>
+            <p className="font-semibold text-blue-600">
+              Improvement Roadmap
+            </p>
+            <ul className="list-disc ml-6 text-blue-700">
+              {mlInsights.improvementRoadmap?.map((r, i) => (
+                <li key={i}>{r}</li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Risk Score */}
+          <div>
+            <p className="font-semibold text-red-600">
+              Academic Risk Score
+            </p>
+            <div className="w-full bg-gray-200 h-3 rounded-full">
+              <div
+                className="h-3 rounded-full bg-red-500"
+                style={{
+                  width: `${mlInsights.academicRiskScore}%`,
+                }}
+              />
+            </div>
+            <p className="text-red-600 font-bold mt-1">
+              {mlInsights.academicRiskScore}%
+            </p>
+          </div>
         </div>
       )}
+
+      {/* ================= UPLOADED MARKSHEETS ================= */}
+      <div>
+        <h3 className="text-xl font-semibold mb-3">
+          Uploaded Marksheets
+        </h3>
+
+        {marksheets.length === 0 ? (
+          <p className="text-gray-500">
+            No marksheets uploaded yet.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {marksheets.map((m) => (
+              <div
+                key={m._id}
+                className="bg-white shadow p-4 rounded flex justify-between"
+              >
+                <div>
+                  <p className="font-semibold">{m.semester}</p>
+                  <p className="text-sm text-gray-500">
+                    {m.subjects.length} subjects | {m.percentage}%
+                  </p>
+
+                  {/* IMPORTANT FIX */}
+                  <a
+                    href={`http://localhost:5001/api/student/marksheet/file/${m._id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 text-sm underline"
+                  >
+                    View File
+                  </a>
+
+                  <p className="text-xs text-gray-400 mt-1">
+                    Uploaded: {new Date(m.uploadedAt).toLocaleDateString()}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => handleDelete(m._id)}
+                  className="text-red-600 hover:underline"
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

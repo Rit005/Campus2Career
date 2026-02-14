@@ -4,6 +4,14 @@ import pdfParse from "pdf-parse-fixed";
 import Resume from "../models/Resume.js";
 import Student from "../models/Student.js";
 
+
+import {
+  predictDomain,
+  calculateResumeStrength,
+  autoFillMissingSkills,
+} from "../ml/resumeML.js";
+
+
 export const analyzeResume = async (req, res) => {
   try {
     const studentId = req.user?._id;
@@ -80,7 +88,20 @@ ${resumeText}
 
     if (!jsonMatch) throw new Error("Invalid JSON from AI");
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    let parsed = JSON.parse(jsonMatch[0]);
+  parsed = {
+      skills: parsed.skills || [],
+      experience_summary: parsed.experience_summary || "",
+      education: parsed.education || "",
+      suitable_roles: parsed.suitable_roles || [],
+      projects: parsed.projects || [],
+      missing_skills: parsed.missing_skills || [],
+      project_recommendations: parsed.project_recommendations || [],
+    };
+    const domainPrediction = predictDomain(parsed.skills);
+    const resumeStrength = calculateResumeStrength(parsed);
+
+    parsed = autoFillMissingSkills(parsed, domainPrediction.predictedDomain);
 
     // ---------------- Extract Email & Phone ----------------
     const extractedEmail =
@@ -101,10 +122,12 @@ ${resumeText}
         fileSize: req.file?.size || "",
         extractedText: resumeText,
         ...parsed,
+       predictedDomain: domainPrediction.predictedDomain,
+        domainConfidence: domainPrediction.confidenceScore,
+        resumeStrengthScore: resumeStrength,
       },
       { upsert: true, new: true }
     );
-
     // Update Student Model
     await Student.findOneAndUpdate(
       { userId: studentId },
@@ -115,14 +138,22 @@ ${resumeText}
         suitableRoles: parsed.suitable_roles || [],
         email: extractedEmail,
         phone: extractedPhone,
+        predictedDomain: domainPrediction.predictedDomain,
+        resumeStrengthScore: resumeStrength,
       },
       { upsert: true }
     );
 
     return res.json({
       success: true,
+      mlInsights: {
+        predictedDomain: domainPrediction.predictedDomain,
+        confidence: domainPrediction.confidenceScore,
+        resumeStrengthScore: resumeStrength,
+      },
       data: savedResume,
     });
+    
   } catch (err) {
     console.error("❌ Resume Analyzer Error:", err);
     return res

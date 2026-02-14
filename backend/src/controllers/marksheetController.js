@@ -4,6 +4,16 @@ import pdfParse from "pdf-parse-fixed";
 import mammoth from "mammoth";
 import Marksheet from "../models/Marksheet.js";
 
+import {
+  predictAcademicDomain,
+  detectWeakSubjects,
+  analyzeTrend,
+  calculateRiskScore,
+  calculateCareerReadiness,
+  predictNextSemester,
+  generateImprovementRoadmap,
+  predictPlacementProbability,
+} from "../ml/academicML.js";
 /*============================================================
   RAW TEXT EXTRACTOR
 ============================================================*/
@@ -135,11 +145,7 @@ export const uploadMarksheetController = async (req, res) => {
       });
     }
 
-    let percentage = "";
-
-    /*----------------------------------------------------------
-      Process Final Subjects
-    -----------------------------------------------------------*/
+    /* ================= PROCESS SUBJECTS ================= */
     const subjects = parsed.subjects.map((sub) => {
       const pct = (sub.marks / sub.maxMarks) * 100;
 
@@ -151,19 +157,16 @@ export const uploadMarksheetController = async (req, res) => {
       };
     });
 
-    /*----------------------------------------------------------
-      Auto Calculate Percentage
-    -----------------------------------------------------------*/
+    /* ================= CALCULATE PERCENTAGE ================= */
     const totalMarks = subjects.reduce((sum, s) => sum + s.marks, 0);
     const totalMax = subjects.reduce((sum, s) => sum + s.maxMarks, 0);
 
-    if (totalMax > 0) {
-      percentage = ((totalMarks / totalMax) * 100).toFixed(2);
-    }
+    const percentage =
+      totalMax > 0
+        ? ((totalMarks / totalMax) * 100).toFixed(2)
+        : 0;
 
-    /*----------------------------------------------------------
-      Save to DB
-    -----------------------------------------------------------*/
+    /* ================= SAVE ================= */
     const saved = await Marksheet.create({
       studentId: req.user._id,
       semester: parsed.semester || req.body.semester || "",
@@ -178,7 +181,99 @@ export const uploadMarksheetController = async (req, res) => {
       uploadedAt: new Date(),
     });
 
-    res.json({ success: true, data: saved });
+    /* ================= FETCH ALL FOR ML ================= */
+    const allMarksheets = await Marksheet.find({
+      studentId: req.user._id,
+    }).sort({ semester: 1 });
+
+    const semesterTrend = allMarksheets.map((m) => ({
+      semester: m.semester,
+      percentage: Number(m.percentage),
+    }));
+
+    const overallPerformance =
+      allMarksheets.reduce(
+        (sum, m) => sum + Number(m.percentage),
+        0
+      ) / allMarksheets.length;
+
+    /* ================= SUBJECT PERFORMANCE ================= */
+    const subjectStats = {};
+
+    allMarksheets.forEach((m) => {
+      m.subjects.forEach((sub) => {
+        if (!subjectStats[sub.name]) {
+          subjectStats[sub.name] = { total: 0, count: 0 };
+        }
+
+        subjectStats[sub.name].total +=
+          (sub.marks / sub.maxMarks) * 100;
+
+        subjectStats[sub.name].count++;
+      });
+    });
+
+    const subjectWisePerformance = Object.keys(subjectStats).map(
+      (name) => ({
+        name,
+        average:
+          subjectStats[name].total /
+          subjectStats[name].count,
+      })
+    );
+
+    /* ================= ML ANALYSIS ================= */
+
+    const predictedDomain =
+      predictAcademicDomain(subjectWisePerformance);
+
+    const weakSubjects =
+      detectWeakSubjects(subjectWisePerformance);
+
+    const trendStatus =
+      analyzeTrend(semesterTrend);
+
+    const riskScore =
+      calculateRiskScore(
+        overallPerformance,
+        weakSubjects
+      );
+
+    const careerReadiness =
+      calculateCareerReadiness(
+        overallPerformance,
+        trendStatus
+      );
+
+    const nextSemesterPrediction =
+      predictNextSemester(semesterTrend);
+
+    const roadmap =
+      generateImprovementRoadmap(weakSubjects);
+
+    const placementProbability =
+      predictPlacementProbability(
+        overallPerformance,
+        careerReadiness
+      );
+
+    /* ================= RESPONSE ================= */
+
+    res.json({
+      success: true,
+      data: saved,
+
+      mlInsights: {
+        predictedStrongDomain: predictedDomain,
+        weakSubjects,
+        academicTrend: trendStatus,
+        academicRiskScore: riskScore,
+        careerReadinessScore: careerReadiness,
+        nextSemesterPrediction,
+        improvementRoadmap: roadmap,
+        placementProbability,
+      },
+    });
   } catch (err) {
     console.log("UPLOAD ERROR:", err);
     res.status(500).json({

@@ -17,27 +17,35 @@ export const getAllStudents = async (req, res) => {
       skills: s.skills,
     }));
 
-    res.json({ success: true, students: formatted });
+    return res.json({ success: true, students: formatted });
+
   } catch (err) {
-    res.status(500).json({
+    console.error("GET STUDENTS ERROR:", err);
+    return res.status(500).json({
       success: false,
       message: "Failed to load students",
     });
   }
 };
 
+
 /* ============================================================
    APPLY FOR JOB (Student)
 ============================================================ */
 export const applyForJob = async (req, res) => {
   try {
+    console.log("BODY:", req.body);
+console.log("FILE:", req.file);
+console.log("USER:", req.user);
     const { jobId, jobRole, message, expectedSalary } = req.body;
 
-    // these 3 fields are NOT coming from req.body 
-    // so remove them
-    const name = req.body.name || req.user.name;
-    const email = req.body.email || req.user.email;
-    const phone = req.body.phone || req.user.phone || "Not Provided";
+    // 🔹 Validate required fields
+    if (!jobId || !jobRole) {
+      return res.status(400).json({
+        success: false,
+        message: "Job ID and Job Role are required",
+      });
+    }
 
     if (!req.file) {
       return res.status(400).json({
@@ -46,6 +54,25 @@ export const applyForJob = async (req, res) => {
       });
     }
 
+    // 🔹 Prevent duplicate application
+    const existing = await Application.findOne({
+      jobId,
+      studentId: req.user._id,
+    });
+
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already applied for this job",
+      });
+    }
+
+    // 🔹 Get user details from logged-in user
+    const name = req.user.name;
+    const email = req.user.email;
+    const phone = req.user.phone || "Not Provided";
+
+    // 🔹 Create application
     const application = await Application.create({
       jobId,
       studentId: req.user._id,
@@ -55,17 +82,52 @@ export const applyForJob = async (req, res) => {
       email,
       phone,
       expectedSalary,
-      resume: req.file.path,
+
+      // 🔥 STORE FILE IN DATABASE
+      resumeData: req.file.buffer,
+      resumeName: req.file.originalname,
+      resumeType: req.file.mimetype,
+      resumeSize: req.file.size,
+
       status: "applied",
     });
 
-    return res.json({ success: true, data: application });
+    return res.json({
+      success: true,
+      message: "Application submitted successfully",
+      data: application,
+    });
 
   } catch (err) {
     console.error("APPLY ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Application failed",
+    });
+  }
+};
+export const downloadResume = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id);
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
+
+    res.set({
+      "Content-Type": application.resumeType,
+      "Content-Disposition": `attachment; filename="${application.resumeName}"`,
+    });
+
+    res.send(application.resumeData);
+
+  } catch (err) {
     res.status(500).json({
       success: false,
-      error: err.message,
+      message: "Download failed",
     });
   }
 };
