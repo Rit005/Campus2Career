@@ -130,36 +130,32 @@ export const getMe = async (req, res, next) => {
   }
 };
 
-export const verifyToken = async (req, res, next) => {
+export const verifyToken = async (req, res) => {
   try {
     let token;
 
-    if (req.headers.authorization?.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
+    if (req.headers.authorization?.startsWith("Bearer")) {
+      token = req.headers.authorization.split(" ")[1];
     } else if (req.cookies?.token) {
       token = req.cookies.token;
     }
 
+    // No token is not an error - user simply isn't logged in
     if (!token) {
-      return res.status(401).json({ success: false, message: 'No token provided' });
+      return res.status(200).json({ success: true, data: { user: null } });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
 
     if (!user) {
-      return res.status(401).json({ success: false, message: 'User not found' });
+      return res.status(200).json({ success: true, data: { user: null } });
     }
 
-    res.status(200).json({
-      success: true,
-      data: { user: user.toPublicProfile() }
-    });
-  } catch (error) {
-    res.status(401).json({
-      success: false,
-      message: 'Invalid token'
-    });
+    res.json({ success: true, data: { user: user.toPublicProfile() } });
+  } catch {
+    // Invalid token - clear it and return no user
+    return res.status(200).json({ success: true, data: { user: null } });
   }
 };
 

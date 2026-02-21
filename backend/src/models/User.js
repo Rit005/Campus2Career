@@ -53,6 +53,12 @@ const userSchema = new mongoose.Schema({
     default: false
   },
   
+  // Block status for admin user management
+  isBlocked: {
+    type: Boolean,
+    default: false
+  },
+  
   // Profile Data (Populated later for scalability)
   studentProfile: {
     type: mongoose.Schema.Types.ObjectId,
@@ -62,6 +68,20 @@ const userSchema = new mongoose.Schema({
   recruiterProfile: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'RecruiterProfile',
+    default: null
+  },
+  
+  // Academic Performance (for students)
+  cgpa: {
+    type: Number,
+    min: 0,
+    max: 10,
+    default: null
+  },
+  percentage: {
+    type: Number,
+    min: 0,
+    max: 100,
     default: null
   }
 }, {

@@ -17,6 +17,7 @@ import { fileURLToPath } from "url";
 import authRoutes from "./routes/authRoutes.js";
 import recruiterRoutes from "./routes/recruiterRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 // Middlewares
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
@@ -83,6 +84,7 @@ app.get("/health", (req, res) => {
 app.use("/auth", authRoutes); // Login + Signup
 app.use("/api/recruiter", recruiterRoutes); // ALL Recruiter APIs
 app.use("/api/student", studentRoutes);
+app.use("/admin", adminRoutes); // Admin Dashboard APIs
 // ================== PRODUCTION STATIC FILES ==================
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../../frontend/dist")));

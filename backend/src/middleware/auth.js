@@ -87,6 +87,7 @@ export const optionalAuth = async (req, res, next) => {
    3️⃣ ROLE-BASED ACCESS CONTROL
    - requireRole("student")
    - requireRole("recruiter")
+   - requireRole("admin")
 ============================================================ */
 export const requireRole = (...roles) => {
   return (req, res, next) => {
@@ -113,15 +114,15 @@ export const requireRole = (...roles) => {
 /* ============================================================
    4️⃣ GENERATE TOKENS
 ============================================================ */
-export const generateToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+export const generateToken = (userId, role) => {
+  return jwt.sign({ id: userId, role }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
 };
 
-export const generateRefreshToken = (userId) => {
+export const generateRefreshToken = (userId, role) => {
   return jwt.sign(
-    { id: userId },
+    { id: userId, role },
     process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + "_refresh",
     { expiresIn: "30d" }
   );
@@ -131,22 +132,28 @@ export const generateRefreshToken = (userId) => {
    5️⃣ SEND TOKEN COOKIE (HTTP-ONLY)
 ============================================================ */
 export const sendTokenCookie = (res, token) => {
+  const isProduction = process.env.NODE_ENV === "production";
+  
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
+
+
 
 /* ============================================================
    6️⃣ CLEAR TOKEN COOKIE (Logout)
 ============================================================ */
 export const clearTokenCookie = (res) => {
+  const isProduction = process.env.NODE_ENV === "production";
+  
   res.cookie("token", "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     expires: new Date(0),
   });
 };
