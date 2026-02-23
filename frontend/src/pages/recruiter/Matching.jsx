@@ -9,15 +9,12 @@ const Matching = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [requiredSkills, setRequiredSkills] = useState("");
 
-  const [loading, setLoading] = useState(false);   // post/delete loading
+  const [loading, setLoading] = useState(false); 
   const [myJobs, setMyJobs] = useState([]);
 
-  const [jobMatches, setJobMatches] = useState({}); // 🔥 store match results per job
-  const [matchLoadingFor, setMatchLoadingFor] = useState(null); // loading for specific job
+  const [jobMatches, setJobMatches] = useState({}); 
+  const [matchLoadingFor, setMatchLoadingFor] = useState(null); 
 
-  /* ----------------------------------------------
-      LOAD JOBS ON PAGE LOAD
-  ---------------------------------------------- */
   useEffect(() => {
     loadJobs();
   }, []);
@@ -33,9 +30,6 @@ const Matching = () => {
     }
   };
 
-  /* ----------------------------------------------
-      DELETE JOB
-  ---------------------------------------------- */
   const handleDeleteJob = async (jobId) => {
     if (!window.confirm("Delete this job?")) return;
 
@@ -55,9 +49,6 @@ const Matching = () => {
     setLoading(false);
   };
 
-  /* ----------------------------------------------
-      POST JOB
-  ---------------------------------------------- */
   const handlePostJob = async () => {
     if (!jobTitle || !company || !jobLocation || !jobDescription || !requiredSkills) {
       return alert("Please fill required fields");
@@ -82,7 +73,6 @@ const Matching = () => {
         alert("Job posted successfully!");
         await loadJobs();
 
-        // Clear fields
         setJobTitle("");
         setCompany("");
         setSalary("");
@@ -98,11 +88,8 @@ const Matching = () => {
     setLoading(false);
   };
 
-  /* ----------------------------------------------
-      MATCH CANDIDATES (PER JOB)
-  ---------------------------------------------- */
   const matchForJob = async (job) => {
-    setMatchLoadingFor(job._id); // show loader only for this job
+    setMatchLoadingFor(job._id); 
 
     try {
       const res = await recruiterAPI.matchCandidates({
@@ -124,15 +111,11 @@ const Matching = () => {
     setMatchLoadingFor(null);
   };
 
-  /* ----------------------------------------------
-      UI
-  ---------------------------------------------- */
   return (
     <div className="space-y-10 py-6">
 
       <h1 className="text-3xl font-bold text-gray-900">🤝 Candidate Matching</h1>
 
-      {/* POST JOB SECTION */}
       <div className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold mb-4">Post a Job</h2>
 
@@ -166,7 +149,6 @@ const Matching = () => {
         </div>
       </div>
 
-      {/* JOB LIST SECTION */}
       <div className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold mb-4">📄 Your Posted Jobs</h2>
 
@@ -177,7 +159,7 @@ const Matching = () => {
             {myJobs.map((job) => (
               <div key={job._id} className="p-4 border rounded-lg bg-gray-50">
 
-                {/* JOB INFO */}
+
                 <h3 className="font-bold text-lg">{job.jobTitle}</h3>
                 <p>Company: {job.company}</p>
                 <p>Salary: {job.salary || "Not specified"}</p>
@@ -185,7 +167,6 @@ const Matching = () => {
 
                 <p><strong>Skills:</strong> {(job.requiredSkills || []).join(", ")}</p>
 
-                {/* BUTTONS */}
                 <div className="flex gap-3 mt-4">
                   <button
                     onClick={() => matchForJob(job)}
@@ -207,7 +188,6 @@ const Matching = () => {
                   </button>
                 </div>
 
-                {/* MATCH RESULTS FOR THIS JOB */}
                 {jobMatches[job._id] && (
                   <div className="mt-4 p-4 bg-white border rounded-lg">
                     <h4 className="font-semibold mb-2">🎯 Matched Candidates</h4>

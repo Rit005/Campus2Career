@@ -35,7 +35,6 @@ const RecruiterNavbar = () => {
             </div>
           </div>
 
-          {/* CENTER: Menu */}
           <div className="flex items-center gap-8">
             <NavItem to="/recruiter/dashboard" label="📊 Dashboard" end />
             <NavItem to="/recruiter/matching" label="🤝 Matching" />
@@ -43,10 +42,8 @@ const RecruiterNavbar = () => {
             <NavItem to="/recruiter/hr-assistant" label="🤖 HR Assistant" />
           </div>
 
-          {/* RIGHT: Profile & Logout */}
           <div className="flex items-center gap-6">
 
-            {/* Switch Dashboard Button */}
             <button
               onClick={() => navigate("/choose-dashboard")}
               className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold"
@@ -55,7 +52,6 @@ const RecruiterNavbar = () => {
               Switch Dashboard
             </button>
 
-            {/* Profile Dropdown */}
             <div className="relative group">
               <div className="w-10 h-10 rounded-full bg-primary-600 text-white 
                 flex items-center justify-center font-bold cursor-pointer">
@@ -81,7 +77,6 @@ const RecruiterNavbar = () => {
               </div>
             </div>
 
-            {/* Logout */}
             <button
               onClick={handleLogout}
               className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold"

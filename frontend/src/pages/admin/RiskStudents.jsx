@@ -1,4 +1,3 @@
-// frontend/src/pages/admin/RiskStudents.jsx
 import { useState, useEffect } from "react";
 import adminAPI from "../../api/admin";
 

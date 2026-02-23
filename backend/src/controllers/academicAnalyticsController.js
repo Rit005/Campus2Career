@@ -1,5 +1,3 @@
-
-// src/controllers/academicAnalyticsController.js
 import Marksheet from "../models/Marksheet.js";
 
 export const getStudentAnalytics = async (req, res) => {
@@ -20,9 +18,6 @@ export const getStudentAnalytics = async (req, res) => {
       });
     }
 
-    /* ---------------------------------------------------------
-       1️⃣ MERGE SUBJECT MARKS ACROSS ALL SEMESTERS
-    ---------------------------------------------------------- */
     const subjectPerf = {};
 
     marksheets.forEach((ms) => {
@@ -52,10 +47,6 @@ export const getStudentAnalytics = async (req, res) => {
       });
     });
 
-    /* ---------------------------------------------------------
-       2️⃣ FIX SUBJECT GRADES (if missing)
-       If grade is missing but marks exist → auto-generate
-    ---------------------------------------------------------- */
     const computeGrade = (mark) => {
       if (mark >= 90) return "A+";
       if (mark >= 80) return "A";
@@ -77,12 +68,6 @@ export const getStudentAnalytics = async (req, res) => {
       };
     });
 
-    /* ---------------------------------------------------------
-       3️⃣ RADAR CHART
-    ---------------------------------------------------------- */
-/* -------------------------------------------
-   RADAR CHART (Semester-wise comparison)
----------------------------------------------- */
 const radarSubjects = subjectWise.map((s) => s.subject);
 
 const radarDataset = radarSubjects.map((subject) => {
@@ -108,9 +93,6 @@ const radarChart = {
   }))
 };
 
-    /* ---------------------------------------------------------
-       4️⃣ SEMESTER PROGRESS TREND
-    ---------------------------------------------------------- */
     const progressTrend = marksheets.map((m, i) => {
       const prev = i === 0
         ? 0
@@ -125,9 +107,6 @@ const radarChart = {
       };
     });
 
-    /* ---------------------------------------------------------
-       5️⃣ CONSISTENCY SCORE
-    ---------------------------------------------------------- */
     const allPercentages = marksheets
       .map((m) => Number(m.percentage || m.cgpa * 9.5))
       .filter((n) => !isNaN(n));
@@ -142,9 +121,6 @@ const radarChart = {
 
     const consistencyScore = Number(Math.max(0, 100 - stdDev * 2).toFixed(2));
 
-    /* ---------------------------------------------------------
-       6️⃣ SEND TO FRONTEND
-    ---------------------------------------------------------- */
     return res.json({
       success: true,
       data: {
@@ -160,7 +136,6 @@ const radarChart = {
   }
 };
 
-// NEW API → Show semester-wise marks with subjects
 export const getSemesterWiseAnalytics = async (req, res) => {
   try {
     const studentId = req.user._id;

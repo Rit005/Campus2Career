@@ -12,7 +12,6 @@ export const mentorAssistantChat = async (req, res) => {
       });
     }
 
-    // Ensure logged-in student
     const userId = req.user?._id;
     if (!userId) {
       return res.status(401).json({
@@ -21,12 +20,10 @@ export const mentorAssistantChat = async (req, res) => {
       });
     }
 
-    // Load student's resume if available
     const resume = await Resume.findOne({ studentId: userId });
 
     const resumeText = resume?.extractedText || "Resume not uploaded yet.";
 
-    // System prompt for personalized AI mentor
     const systemPrompt = `
 You are an **AI Mentor** helping students with interview preparation, resume review, career guidance and mock interviews.
 
@@ -54,7 +51,6 @@ ${resumeText}
 Now respond to the student's message below:
 `;
 
-    // Call Groq API
     const response = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       temperature: 0.3,

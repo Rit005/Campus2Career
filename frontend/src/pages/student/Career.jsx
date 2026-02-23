@@ -1,6 +1,5 @@
 import React from 'react';
 
-// Mock data for suggested career domains
 const careerDomains = [
   {
     title: 'Software Developer',
@@ -36,7 +35,6 @@ const careerDomains = [
   },
 ];
 
-// Current skills
 const currentSkills = [
   'JavaScript',
   'Python',
@@ -48,7 +46,6 @@ const currentSkills = [
   'Data Analysis',
 ];
 
-// Missing skills for each career path
 const missingSkills = {
   'Software Developer': ['System Design', 'Docker', 'AWS', 'CI/CD', 'TypeScript'],
   'Data Analyst': ['Advanced SQL', 'Tableau', 'R', 'Data Visualization', 'Business Intelligence'],
@@ -56,7 +53,6 @@ const missingSkills = {
   'Product Manager': ['User Research', 'Roadmapping', 'A/B Testing', 'Scrum', 'Stakeholder Management'],
 };
 
-// Career roadmap milestones
 const careerRoadmap = [
   {
     phase: 'Foundation (Year 1-2)',
@@ -104,17 +100,11 @@ const careerRoadmap = [
   },
 ];
 
-/**
- * Career Guidance Page
- * Displays career suggestions, skill gaps, and roadmap
- */
 const Career = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Page Title */}
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Career Guidance</h1>
 
-      {/* Suggested Career Domains */}
       <div className="mb-8">
         <div className="flex items-center mb-6">
           <div className="p-3 bg-blue-100 rounded-lg mr-4">
@@ -142,7 +132,6 @@ const Career = () => {
                 </div>
               </div>
 
-              {/* Match progress bar */}
               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
                 <div
                   className="bg-green-500 h-2 rounded-full"
@@ -181,7 +170,6 @@ const Career = () => {
         </div>
       </div>
 
-      {/* Skill Gap Analysis */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
         <div className="flex items-center mb-6">
           <div className="p-3 bg-yellow-100 rounded-lg mr-4">
@@ -196,7 +184,6 @@ const Career = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Current Skills */}
           <div>
             <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center">
               <svg className="w-5 h-5 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
@@ -216,7 +203,6 @@ const Career = () => {
             </div>
           </div>
 
-          {/* Skills to Learn */}
           <div>
             <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center">
               <svg className="w-5 h-5 mr-2 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
@@ -240,7 +226,6 @@ const Career = () => {
         </div>
       </div>
 
-      {/* Career Roadmap Timeline */}
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className="flex items-center mb-6">
           <div className="p-3 bg-purple-100 rounded-lg mr-4">
@@ -255,13 +240,11 @@ const Career = () => {
         </div>
 
         <div className="relative">
-          {/* Timeline line */}
           <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" />
 
           <div className="space-y-8">
             {careerRoadmap.map((milestone, index) => (
               <div key={index} className="relative flex items-start pl-14">
-                {/* Timeline dot */}
                 <div
                   className={`absolute left-4 w-5 h-5 rounded-full border-2 ${
                     milestone.status === 'completed'

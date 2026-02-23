@@ -7,7 +7,6 @@ const Home = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Handle OAuth callback token
   useEffect(() => {
     const token = searchParams.get("token");
     if (token) {
@@ -15,13 +14,11 @@ const Home = () => {
     }
   }, [searchParams, handleOAuthCallback]);
 
-  // Auto-redirect logged-in user based on role
   if (!loading && user?.role) {
     if (user.role === "student") return <Navigate to="/student/dashboard" replace />;
     if (user.role === "recruiter") return <Navigate to="/recruiter/dashboard" replace />;
   }
 
-  // Loading Spinner
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -33,7 +30,6 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
 
-  {/* 🔥 FIXED NAVBAR */}
   <nav className="bg-white shadow-sm fixed top-0 left-0 w-full z-50">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between h-16">
@@ -69,7 +65,6 @@ const Home = () => {
     </div>
   </nav>
 
-  {/* 🔥 Add padding so content doesn’t hide behind navbar */}
   <main className="pt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center animate-fade-in">
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6">
@@ -102,9 +97,7 @@ const Home = () => {
           )}
         </div>
 
-        {/* Features */}
         <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Feature 1 */}
           <div className="bg-white rounded-xl shadow-lg p-6 animate-slide-up">
             <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,7 +111,6 @@ const Home = () => {
             </p>
           </div>
 
-          {/* Feature 2 */}
           <div className="bg-white rounded-xl shadow-lg p-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
             <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,7 +124,6 @@ const Home = () => {
             </p>
           </div>
 
-          {/* Feature 3 */}
           <div className="bg-white rounded-xl shadow-lg p-6 animate-slide-up" style={{ animationDelay: "0.2s" }}>
             <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,7 +138,6 @@ const Home = () => {
           </div>
         </div>
 
-        {/* CTA Section */}
         <div className="mt-24 bg-primary-600 rounded-2xl shadow-xl p-8 md:p-12 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
             Ready to Start Your Career Journey?
@@ -167,7 +157,6 @@ const Home = () => {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="bg-white border-t mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">

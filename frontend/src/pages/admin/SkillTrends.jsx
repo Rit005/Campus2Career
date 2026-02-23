@@ -1,4 +1,3 @@
-// frontend/src/pages/admin/SkillTrends.jsx
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import adminAPI from "../../api/admin";
@@ -72,7 +71,6 @@ export default function SkillTrends() {
         )}
       </div>
 
-      {/* Skills Table */}
       <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
         <h3 className="text-lg font-semibold mb-4">Detailed View</h3>
         <table className="w-full">

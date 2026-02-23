@@ -51,7 +51,6 @@ const ChooseDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#f4f9fd] flex flex-col items-center justify-center px-4">
-      {/* Header */}
       <h1 className="text-4xl font-bold text-gray-900 mb-2">
         Welcome to Campus2Career
       </h1>
@@ -65,9 +64,7 @@ const ChooseDashboard = () => {
         </div>
       )}
 
-      {/* Cards */}
       <div className="grid md:grid-cols-2 gap-10 max-w-5xl w-full">
-        {/* Student Card */}
         <div
           onClick={() => handleRoleSelect("student")}
           className="bg-white rounded-2xl shadow-lg p-10 text-center cursor-pointer transition hover:shadow-2xl"
@@ -104,7 +101,6 @@ const ChooseDashboard = () => {
           </button>
         </div>
 
-        {/* Recruiter Card (Highlighted) */}
         <div
           onClick={() => handleRoleSelect("recruiter")}
           className="bg-white rounded-2xl shadow-lg p-10 text-center cursor-pointer transition hover:shadow-2xl border-2 border-blue-500"
@@ -140,7 +136,6 @@ const ChooseDashboard = () => {
         </div>
       </div>
 
-      {/* Footer */}
       <p className="mt-12 text-sm text-gray-400">
         You can switch between dashboards later in your settings
       </p>

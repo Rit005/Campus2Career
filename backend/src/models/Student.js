@@ -7,13 +7,11 @@ const studentSchema = new mongoose.Schema(
     branch: { type: String },
     year: { type: Number },
 
-    // AI extracted fields
     skills: { type: [String], default: [] },
     experienceSummary: { type: String, default: "" },
     education: { type: String, default: "" },
     suitableRoles: { type: [String], default: [] },
 
-    // Extracted metadata
     email: { type: String, default: "" },
     phone: { type: String, default: "" }
   },

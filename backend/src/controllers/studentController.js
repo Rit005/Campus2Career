@@ -2,9 +2,6 @@ import Application from "../models/Application.js";
 import Student from "../models/Student.js";
 import User from "../models/User.js";
 
-/* ============================================================
-   GET ALL STUDENTS (Recruiter View)
-============================================================ */
 export const getAllStudents = async (req, res) => {
   try {
     const students = await Student.find().populate("userId", "name email");
@@ -29,9 +26,6 @@ export const getAllStudents = async (req, res) => {
 };
 
 
-/* ============================================================
-   APPLY FOR JOB (Student)
-============================================================ */
 export const applyForJob = async (req, res) => {
   try {
     console.log("BODY:", req.body);
@@ -39,7 +33,6 @@ console.log("FILE:", req.file);
 console.log("USER:", req.user);
     const { jobId, jobRole, message, expectedSalary } = req.body;
 
-    // 🔹 Validate required fields
     if (!jobId || !jobRole) {
       return res.status(400).json({
         success: false,
@@ -54,7 +47,6 @@ console.log("USER:", req.user);
       });
     }
 
-    // 🔹 Prevent duplicate application
     const existing = await Application.findOne({
       jobId,
       studentId: req.user._id,
@@ -67,12 +59,10 @@ console.log("USER:", req.user);
       });
     }
 
-    // 🔹 Get user details from logged-in user
     const name = req.user.name;
     const email = req.user.email;
     const phone = req.user.phone || "Not Provided";
 
-    // 🔹 Create application
     const application = await Application.create({
       jobId,
       studentId: req.user._id,
@@ -83,7 +73,6 @@ console.log("USER:", req.user);
       phone,
       expectedSalary,
 
-      // 🔥 STORE FILE IN DATABASE
       resumeData: req.file.buffer,
       resumeName: req.file.originalname,
       resumeType: req.file.mimetype,

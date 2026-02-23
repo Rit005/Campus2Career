@@ -105,7 +105,6 @@ const Dashboard = () => {
 
   return (
     <>
-      {/* MAIN DASHBOARD */}
       <div
         className={`space-y-10 transition-all ${
           jobsModalOpen || studentsModalOpen ? "blur-sm pointer-events-none" : ""
@@ -129,7 +128,6 @@ const Dashboard = () => {
           </button>
         </div>
 
-        {/* CARDS */}
         <div className="grid md:grid-cols-4 gap-6">
           <Card title="🧑‍💼 Applicants" value={pipeline.applicants} color="blue" />
           <Card title="📌 Shortlisted" value={pipeline.shortlisted} color="green" />
@@ -162,7 +160,6 @@ const Dashboard = () => {
         />
       )}
 
-      {/* APPLY JOB MODAL – HIGHEST LAYER */}
       {applyModalOpen && selectedJob && (
         <ApplyJobModal
           job={selectedJob}
@@ -174,7 +171,6 @@ const Dashboard = () => {
   );
 };
 
-/* CARD */
 const Card = ({ title, value, color }) => (
   <div className="bg-white shadow-md border rounded-xl p-6 text-center">
     <h3 className="text-gray-600">{title}</h3>
@@ -182,7 +178,6 @@ const Card = ({ title, value, color }) => (
   </div>
 );
 
-/* SECTION */
 const FancySection = ({ title, list }) => (
   <div className="bg-white shadow-lg rounded-xl p-6 border">
     <h2 className="text-xl font-semibold mb-4">{title}</h2>

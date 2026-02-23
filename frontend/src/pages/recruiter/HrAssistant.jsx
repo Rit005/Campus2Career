@@ -12,7 +12,6 @@ const HrAssistant = () => {
   const [listening, setListening] = useState(false);
   const chatEndRef = useRef(null);
 
-  // Auto scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -51,7 +50,6 @@ const HrAssistant = () => {
     if (e.key === "Enter") sendMessage();
   };
 
-  /* 🎤 Voice Recognition */
   const handleMicClick = () => {
     if (!("webkitSpeechRecognition" in window)) {
       alert("Speech recognition not supported on this browser.");
@@ -72,13 +70,11 @@ const HrAssistant = () => {
   return (
     <div className="h-[80vh] flex flex-col bg-gradient-to-b from-gray-50 to-gray-100 p-4 rounded-xl shadow-lg">
 
-      {/* HEADER */}
       <h1 className="text-3xl font-bold text-gray-900 mb-3">🤖 HR Assistant</h1>
       <p className="text-gray-600 mb-4 text-sm">
         Ask: *“Interview questions”, “Evaluate candidate”, “Write JD”, “Screen resume”*
       </p>
 
-      {/* CHAT WINDOW */}
       <div className="flex-1 bg-white rounded-xl shadow-inner p-6 overflow-y-auto space-y-4 border border-gray-200">
         {messages.map((m, i) => (
           <div
@@ -96,10 +92,8 @@ const HrAssistant = () => {
         <div ref={chatEndRef} />
       </div>
 
-      {/* INPUT AREA */}
       <div className="flex gap-3 items-center mt-4">
 
-        {/* Mic Button */}
         <button
           onClick={handleMicClick}
           className={`p-3 rounded-full shadow border ${
@@ -109,7 +103,6 @@ const HrAssistant = () => {
           <Mic size={20} />
         </button>
 
-        {/* Text Input */}
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -118,7 +111,6 @@ const HrAssistant = () => {
           placeholder="Ask HR assistant..."
         />
 
-        {/* Send Button */}
         <button
           onClick={sendMessage}
           className="p-3 bg-blue-600 text-white rounded-full shadow hover:bg-blue-700"

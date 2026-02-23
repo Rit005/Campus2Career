@@ -23,8 +23,6 @@ const StudentNavbar = () => {
     <nav className="bg-white shadow sticky top-0 z-50">
       <div className="w-full px-10">
         <div className="h-20 flex items-center">
-
-          {/* LEFT */}
           <div className="flex items-center gap-4 mr-10">
             <div className="flex flex-col">
               <span className="text-2xl font-extrabold text-primary-600">
@@ -36,7 +34,7 @@ const StudentNavbar = () => {
             </div>
           </div>
 
-          {/* CENTER NAV */}
+    
           <div className="flex items-center gap-6 flex-1">
             <NavItem to="/student/dashboard" label="📊Dashboard" end />
             <NavItem to="/student/marksheet-upload" label="📤 Upload Marksheet" />
@@ -45,7 +43,6 @@ const StudentNavbar = () => {
             <NavItem to="/student/ai-mentor" label="🤖 AI Mentor" />
           </div>
 
-          {/* RIGHT */}
           <div className="flex items-center gap-8">
             <button
               onClick={() => navigate("/choose-dashboard")}
@@ -55,7 +52,6 @@ const StudentNavbar = () => {
               Switch Dashboard
             </button>
 
-            {/* Avatar */}
             <div className="relative group">
               <div className="w-10 h-10 rounded-full bg-primary-600 text-white
                               flex items-center justify-center font-bold cursor-pointer">
@@ -81,7 +77,6 @@ const StudentNavbar = () => {
               </div>
             </div>
 
-            {/* Logout */}
             <button
               onClick={handleLogout}
               className="flex items-center gap-1 text-red-600 hover:text-red-800 font-medium"

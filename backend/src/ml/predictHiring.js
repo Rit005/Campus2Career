@@ -10,7 +10,6 @@ export const predictHiringSuccess = (pipeline) => {
   const interviewRate = applicants ? interviews / applicants : 0;
   const applicationVolume = applicants / jobsPosted;
 
-  // Simple ML-style scoring formula
   const score =
     0.5 * shortlistRate +
     0.3 * interviewRate +

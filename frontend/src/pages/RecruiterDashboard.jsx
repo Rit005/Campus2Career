@@ -22,12 +22,9 @@ const RecruiterDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-
-      {/* Top Bar */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 h-16">
 
-          {/* Logo */}
           <div className="flex items-center space-x-2">
             <h1 className="text-xl font-bold text-primary-600">Campus2Career</h1>
             <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
@@ -35,10 +32,7 @@ const RecruiterDashboard = () => {
             </span>
           </div>
 
-          {/* Right User Area */}
           <div className="flex items-center space-x-4">
-
-            {/* Switch Dashboard Button */}
             <button
               onClick={() => navigate('/choose-dashboard')}
               className="flex items-center text-blue-600 hover:text-blue-800 transition"
@@ -47,7 +41,7 @@ const RecruiterDashboard = () => {
               Switch Dashboard
             </button>
 
-            {/* User Info */}
+
             <div className="flex items-center space-x-2">
               <UserCircle className="text-primary-600 w-8 h-8" />
               <span className="text-gray-700 font-medium">
@@ -55,7 +49,6 @@ const RecruiterDashboard = () => {
               </span>
             </div>
 
-            {/* Logout */}
             <button
               onClick={handleLogout}
               className="flex items-center text-red-600 hover:text-red-800 transition"
@@ -67,10 +60,7 @@ const RecruiterDashboard = () => {
         </div>
       </header>
 
-      {/* Main Section */}
       <main className="flex-1 max-w-7xl mx-auto px-6 py-10">
-
-        {/* Page Heading */}
         <div className="mb-8">
           <h2 className="text-3xl font-semibold text-gray-900">
             Recruiter Dashboard
@@ -80,7 +70,6 @@ const RecruiterDashboard = () => {
           </p>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
 
           <DashboardCard
@@ -113,7 +102,6 @@ const RecruiterDashboard = () => {
 
         </div>
 
-        {/* Tabs */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <nav className="flex border-b text-sm font-medium">
             {['overview', 'jobs', 'candidates', 'company'].map((tab) => (
@@ -143,7 +131,6 @@ const RecruiterDashboard = () => {
   );
 };
 
-/* ------------------ Reusable Components ------------------ */
 
 const DashboardCard = ({ title, value, icon, iconBg }) => (
   <div className="bg-white rounded-xl p-6 shadow-md flex items-center space-x-4 hover:shadow-lg transition">

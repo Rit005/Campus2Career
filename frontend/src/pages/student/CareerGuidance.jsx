@@ -53,7 +53,7 @@ const submitJobApplication = async ({
     const form = new FormData();
 
     form.append("jobId", jobId);
-    form.append("jobRole", selectedJob.jobTitle); // ✅ FIX
+    form.append("jobRole", selectedJob.jobTitle); 
     form.append("message", message || "");
     form.append("expectedSalary", expectedSalary || "");
     form.append("resume", resume);
@@ -123,7 +123,6 @@ const submitJobApplication = async ({
             </Grid>
           </Section>
 
- {/* ---- HIGHER STUDIES ---- */}
           <Section title="🎓 Higher Studies Recommendations">
             <h3 className="text-xl font-semibold mb-3">India (M.Tech)</h3>
             <Grid>
@@ -156,7 +155,7 @@ const submitJobApplication = async ({
               ))}
             </Grid>
           </Section>
- {/* ---- RECOMMENDED COLLEGES ---- */}
+
           <Section title="🏫 Recommended Colleges">
             <Grid>
               {profile.recommendedColleges?.map((c, i) => (
@@ -168,7 +167,6 @@ const submitJobApplication = async ({
             </Grid>
           </Section>
 
-          {/* ---- SKILL GAPS ---- */}
           <Section title="⚠️ Skill Gaps to Improve">
             <Grid>
               {profile.skillGaps?.map((g, i) => (
@@ -186,7 +184,6 @@ const submitJobApplication = async ({
             </Grid>
           </Section>
 
-          {/* ---- CERTIFICATIONS ---- */}
           <Section title="🎖 Recommended Certifications">
             <Grid>
               {profile.recommendedCertifications?.map((c, i) => (
@@ -202,7 +199,6 @@ const submitJobApplication = async ({
             </Grid>
           </Section>
 
-          {/* ---- PROJECTS ---- */}
           <Section title="🛠 Suggested Projects">
             <Grid>
               {profile.suggestedProjects?.map((p, i) => (
@@ -216,7 +212,6 @@ const submitJobApplication = async ({
             </Grid>
           </Section>
 
-          {/* ---- LEARNING ROADMAP ---- */}
           <Section title="📅 Learning Roadmap (6 Months)">
             <div className="space-y-6">
               {profile.learningRoadmap?.map((phase, i) => (
@@ -264,7 +259,6 @@ const submitJobApplication = async ({
   );
 };
 
-/* ================= HELPERS ================= */
 const Section = ({ title, children }) => (
   <div>
     <h2 className="text-2xl font-bold mb-4">{title}</h2>
@@ -280,7 +274,6 @@ const Card = ({ children }) => (
   <div className="bg-white border shadow p-5 rounded-lg">{children}</div>
 );
 
-/* ================= JOBS MODAL ================= */
 const JobsModal = ({ jobs, close, onApply }) => {
   const [search, setSearch] = useState("");
 

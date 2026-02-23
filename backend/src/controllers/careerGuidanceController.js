@@ -6,9 +6,6 @@ import Marksheet from "../models/Marksheet.js";
 import Resume from "../models/Resume.js";
 import { groq } from "../groqClient.js";
 
-/* ============================================================
-   GET ALL JOBS (STUDENT + RECRUITER USE)
-============================================================ */
 export const getAllJobs = async (req, res) => {
   try {
     const jobs = await Job.find().sort({ createdAt: -1 });
@@ -27,17 +24,10 @@ export const getAllJobs = async (req, res) => {
   }
 };
 
-/* ============================================================
-   ANALYZE CAREER
-============================================================ */
-/* ============================================================
-   ADVANCED CAREER ANALYSIS (Marksheets + Resume + 10th/12th)
-============================================================ */
 export const analyzeCareer = async (req, res) => {
   try {
     const studentId = req.user._id;
 
-    // Fetch academic + resume data
     const [marksheets, resume, academicSummary] = await Promise.all([
       Marksheet.find({ studentId }).sort({ semester: 1 }),
       Resume.findOne({ studentId }),
@@ -51,7 +41,6 @@ export const analyzeCareer = async (req, res) => {
       });
     }
 
-    // Extract consolidated subject performance
     const consolidatedSubjects = [];
 
     marksheets.forEach((sheet) => {
@@ -140,14 +129,12 @@ RESPOND WITH JSON ONLY.
       messages: [{ role: "user", content: prompt }],
     });
 
-    // Strict JSON extraction
     let raw = response.choices[0].message.content;
     raw = raw.substring(raw.indexOf("{"));
     raw = raw.substring(0, raw.lastIndexOf("}") + 1);
 
     const careerData = JSON.parse(raw);
 
-    // Save updated career profile
     await CareerProfile.findOneAndUpdate(
       { studentId },
       { ...careerData, lastAnalyzed: new Date(), updatedAt: new Date() },
@@ -165,10 +152,6 @@ RESPOND WITH JSON ONLY.
   }
 };
 
-
-/* ============================================================
-   GET CAREER PROFILE (Student)
-============================================================ */
 export const getCareerProfile = async (req, res) => {
   try {
     const profile = await CareerProfile.findOne({ studentId: req.user._id });

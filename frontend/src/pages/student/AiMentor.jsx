@@ -13,7 +13,6 @@ const AiMentor = () => {
 
   const chatEndRef = useRef(null);
 
-  // 🚀 Auto-scroll to bottom
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -25,7 +24,6 @@ const AiMentor = () => {
 
     const userMessage = input;
 
-    // Add user message
     setMessages((prev) => [...prev, { from: "user", text: userMessage }]);
     setInput("");
 
@@ -52,7 +50,6 @@ const AiMentor = () => {
     }
   };
 
-  // ENTER key sends message
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -60,7 +57,6 @@ const AiMentor = () => {
     }
   };
 
-  /* 🎤 Voice Recognition */
   const handleMicClick = () => {
     if (!("webkitSpeechRecognition" in window)) {
       alert("Speech recognition not supported on this browser.");
@@ -91,7 +87,6 @@ const AiMentor = () => {
         Ask: *"Mock interview", "Improve my resume", "Explain DBMS", "Give study plan"*
       </p>
 
-      {/* Chat Window */}
       <div className="flex-1 bg-white rounded-xl shadow-inner p-6 overflow-y-auto space-y-4 border border-gray-200">
         {messages.map((m, i) => (
           <div
@@ -109,9 +104,7 @@ const AiMentor = () => {
         <div ref={chatEndRef} />
       </div>
 
-      {/* Input Section */}
       <div className="flex gap-3 items-center mt-4">
-        {/* 🎤 Mic Button */}
         <button
           onClick={handleMicClick}
           className={`p-3 rounded-full shadow border ${
@@ -121,7 +114,6 @@ const AiMentor = () => {
           <Mic size={20} />
         </button>
 
-        {/* Text Input */}
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -130,7 +122,6 @@ const AiMentor = () => {
           placeholder="Ask your mentor..."
         />
 
-        {/* Send Button */}
         <button
           onClick={sendMessage}
           className="p-3 bg-blue-600 text-white rounded-full shadow hover:bg-blue-700"

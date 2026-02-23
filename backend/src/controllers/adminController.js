@@ -1,18 +1,12 @@
-// backend/src/controllers/adminController.js
 import User from "../models/User.js";
 import Resume from "../models/Resume.js";
 import Marksheet from "../models/Marksheet.js";
 import Student from "../models/Student.js";
 
-// ============================================================
-// 1️⃣ GET /api/admin/overview
-// Returns: totalUsers, totalStudents, totalRecruiters, totalResumesUploaded, totalMarksheetsUploaded, totalActiveUsers
-// ============================================================
 export const getOverview = async (req, res) => {
   try {
-    // Get total counts using aggregation
+
     const [userCounts, resumeCount, marksheetCount, activeUsers] = await Promise.all([
-      // User counts by role
       User.aggregate([
         {
           $group: {
@@ -21,17 +15,13 @@ export const getOverview = async (req, res) => {
           }
         }
       ]),
-      // Total resumes
       Resume.countDocuments(),
-      // Total marksheets
       Marksheet.countDocuments(),
-      // Active users in last 7 days
       User.countDocuments({
         updatedAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
       })
     ]);
 
-    // Calculate totals from aggregation
     const totalStudents = userCounts.find(u => u._id === 'student')?.count || 0;
     const totalRecruiters = userCounts.find(u => u._id === 'recruiter')?.count || 0;
     const totalUsers = totalStudents + totalRecruiters;
@@ -56,36 +46,30 @@ export const getOverview = async (req, res) => {
   }
 };
 
-// ============================================================
-// 2️⃣ GET /api/admin/users
-// Returns: paginated list of users with filters
-// ============================================================
 export const getUsers = async (req, res) => {
   try {
     const {
       page = 1,
       limit = 10,
       role,
-      status, // 'active' or 'blocked'
+      status, 
       search
     } = req.query;
 
-    // Build query
     const query = {};
 
-    // Filter by role
+
     if (role && ['student', 'recruiter', 'admin'].includes(role)) {
       query.role = role;
     }
 
-    // Filter by status
     if (status === 'active') {
       query.isBlocked = false;
     } else if (status === 'blocked') {
       query.isBlocked = true;
     }
 
-    // Search by name or email
+
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -93,7 +77,6 @@ export const getUsers = async (req, res) => {
       ];
     }
 
-    // Execute paginated query
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const users = await User.find(query)
       .select('-password')
@@ -124,14 +107,11 @@ export const getUsers = async (req, res) => {
   }
 };
 
-// ============================================================
-// 3️⃣ PATCH /api/admin/users/:id/block
-// Block or unblock a user
-// ============================================================
+
 export const toggleUserBlock = async (req, res) => {
   try {
     const { id } = req.params;
-    const { block } = req.body; // true to block, false to unblock
+    const { block } = req.body; 
 
     const user = await User.findById(id);
     if (!user) {
@@ -141,7 +121,6 @@ export const toggleUserBlock = async (req, res) => {
       });
     }
 
-    // Prevent blocking admin users
     if (user.role === 'admin') {
       return res.status(403).json({
         success: false,
@@ -174,10 +153,6 @@ export const toggleUserBlock = async (req, res) => {
   }
 };
 
-// ============================================================
-// 4️⃣ DELETE /api/admin/users/:id
-// Delete a user
-// ============================================================
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -190,7 +165,6 @@ export const deleteUser = async (req, res) => {
       });
     }
 
-    // Prevent deleting admin users
     if (user.role === 'admin') {
       return res.status(403).json({
         success: false,
@@ -198,9 +172,8 @@ export const deleteUser = async (req, res) => {
       });
     }
 
-    // Delete related data based on role
+
     if (user.role === 'student') {
-      // Delete student's resumes and marksheets
       await Promise.all([
         Resume.deleteMany({ studentId: user._id }),
         Marksheet.deleteMany({ studentId: user._id }),
@@ -223,25 +196,16 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-// ============================================================
-// 5️⃣ GET /api/admin/students/at-risk
-// Returns: students with cgpa < 6 OR percentage < 60
-// ============================================================
 export const getAtRiskStudents = async (req, res) => {
   try {
-    // Get all students (users with role: 'student')
     const students = await User.find({ role: 'student' })
       .select('_id name email cgpa percentage')
       .lean();
 
-    // Filter at-risk students: cgpa < 6 OR percentage < 60
     const atRiskStudents = students
       .map(student => {
         const cgpa = student.cgpa != null ? parseFloat(student.cgpa) : null;
         const percentage = student.percentage != null ? parseFloat(student.percentage) : null;
-        
-        // Check if at-risk: cgpa < 6 OR percentage < 60
-        // Handle missing values gracefully - don't flag as at-risk if fields are missing
         const isAtRisk = (cgpa !== null && cgpa < 6) || (percentage !== null && percentage < 60);
         
         if (isAtRisk) {
@@ -270,10 +234,7 @@ export const getAtRiskStudents = async (req, res) => {
   }
 };
 
-// ============================================================
-// 6️⃣ GET /api/admin/skill-trends
-// Returns: aggregate top 10 skills from Resume collection
-// ============================================================
+
 export const getSkillTrends = async (req, res) => {
   try {
     const skillTrends = await Resume.aggregate([
@@ -296,7 +257,6 @@ export const getSkillTrends = async (req, res) => {
       }
     ]);
 
-    // Alternative simpler approach if the above doesn't work
     const resumes = await Resume.find({ skills: { $exists: true, $ne: [] } }).select('skills');
     
     const skillCount = {};
@@ -327,16 +287,12 @@ export const getSkillTrends = async (req, res) => {
   }
 };
 
-// ============================================================
-// BONUS: GET /api/admin/analytics/growth
-// Returns: user growth data for charts
-// ============================================================
 export const getGrowthAnalytics = async (req, res) => {
   try {
     const { period = '30' } = req.query;
     const days = parseInt(period);
 
-    // Get user registrations by date
+  
     const userGrowth = await User.aggregate([
       {
         $match: {
@@ -360,7 +316,6 @@ export const getGrowthAnalytics = async (req, res) => {
       { $sort: { _id: 1 } }
     ]);
 
-    // Get resume uploads by date
     const resumeUploads = await Resume.aggregate([
       {
         $match: {
@@ -378,7 +333,6 @@ export const getGrowthAnalytics = async (req, res) => {
       { $sort: { _id: 1 } }
     ]);
 
-    // Get marksheet uploads by date
     const marksheetUploads = await Marksheet.aggregate([
       {
         $match: {

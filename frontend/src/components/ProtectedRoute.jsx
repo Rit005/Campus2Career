@@ -5,7 +5,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, authChecked, refreshUser } = useAuth();
   const location = useLocation();
 
-  // 🔄 First time only: verify token
   if (!authChecked) {
     refreshUser();
     return (
@@ -15,19 +14,15 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     );
   }
 
-  // ❌ Not logged in
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // 🧠 Role not selected
   if (!user.role && location.pathname !== "/choose-dashboard") {
     return <Navigate to="/choose-dashboard" replace />;
   }
 
-  // 🔐 Role restriction
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // Redirect based on user's role
     if (user.role === "student") {
       return <Navigate to="/student/dashboard" replace />;
     } else if (user.role === "recruiter") {
@@ -35,7 +30,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     } else if (user.role === "admin") {
       return <Navigate to="/admin/dashboard" replace />;
     }
-    // If role not recognized, go to choose dashboard
     return <Navigate to="/choose-dashboard" replace />;
   }
 

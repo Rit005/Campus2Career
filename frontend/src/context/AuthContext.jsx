@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import {
   createContext,
   useContext,
@@ -6,11 +5,11 @@ import {
   useCallback,
   useEffect,
 } from "react";
-import { authAPI } from "../api/api";  // MUST use withCredentials:true inside api.js
+import { authAPI } from "../api/api";
 
 const AuthContext = createContext(null);
 
-// Hook
+
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
@@ -23,18 +22,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  /* -----------------------------------------------------
-     REFRESH USER — Reads JWT COOKIE sent by backend
-  ------------------------------------------------------ */
+
   const refreshUser = useCallback(async () => {
     try {
-      const res = await authAPI.verifyToken(); // cookie-based auth
+      const res = await authAPI.verifyToken(); 
       const usr = res.data.data.user;
 
       setUser(usr);
       setAuthChecked(true);
 
-      // Save role only (role is harmless & needed in UI)
       if (usr?.role) {
         localStorage.setItem("role", usr.role);
       }
@@ -47,9 +43,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  /* -----------------------------------------------------
-     LOGIN — COOKIE IS SET AUTOMATICALLY
-  ------------------------------------------------------ */
   const login = useCallback(
   async (email, password) => {
     try {
@@ -59,12 +52,11 @@ export const AuthProvider = ({ children }) => {
       const res = await authAPI.login({ email, password });
 
       if (res.data.success) {
-        // Refresh user from token cookie
         const usr = await refreshUser();
 
         return {
           success: true,
-          data: { user: usr }, // ⭐ RETURN ROLE BACK TO CALLER
+          data: { user: usr }, 
         };
       }
 
@@ -84,9 +76,6 @@ export const AuthProvider = ({ children }) => {
 );
 
 
-  /* -----------------------------------------------------
-     SIGNUP — Same logic as login
-  ------------------------------------------------------ */
   const signup = useCallback(
     async (name, email, password) => {
       try {
@@ -115,12 +104,9 @@ export const AuthProvider = ({ children }) => {
     [refreshUser]
   );
 
-  /* -----------------------------------------------------
-     LOGOUT — Clears cookie server-side
-  ------------------------------------------------------ */
   const logout = useCallback(async () => {
     try {
-      await authAPI.logout(); // backend clears cookie
+      await authAPI.logout(); 
     } catch {}
 
     localStorage.removeItem("role");
@@ -128,9 +114,6 @@ export const AuthProvider = ({ children }) => {
     setAuthChecked(false);
   }, []);
 
-  /* -----------------------------------------------------
-     OAUTH support
-  ------------------------------------------------------ */
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
   const loginWithGoogle = () => {
@@ -149,16 +132,10 @@ export const AuthProvider = ({ children }) => {
 
   const clearError = () => setError(null);
 
-  /* -----------------------------------------------------
-     AUTO VERIFY ON PAGE LOAD
-  ------------------------------------------------------ */
   useEffect(() => {
     refreshUser();
   }, [refreshUser]);
 
-  /* -----------------------------------------------------
-     PROVIDER VALUE
-  ------------------------------------------------------ */
   return (
     <AuthContext.Provider
       value={{

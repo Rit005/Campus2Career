@@ -1,18 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-
-/* AUTH */
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import OAuthCallback from "./pages/OAuthCallback";
-
-/* COMMON */
 import Home from "./pages/Home";
 import ChooseDashboard from "./pages/ChooseDashboard";
 import RouteRedirect from "./pages/RouteRedirect";
-
-/* STUDENT */
 import StudentLayout from "./pages/student/StudentLayout";
 import StudentDashboard from "./pages/StudentDashboard";
 import Career from "./pages/student/Career";
@@ -22,15 +16,11 @@ import ResumeAnalyzer from "./pages/student/ResumeAnalyzer";
 import MarksheetUpload from "./pages/student/MarksheetUpload";
 import AcademicDashboard from "./pages/student/AcademicDashboard";
 import CareerGuidance from "./pages/student/CareerGuidance";
-
-/* RECRUITER */
 import RecruiterLayout from "./pages/recruiter/RecruiterLayout";
 import Dashboard from "./pages/recruiter/Dashboard";
 import Matching from "./pages/recruiter/Matching";
 import RecruiterAnalytics from "./pages/recruiter/Analytics";
 import HrAssistant from "./pages/recruiter/HrAssistant";
-
-/* ADMIN */
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Users from "./pages/admin/Users";
@@ -45,15 +35,12 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-
-          {/* PUBLIC ROUTES */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/auth/callback" element={<OAuthCallback />} />
           <Route path="/redirect" element={<RouteRedirect />} />
 
-          {/* CHOOSE DASHBOARD */}
           <Route
             path="/choose-dashboard"
             element={
@@ -63,7 +50,6 @@ function App() {
             }
           />
 
-          {/* ---------------- STUDENT ROUTES ---------------- */}
           <Route
             path="/student"
             element={
@@ -73,7 +59,6 @@ function App() {
             }
           >
 
-            {/* Dashboard & Other Pages */}
             <Route index element={<StudentDashboard />} />
             <Route path="dashboard" element={<StudentDashboard />} />
             <Route path="resume-analyzer" element={<ResumeAnalyzer />} />
@@ -86,7 +71,6 @@ function App() {
 
           </Route>
 
-          {/* ---------------- RECRUITER ROUTES ---------------- */}
           <Route
             path="/recruiter"
             element={
@@ -101,7 +85,6 @@ function App() {
             <Route path="hr-assistant" element={<HrAssistant />} />
           </Route>
 
-          {/* ---------------- ADMIN ROUTES ---------------- */}
           <Route
             path="/admin"
             element={

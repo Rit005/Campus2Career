@@ -1,9 +1,7 @@
 import multer from "multer";
 
-// ⭐ Store files directly in memory (not on disk)
 const storage = multer.memoryStorage();
 
-// ⭐ Allowed MIME types
 const ALLOWED_TYPES = [
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -19,7 +17,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 export const uploadResume = multer({
-  storage, // ⬅️ Store file in Buffer (MongoDB friendly)
+  storage, 
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits: { fileSize: 5 * 1024 * 1024 }, 
 });

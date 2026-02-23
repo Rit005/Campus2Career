@@ -1,16 +1,20 @@
-// src/api/student.js
+
 import axios from "axios";
 
-// Create dedicated axios instance for student APIs
 const StudentAPI = axios.create({
   baseURL: "http://localhost:5001/api/student",
   withCredentials: true,
 });
 
 export const studentAPI = {
-  /* ============================================================
-     RESUME
-  ============================================================ */
+
+saveProfile: (data) => axios.post("/api/profile/save", data),
+  getProfile: () => axios.get("/api/profile/get"),
+  addSkill: (skill) => axios.post("/api/profile/skill/add", { skill }),
+  removeSkill: (skill) => axios.post("/api/profile/skill/remove", { skill }),
+  addInterest: (interest) => axios.post("/api/profile/interest/add", { interest }),
+  removeInterest: (interest) => axios.post("/api/profile/interest/remove", { interest }),
+
   analyzeResume: (formData) =>
     StudentAPI.post("/resume", formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -18,9 +22,6 @@ export const studentAPI = {
 
   getResume: () => StudentAPI.get("/resume"),
 
-  /* ============================================================
-     MARKSHEET
-  ============================================================ */
   uploadMarksheet: (formData) =>
     StudentAPI.post("/marksheet", formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -32,23 +33,14 @@ export const studentAPI = {
 
   getSemesterWise: () => StudentAPI.get("/marksheet/semester-wise"),
 
-  /* ============================================================
-     ACADEMIC DASHBOARD
-  ============================================================ */
   getAcademicDashboard: () => StudentAPI.get("/dashboard/academic"),
 
   getAcademicAnalytics: () => StudentAPI.get("/dashboard/analytics"),
 
-  /* ============================================================
-     CAREER GUIDANCE
-  ============================================================ */
   analyzeCareer: () => StudentAPI.post("/career/analyze"),
 
   getCareerProfile: () => StudentAPI.get("/career/profile"),
 
-  /* ============================================================
-     JOBS (Student + Recruiter)
-  ============================================================ */
   getAllJobs: () => StudentAPI.get("/jobs"),
 
   applyForJob: (formData) =>
@@ -56,14 +48,9 @@ export const studentAPI = {
       headers: { "Content-Type": "multipart/form-data" },
     }),
 
-  /* ============================================================
-     STUDENTS (Recruiter Dashboard)
-  ============================================================ */
   getAllStudents: () => StudentAPI.get("/students"),
 
-  /* ============================================================
-     AI MENTOR
-  ============================================================ */
+
   aiMentor: (data) => StudentAPI.post("/mentor-assistant", data),
 };
 

@@ -1,4 +1,3 @@
-// controllers/opportunitiesController.js
 import Resume from "../models/Resume.js";
 import Job from "../models/Job.js";
 

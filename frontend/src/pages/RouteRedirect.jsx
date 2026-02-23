@@ -5,14 +5,8 @@ const RouteRedirect = () => {
   const { user, loading } = useAuth();
 
   if (loading) return null;
-
-  // If no user → stay on homepage, DO NOT redirect
   if (!user) return <Navigate to="/" replace />;
-
-  // If logged in but no role
   if (!user.role) return <Navigate to="/choose-dashboard" replace />;
-
-  // If logged in with role
   if (user.role === "student")
     return <Navigate to="/student/dashboard" replace />;
 

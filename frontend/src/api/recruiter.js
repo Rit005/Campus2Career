@@ -12,7 +12,6 @@ const recruiterAPI = {
   matchCandidates: (data) => API.post("/match", data),
   dashboard: (data) => API.post("/dashboard", data),
 
-  // ✅ Correct GET request
   getAnalytics: () => API.get("/analytics"),
 
   hrAssistant: (data) => API.post("/hr-assistant", data),

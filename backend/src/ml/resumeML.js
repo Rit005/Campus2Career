@@ -1,5 +1,3 @@
-// src/ml/resumeML.js
-
 export const DOMAIN_SKILLS = {
   "Software Engineering": ["java", "python", "c++", "dsa", "oop", "sql"],
   "Web Development": ["html", "css", "javascript", "react", "node", "mongodb"],

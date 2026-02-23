@@ -18,7 +18,6 @@ import {
   PolarRadiusAxis,
 } from "recharts";
 
-/* ---------------- EMPTY DEFAULT STATE ---------------- */
 
 const EMPTY_ANALYTICS = {
   subjectWise: [],
@@ -26,8 +25,6 @@ const EMPTY_ANALYTICS = {
   progressTrend: [],
   consistencyScore: 0,
 };
-
-/* ---------------- HELPER ---------------- */
 
 const getGradeColor = (grade) => {
   if (!grade) return "text-gray-600 bg-gray-100";
@@ -37,13 +34,10 @@ const getGradeColor = (grade) => {
   return "text-red-700 bg-red-100";
 };
 
-/* ---------------- COMPONENT ---------------- */
-
 const Analytics = () => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /* ---------------- FETCH DATA ---------------- */
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -65,7 +59,6 @@ const Analytics = () => {
     fetchData();
   }, []);
 
-  /* ---------------- LOADING STATE ---------------- */
   if (loading) {
     return (
       <div className="text-center mt-20 text-xl text-gray-500 animate-pulse">
@@ -74,7 +67,6 @@ const Analytics = () => {
     );
   }
 
-  /* ---------------- NO MARKSHEET STATE ---------------- */
   if (!analytics) {
     return (
       <div className="text-center mt-20 space-y-6">
@@ -97,7 +89,6 @@ const Analytics = () => {
     );
   }
 
-  /* ---------------- SAFE DESTRUCTURE ---------------- */
 
   const {
     subjectWise = [],
@@ -109,7 +100,6 @@ const Analytics = () => {
   return (
     <div className="space-y-10">
 
-      {/* HEADER */}
       <div>
         <h2 className="text-3xl font-bold text-gray-900">
           Analytics & Reports
@@ -119,7 +109,6 @@ const Analytics = () => {
         </p>
       </div>
 
-      {/* ---------------- SUBJECT TABLE ---------------- */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="px-6 py-4 border-b">
           <h3 className="text-lg font-semibold">
@@ -192,10 +181,8 @@ const Analytics = () => {
         </table>
       </div>
 
-      {/* ---------------- RADAR + BAR ---------------- */}
       <div className="grid lg:grid-cols-2 gap-6">
 
-        {/* RADAR */}
         <div className="bg-white p-6 rounded-xl shadow">
           <h3 className="font-semibold mb-4">
             Strengths & Weaknesses
@@ -223,7 +210,6 @@ const Analytics = () => {
           )}
         </div>
 
-        {/* BAR */}
         <div className="bg-white p-6 rounded-xl shadow">
           <h3 className="font-semibold mb-4">
             Progress Comparison
@@ -249,7 +235,6 @@ const Analytics = () => {
         </div>
       </div>
 
-      {/* ---------------- CONSISTENCY SCORE ---------------- */}
       <div className="bg-white p-6 rounded-xl shadow">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-semibold">Consistency Score</h3>

@@ -1,10 +1,4 @@
-// controllers/JobController.js
-
 import Job from "../models/Job.js";
-
-/* ====================================================
-   POST A JOB  (Recruiter)
-==================================================== */
 export const postJob = async (req, res) => {
   try {
     const {
@@ -16,7 +10,7 @@ export const postJob = async (req, res) => {
       requiredSkills = [],
     } = req.body;
 
-    // Validate
+
     if (!jobTitle || !company || !jobLocation || !jobDescription) {
       return res.status(400).json({
         success: false,
@@ -24,7 +18,6 @@ export const postJob = async (req, res) => {
       });
     }
 
-    // Create job with CORRECT field names
     const job = await Job.create({
       recruiterId: req.user._id,
       jobTitle,
@@ -49,10 +42,6 @@ export const postJob = async (req, res) => {
   }
 };
 
-
-/* ====================================================
-   GET ALL JOBS CREATED BY LOGGED-IN RECRUITER
-==================================================== */
 export const getMyJobs = async (req, res) => {
   try {
     const jobs = await Job.find({ recruiterId: req.user._id }).sort({
@@ -71,9 +60,8 @@ export const getMyJobs = async (req, res) => {
     });
   }
 };
-/* ====================================================
-   DELETE A JOB (Recruiter Only)
-==================================================== */
+
+
 export const deleteJob = async (req, res) => {
   try {
     const jobId = req.params.id;
@@ -87,7 +75,7 @@ export const deleteJob = async (req, res) => {
       });
     }
 
-    // Only allow owner to delete
+
     if (job.recruiterId.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
@@ -102,7 +90,7 @@ export const deleteJob = async (req, res) => {
       message: "Job deleted successfully",
     });
   } catch (err) {
-    console.error("❌ Delete Job Error:", err);
+    console.error(" Delete Job Error:", err);
     return res.status(500).json({
       success: false,
       message: "Failed to delete job",
@@ -141,7 +129,7 @@ export const getAllJobs = async (req, res) => {
       jobs,
     });
   } catch (err) {
-    console.error("❌ Get All Jobs Error:", err);
+    console.error("Get All Jobs Error:", err);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch jobs",

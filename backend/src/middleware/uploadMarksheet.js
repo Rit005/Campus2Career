@@ -1,9 +1,7 @@
 import multer from "multer";
 
-// ⭐ Store marksheets directly in MongoDB using memory storage
 const storage = multer.memoryStorage();
 
-// ⭐ Allowed MIME types
 const allowedTypes = [
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -18,9 +16,8 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// ⭐ FIXED: Named export uploadMarksheet
 export const uploadMarksheet = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 }, 
 });

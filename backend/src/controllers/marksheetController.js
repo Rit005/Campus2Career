@@ -13,9 +13,7 @@ import {
   predictPlacementProbability,
 } from "../ml/academicML.js";
 
-/* ============================================================
-   RAW TEXT EXTRACTION
-============================================================ */
+
 const extractTextFromFile = async (buffer, mimeType) => {
   if (mimeType === "application/pdf") {
     const data = await pdfParse(buffer);
@@ -35,9 +33,7 @@ const extractTextFromFile = async (buffer, mimeType) => {
   throw new Error("Unsupported file format");
 };
 
-/* ============================================================
-   FALLBACK GRADE
-============================================================ */
+
 const autoAssignGrade = (percentage) => {
   if (percentage >= 80) return "A";
   if (percentage >= 70) return "B";
@@ -46,9 +42,6 @@ const autoAssignGrade = (percentage) => {
   return "F";
 };
 
-/* ============================================================
-   MARKSHEET PARSER
-============================================================ */
 const parseMarksheetProperly = (text) => {
   const subjectRegex = /^[A-Z]{2,4}\s*\d+-[A-Za-z0-9\s&()]+/gm;
   const subjectsUnique = [...new Set(text.match(subjectRegex) || [])];
@@ -88,9 +81,7 @@ const parseMarksheetProperly = (text) => {
   };
 };
 
-/* ============================================================
-   SANITIZERS
-============================================================ */
+
 const sanitizeNumber = (v) => {
   if (typeof v === "number") return v;
   if (typeof v === "string") return Number(v);
@@ -107,9 +98,7 @@ const sanitizeString = (v) => {
   return "";
 };
 
-/* ============================================================
-   UPLOAD MARKSHEET
-============================================================ */
+
 export const uploadMarksheetController = async (req, res) => {
   try {
     if (!req.file)
@@ -128,7 +117,7 @@ export const uploadMarksheetController = async (req, res) => {
         message: "Could not extract subject data",
       });
 
-    /* SUBJECT STRUCTURE */
+
     const subjects = parsed.subjects.map((sub) => {
       const pct = (sub.marks / sub.maxMarks) * 100;
       return {
@@ -157,7 +146,6 @@ export const uploadMarksheetController = async (req, res) => {
       });
     }
 
-    /* CREATE MARKSHEET */
     const saved = await Marksheet.create({
       studentId: req.user._id,
       semester: parsed.semester || req.body.semester,
@@ -172,25 +160,22 @@ export const uploadMarksheetController = async (req, res) => {
       uploadedAt: new Date(),
     });
 
-    /* ============================================================
-       GLOBAL ML ANALYSIS
-    ============================================================ */
+
     const allMarksheets = await Marksheet.find({
       studentId: req.user._id,
     }).sort({ semester: 1 });
 
-    /* SEMESTER TREND */
     const semesterTrend = allMarksheets.map((m) => ({
       semester: m.semester,
       percentage: Number(m.percentage),
     }));
 
-    /* OVERALL PERFORMANCE */
+
     const overallPerformance =
       allMarksheets.reduce((a, m) => a + Number(m.percentage), 0) /
       allMarksheets.length;
 
-    /* SUBJECT-WISE GLOBAL PERFORMANCE */
+    
     const subjectStats = {};
     allMarksheets.forEach((m) => {
       m.subjects.forEach((sub) => {
@@ -210,7 +195,6 @@ export const uploadMarksheetController = async (req, res) => {
 
     const globalWeakSubjects = detectWeakSubjects(subjectWisePerformance);
 
-    /* ML PREDICTIONS */
     const predictedDomain = sanitizeString(
       predictAcademicDomain(subjectWisePerformance)
     );
@@ -244,13 +228,11 @@ export const uploadMarksheetController = async (req, res) => {
       predictPlacementProbability(overallPerformance, careerReadiness)
     );
 
-    /* CLEAR OLD ML INSIGHTS */
     await Marksheet.updateMany(
       { studentId: req.user._id },
       { $unset: { mlInsights: "" } }
     );
 
-    /* WRITE ML INSIGHTS ONLY ON NEWEST MARKSHEET */
     await Marksheet.findByIdAndUpdate(saved._id, {
       mlInsights: {
         predictedStrongDomain: predictedDomain,
@@ -263,9 +245,6 @@ export const uploadMarksheetController = async (req, res) => {
         placementProbability,
       },
     });
-
-    /* IMPORTANT FIX — DO NOT SAVE AGAIN */
-    // await saved.save();  // ❌ REMOVED
 
     res.json({
       success: true,
@@ -290,9 +269,6 @@ export const uploadMarksheetController = async (req, res) => {
   }
 };
 
-/* ============================================================
-   GET ALL MARKSHEETS
-============================================================ */
 export const getAllMarksheets = async (req, res) => {
   try {
     const list = await Marksheet.find({
@@ -308,9 +284,7 @@ export const getAllMarksheets = async (req, res) => {
   }
 };
 
-/* ============================================================
-   DELETE MARKSHEET
-============================================================ */
+
 export const deleteMarksheet = async (req, res) => {
   try {
     await Marksheet.findOneAndDelete({
@@ -327,9 +301,6 @@ export const deleteMarksheet = async (req, res) => {
   }
 };
 
-/* ============================================================
-   DASHBOARD ANALYTICS
-============================================================ */
 export const getAcademicDashboard = async (req, res) => {
   try {
     const marksheets = await Marksheet.find({
@@ -346,7 +317,6 @@ export const getAcademicDashboard = async (req, res) => {
         },
       });
 
-    /* Subject Aggregation */
     const subjectStats = {};
     marksheets.forEach((m) => {
       m.subjects.forEach((s) => {

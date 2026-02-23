@@ -15,16 +15,12 @@ const ResumeAnalyzer = () => {
   const [missingSkills, setMissingSkills] = useState([]);
   const [recommendedProjects, setRecommendedProjects] = useState([]);
 
-  // ⭐ ML Fields
   const [predictedDomain, setPredictedDomain] = useState("");
   const [confidence, setConfidence] = useState(0);
   const [resumeStrength, setResumeStrength] = useState(0);
 
   const [dragActive, setDragActive] = useState(false);
 
-  /* ============================================================
-     LOAD PREVIOUS RESUME
-  ============================================================ */
   useEffect(() => {
     const loadResume = async () => {
       try {
@@ -40,7 +36,6 @@ const ResumeAnalyzer = () => {
           setMissingSkills(d.missing_skills || []);
           setRecommendedProjects(d.project_recommendations || []);
 
-          // ML Fields
           setPredictedDomain(d.predictedDomain || "");
           setConfidence(d.domainConfidence || 0);
           setResumeStrength(d.resumeStrengthScore || 0);
@@ -53,9 +48,6 @@ const ResumeAnalyzer = () => {
     loadResume();
   }, []);
 
-  /* ============================================================
-     FILE HANDLING
-  ============================================================ */
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -73,9 +65,6 @@ const ResumeAnalyzer = () => {
     if (e.target.files?.[0]) setFile(e.target.files[0]);
   };
 
-  /* ============================================================
-     ANALYZE RESUME
-  ============================================================ */
   const analyzeResume = async () => {
     if (!file) return alert("Please upload a resume.");
 
@@ -97,7 +86,6 @@ const ResumeAnalyzer = () => {
       setMissingSkills(d.missing_skills || []);
       setRecommendedProjects(d.project_recommendations || []);
 
-      // ⭐ ML DATA
       setPredictedDomain(ml?.predictedDomain || "");
       setConfidence(ml?.confidence || 0);
       setResumeStrength(ml?.resumeStrengthScore || 0);
@@ -116,7 +104,6 @@ const ResumeAnalyzer = () => {
         📄 Resume Analyzer
       </h1>
 
-      {/* Upload Box */}
       <div
         className={`border-2 border-dashed rounded-xl p-10 text-center transition-all
         ${dragActive ? "border-blue-600 bg-blue-50" : "border-gray-300 bg-white"}`}
@@ -149,7 +136,6 @@ const ResumeAnalyzer = () => {
         )}
       </div>
 
-      {/* Analyze Button */}
       <button
         onClick={analyzeResume}
         disabled={!file || loading}
@@ -159,12 +145,10 @@ const ResumeAnalyzer = () => {
         Analyze Resume
       </button>
 
-      {/* ================= ML INSIGHTS SECTION ================= */}
       {(predictedDomain || resumeStrength > 0) && (
         <Section title="🧠 AI Resume Intelligence">
           <div className="space-y-6">
 
-            {/* Predicted Domain */}
             <div>
               <h3 className="font-semibold text-lg flex items-center gap-2">
                 <Brain className="h-5 w-5 text-purple-600" />
@@ -178,7 +162,6 @@ const ResumeAnalyzer = () => {
               </p>
             </div>
 
-            {/* Resume Strength */}
             <div>
               <h3 className="font-semibold text-lg">
                 Resume Strength Score
@@ -199,7 +182,6 @@ const ResumeAnalyzer = () => {
         </Section>
       )}
 
-      {/* Skills */}
       <Section title="Extracted Skills">
         {skills.length ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -217,7 +199,6 @@ const ResumeAnalyzer = () => {
         )}
       </Section>
 
-      {/* Projects */}
       <Section title="Extracted Projects">
         {projects.length ? (
           <div className="space-y-4">
@@ -238,7 +219,6 @@ const ResumeAnalyzer = () => {
         )}
       </Section>
 
-      {/* Missing Skills */}
       <Section title="Missing Skills (Recommended)">
         {missingSkills.length ? (
           <ul className="list-disc ml-6 text-gray-700">
@@ -249,7 +229,6 @@ const ResumeAnalyzer = () => {
         )}
       </Section>
 
-      {/* Recommended Projects */}
       <Section title="AI Recommended Projects">
         {recommendedProjects.length ? (
           <ul className="list-disc ml-6 text-gray-700">
@@ -260,21 +239,18 @@ const ResumeAnalyzer = () => {
         )}
       </Section>
 
-      {/* Summary */}
       <Section title="AI Summary">
         <p className="text-gray-700 whitespace-pre-line">
           {summary || "Summary will appear here."}
         </p>
       </Section>
 
-      {/* Education */}
       <Section title="Education">
         <p className="text-gray-700">
           {education || "Education details will appear here."}
         </p>
       </Section>
 
-      {/* Roles */}
       <Section title="Suggested Roles">
         {roles.length ? (
           <ul className="list-disc ml-6 text-gray-700">
@@ -287,8 +263,6 @@ const ResumeAnalyzer = () => {
     </div>
   );
 };
-
-/* ================= COMPONENTS ================= */
 
 const Section = ({ title, children }) => (
   <div className="bg-white shadow rounded-xl p-6">

@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import Job from "../models/Job.js";
 
-dotenv.config({ path: "./.env" }); // ensure .env loads from backend root
+dotenv.config({ path: "./.env" });
 
-console.log("MONGO_URI ->", process.env.MONGO_URI); // debug
+console.log("MONGO_URI ->", process.env.MONGO_URI);
 
 const jobs = [
   {
@@ -209,10 +209,9 @@ const seedJobs = async () => {
     console.log("Old jobs removed.");
     await Job.deleteMany({});
 
-    // 👉 Use your REAL recruiter _id
+
     const realRecruiterId = "697ef0ab2c201f2d780cdc1d";
 
-    // Assign recruiterId to every job
     jobs.forEach((j) => (j.recruiterId = realRecruiterId));
 
     await Job.insertMany(jobs);

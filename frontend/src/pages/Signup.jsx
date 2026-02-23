@@ -12,7 +12,7 @@ const Signup = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState(""); // ROLE ADDED
+  const [role, setRole] = useState(""); 
   const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -22,13 +22,11 @@ const Signup = () => {
   const { signup, loginWithGoogle, loginWithGithub, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
-  /**
-   * Redirect logic for both normal signup & OAuth
-   */
+
   useEffect(() => {
     if (isAuthenticated) {
       if (!user?.role) {
-        navigate("/choose-dashboard"); // user has no role → choose role
+        navigate("/choose-dashboard");
       } else if (user.role === "student") {
         navigate("/student/dashboard");
       } else if (user.role === "recruiter") {
@@ -37,9 +35,7 @@ const Signup = () => {
     }
   }, [isAuthenticated, user, navigate]);
 
-  /**
-   * Validate signup form
-   */
+
   const validateForm = () => {
     const errors = {};
 
@@ -55,9 +51,7 @@ const Signup = () => {
     return Object.keys(errors).length === 0;
   };
 
-  /**
-   * Submit Signup Form
-   */
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -85,7 +79,6 @@ const Signup = () => {
           <Alert type="error" message={error} onClose={() => setError("")} />
         )}
 
-        {/* NAME */}
         <Input
           label="Full name"
           type="text"
@@ -96,7 +89,6 @@ const Signup = () => {
           error={validationErrors.name}
         />
 
-        {/* EMAIL */}
         <Input
           label="Email address"
           type="email"
@@ -107,7 +99,6 @@ const Signup = () => {
           error={validationErrors.email}
         />
 
-        {/* ROLE DROPDOWN */}
         <div>
           <label className="label mb-1">Select Role</label>
           <select
@@ -125,7 +116,6 @@ const Signup = () => {
           )}
         </div>
 
-        {/* PASSWORD WITH TOGGLE */}
         <div className="relative">
           <Input
             label="Password"
@@ -137,7 +127,6 @@ const Signup = () => {
             error={validationErrors.password}
           />
 
-          {/* EYE ICON */}
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
@@ -147,12 +136,10 @@ const Signup = () => {
           </button>
         </div>
 
-        {/* SUBMIT BUTTON */}
         <Button type="submit" className="w-full" loading={loading}>
           Create account
         </Button>
 
-        {/* OAUTH BUTTONS */}
         <OAuthButtons
           onGoogleClick={loginWithGoogle}
           onGithubClick={loginWithGithub}

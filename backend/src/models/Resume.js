@@ -21,7 +21,6 @@ const resumeSchema = new mongoose.Schema(
     education: String,
     suitable_roles: [String],
 
-    // ⭐ NEW FIELDS
     projects: [projectSchema],            
     missing_skills: [String],              
     project_recommendations: [String],  

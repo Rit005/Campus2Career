@@ -1,4 +1,3 @@
-// frontend/src/pages/admin/Recruiters.jsx
 import { useState, useEffect } from "react";
 import adminAPI from "../../api/admin";
 
@@ -41,7 +40,6 @@ export default function Recruiters() {
     <div>
       <h2 className="text-2xl font-bold text-gray-800 mb-6">All Recruiters</h2>
 
-      {/* Search */}
       <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
         <form onSubmit={handleSearch} className="flex gap-4">
           <input
@@ -60,7 +58,6 @@ export default function Recruiters() {
         </form>
       </div>
 
-      {/* Recruiters Table */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">

@@ -4,7 +4,7 @@ export async function extractFullMarksheet(buffer) {
   const pdfData = await pdf(buffer);
   const text = pdfData.text;
 
-  // 1️⃣ Extract subject rows containing final marks
+
   const subjectRegex = /([A-Z]{2,3}\s?\d{3})-(.*?)\s+(\d+(\.\d+)?)\s*\/\s*100\s+([A-F][+\-]?)/g;
 
   const subjects = [];
@@ -19,7 +19,6 @@ export async function extractFullMarksheet(buffer) {
     });
   }
 
-  // If final marks not found (layout mismatch) – fallback to AI
   if (subjects.length === 0) {
     subjects.push(...await extractUsingAI(text));
   }
@@ -27,7 +26,6 @@ export async function extractFullMarksheet(buffer) {
   return subjects;
 }
 
-// 2️⃣ AI fallback using GPT-4 vision
 async function extractUsingAI(text) {
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",

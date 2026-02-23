@@ -3,7 +3,7 @@ import { protect, requireRole } from "../middleware/auth.js";
 import { uploadResume } from "../middleware/upload.js";
 import { uploadMarksheet } from "../middleware/uploadMarksheet.js";
 import { getStudentAnalytics,getSemesterWiseAnalytics} from "../controllers/academicAnalyticsController.js";
-// STUDENT + JOB APPLY MODULE
+
 import {
   getAllStudents,
   applyForJob
@@ -29,16 +29,14 @@ import {
   getAcademicDashboard
 } from "../controllers/marksheetController.js";
 
-// CAREER ANALYSIS (IMPORTANT: imported from correct file!)
+// CAREER ANALYSIS
 import {
   analyzeCareer,
   getCareerProfile
 } from "../controllers/careerGuidanceController.js";  
-//  ⬆️ FIXED — this was your missing import
 
 const router = express.Router();
 
-/* RESUME */
 router.post(
   "/resume",
   protect,
@@ -54,7 +52,6 @@ router.get(
   getStudentResume
 );
 
-/* MARKSHEET UPLOAD */
 router.post(
   "/marksheet",
   protect,
@@ -77,7 +74,6 @@ router.delete(
   deleteMarksheet
 );
 
-/* ACADEMIC DASHBOARD */
 router.get(
   "/dashboard/academic",
   protect,
@@ -85,25 +81,25 @@ router.get(
   getAcademicDashboard
 );
 
-/* CAREER GUIDANCE */
+
 router.post(
   "/career/analyze",
   protect,
   requireRole("student"),
-  analyzeCareer   // ✔ FIXED (correct import)
+  analyzeCareer   
 );
 
 router.get(
   "/career/profile",
   protect,
   requireRole("student"),
-  getCareerProfile  // ✔ FIXED (correct import)
+  getCareerProfile  
 );
 
-/* STUDENTS LIST */
+
 router.get("/students", getAllStudents);
 
-/* MENTOR ASSISTANT */
+
 router.post(
   "/mentor-assistant",
   protect,
@@ -111,7 +107,7 @@ router.post(
   mentorAssistantChat
 );
 
-/* JOB APPLY */
+
 router.post(
   "/apply",
   protect,
@@ -119,7 +115,7 @@ router.post(
   applyForJob
 );
 
-/* JOB LISTING */
+
 router.get(
   "/jobs",
   protect,

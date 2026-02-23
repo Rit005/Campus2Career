@@ -1,13 +1,11 @@
 import React from 'react';
 
-// Mock data for weak subjects
 const weakSubjects = [
   { name: 'History', currentMarks: 70, targetMarks: 85, priority: 'High' },
   { name: 'Physics', currentMarks: 78, targetMarks: 90, priority: 'Medium' },
   { name: 'Chemistry', currentMarks: 82, targetMarks: 90, priority: 'Low' },
 ];
 
-// Mock data for weekly study plan
 const weeklyPlan = [
   { day: 'Monday', tasks: ['History - Chapter 5 review', 'Physics - Problem set 3'], duration: '2h' },
   { day: 'Tuesday', tasks: ['Chemistry - Lab preparation', 'Mathematics - Practice problems'], duration: '2.5h' },
@@ -18,7 +16,6 @@ const weeklyPlan = [
   { day: 'Sunday', tasks: ['Rest day - Light reading', 'Plan for next week'], duration: '1h' },
 ];
 
-// Auto-generated content cards
 const contentCards = [
   {
     title: 'Revision Notes',
@@ -89,17 +86,11 @@ const contentCards = [
   },
 ];
 
-/**
- * Learning & Study Plan Page
- * Displays weak subjects, weekly study plan, and AI-generated content
- */
 const Learning = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Page Title */}
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Learning & Study Plan</h1>
 
-      {/* Weak Subjects Section */}
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Learning & Study Plan</h1>
       <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
         <div className="flex items-center mb-6">
           <div className="p-3 bg-red-100 rounded-lg mr-4">
@@ -151,7 +142,6 @@ const Learning = () => {
         </div>
       </div>
 
-      {/* Weekly Study Plan */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
         <div className="flex items-center mb-6">
           <div className="p-3 bg-blue-100 rounded-lg mr-4">
@@ -204,7 +194,6 @@ const Learning = () => {
         </div>
       </div>
 
-      {/* AI-Generated Content Cards */}
       <div>
         <div className="flex items-center mb-6">
           <div className="p-3 bg-purple-100 rounded-lg mr-4">

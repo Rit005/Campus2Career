@@ -10,9 +10,6 @@ import {
   autoFillMissingSkills,
 } from "../ml/resumeML.js";
 
-/* ============================================================
-   ANALYZE RESUME CONTROLLER (FULLY FIXED)
-============================================================ */
 export const analyzeResume = async (req, res) => {
   try {
     const studentId = req.user?._id;
@@ -21,7 +18,6 @@ export const analyzeResume = async (req, res) => {
 
     let resumeText = req.body.resumeText || "";
 
-    /* ---------------- FILE PROCESSING ---------------- */
     if (req.file) {
       const buffer = req.file.buffer;
       const type = req.file.mimetype;
@@ -47,7 +43,6 @@ export const analyzeResume = async (req, res) => {
     if (!resumeText.trim())
       return res.status(400).json({ error: "Resume text is empty" });
 
-    /* ---------------- AI STRUCTURED EXTRACTION ---------------- */
     const prompt = `
 Extract structured details from the resume strictly in JSON format.
 
@@ -91,7 +86,7 @@ ${resumeText}
 
     let parsed = JSON.parse(jsonMatch[0]);
 
-    /* Safe structure */
+
     parsed = {
       skills: parsed.skills || [],
       experience_summary: parsed.experience_summary || "",
@@ -102,14 +97,11 @@ ${resumeText}
       project_recommendations: parsed.project_recommendations || [],
     };
 
-    /* ---------------- ML ANALYSIS ---------------- */
     const domainPrediction = predictDomain(parsed.skills);
     const resumeStrength = calculateResumeStrength(parsed);
 
-    // Auto-fill missing skills
     parsed = autoFillMissingSkills(parsed, domainPrediction.predictedDomain);
 
-    /* ---------------- Extract Email & Phone ---------------- */
     const extractedEmail =
       resumeText.match(
         /[a-zA-Z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/
@@ -118,7 +110,6 @@ ${resumeText}
     const extractedPhone =
       resumeText.match(/\+?\d[\d\s]{7,15}\d/)?.[0] || "";
 
-    /* ---------------- SAVE TO RESUME DB (PERSIST ML DATA) ---------------- */
     const savedResume = await Resume.findOneAndUpdate(
       { studentId },
       {
@@ -128,10 +119,8 @@ ${resumeText}
         fileSize: req.file?.size || "",
         extractedText: resumeText,
 
-        // Core extracted data
         ...parsed,
 
-        // ML insights stored permanently
         predictedDomain: domainPrediction.predictedDomain,
         domainConfidence: domainPrediction.confidenceScore,
         resumeStrengthScore: resumeStrength,
@@ -139,7 +128,6 @@ ${resumeText}
       { upsert: true, new: true }
     );
 
-    /* ---------------- UPDATE STUDENT MODEL ---------------- */
     await Student.findOneAndUpdate(
       { userId: studentId },
       {
@@ -171,9 +159,6 @@ ${resumeText}
   }
 };
 
-/* ============================================================
-   GET STUDENT RESUME (ALWAYS RETURNS ML INSIGHTS)
-============================================================ */
 export const getStudentResume = async (req, res) => {
   try {
     const studentId = req.user._id;
@@ -182,7 +167,7 @@ export const getStudentResume = async (req, res) => {
 
     return res.json({
       success: true,
-      data: resume || null, // ML insights included
+      data: resume || null, 
     });
   } catch (err) {
     return res.status(500).json({

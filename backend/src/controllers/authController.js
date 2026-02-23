@@ -25,7 +25,6 @@ export const signup = async (req, res, next) => {
       });
     }
 
-    // Only allow admin role if explicitly provided (for Postman / internal use)
     const assignedRole =
       role && ["admin", "student", "recruiter"].includes(role)
         ? role
@@ -140,7 +139,6 @@ export const verifyToken = async (req, res) => {
       token = req.cookies.token;
     }
 
-    // No token is not an error - user simply isn't logged in
     if (!token) {
       return res.status(200).json({ success: true, data: { user: null } });
     }
@@ -154,7 +152,6 @@ export const verifyToken = async (req, res) => {
 
     res.json({ success: true, data: { user: user.toPublicProfile() } });
   } catch {
-    // Invalid token - clear it and return no user
     return res.status(200).json({ success: true, data: { user: null } });
   }
 };
@@ -170,7 +167,6 @@ export const selectRole = async (req, res) => {
   req.user.role = role;
   await req.user.save();
 
-  // Regenerate token with updated role
   const token = generateToken(req.user._id, req.user.role);
   sendTokenCookie(res, token);
 
@@ -188,11 +184,6 @@ export const selectRole = async (req, res) => {
 };
 
 
-/**
- * @desc    Update user profile
- * @route   PUT /auth/profile
- * @access  Private
- */
 export const updateProfile = async (req, res, next) => {
   try {
     const { name, email } = req.body;

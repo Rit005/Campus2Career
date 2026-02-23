@@ -1,8 +1,7 @@
-// ================== LOAD ENV FIRST ==================
 import dotenv from "dotenv";
 dotenv.config();
 
-// ================== IMPORTS ==================
+
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -25,18 +24,14 @@ import { errorHandler, notFound } from "./middleware/errorHandler.js";
 // Passport config
 import "./config/passport.js";
 
-// ================== __DIRNAME FIX (ESM) ==================
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ================== APP INIT ==================
 const app = express();
 let server;
 
-// ================== TRUST PROXY ==================
 app.set("trust proxy", 1);
 
-// ================== CORS CONFIG ==================
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -46,14 +41,11 @@ app.use(
   })
 );
 
-// ================== BODY PARSER ==================
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
-// ================== COOKIE PARSER ==================
 app.use(cookieParser());
 
-// ================== SESSION (FOR OAUTH) ==================
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "sessionsecret",
@@ -67,11 +59,9 @@ app.use(
   })
 );
 
-// ================== PASSPORT ==================
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ================== HEALTH CHECK ROUTE ==================
 app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -80,12 +70,11 @@ app.get("/health", (req, res) => {
   });
 });
 
-// ================== API ROUTES ==================
-app.use("/auth", authRoutes); // Login + Signup
-app.use("/api/recruiter", recruiterRoutes); // ALL Recruiter APIs
+app.use("/auth", authRoutes); 
+app.use("/api/recruiter", recruiterRoutes); 
 app.use("/api/student", studentRoutes);
-app.use("/admin", adminRoutes); // Admin Dashboard APIs
-// ================== PRODUCTION STATIC FILES ==================
+app.use("/admin", adminRoutes); 
+
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 
@@ -94,13 +83,11 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// ================== 404 HANDLER ==================
+
 app.use(notFound);
 
-// ================== GLOBAL ERROR HANDLER ==================
 app.use(errorHandler);
 
-// ================== DATABASE CONNECTION ==================
 const connectDB = async () => {
   try {
     const mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI;
@@ -109,14 +96,13 @@ const connectDB = async () => {
 
     const conn = await mongoose.connect(mongoURI);
 
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    console.log(` MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error("❌ MongoDB Connection Failed:", error.message);
+    console.error("MongoDB Connection Failed:", error.message);
     process.exit(1);
   }
 };
 
-// ================== START SERVER ==================
 const PORT = process.env.PORT || 5001;
 
 const startServer = async () => {
@@ -132,11 +118,10 @@ const startServer = async () => {
       );
     });
   } catch (error) {
-    console.error("❌ Failed to start server:", error);
+    console.error(" Failed to start server:", error);
   }
 };
 
-// ================== PROCESS HANDLERS ==================
 process.on("unhandledRejection", (err) => {
   console.error("❌ Unhandled Rejection:", err.message);
   if (server) server.close(() => process.exit(1));
@@ -159,7 +144,7 @@ process.on("SIGINT", () => {
   }
 });
 
-// ================== START ==================
+
 startServer();
 
 export default app;

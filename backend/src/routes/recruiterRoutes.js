@@ -16,7 +16,6 @@ import { hrAssistantChat } from "../controllers/hrAssistantController.js";
 
 const router = express.Router();
 
-// ALL recruiter routes protected
 router.use(protect, requireRole("recruiter"));
 
 // JOB ROUTES

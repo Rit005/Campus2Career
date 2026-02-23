@@ -20,23 +20,16 @@ const marksheetSchema = new mongoose.Schema(
     semester: { type: String, required: true },
     year: { type: String },
 
-    // Academic fields
     cgpa: { type: String, default: "" },
     percentage: { type: String, default: "" },
 
     subjects: [subjectSchema],
 
-    // *******************************
-    // ⭐ STORE ML INSIGHTS IN DB ⭐
-    // *******************************
     mlInsights: {
       type: Object,
-      default: null, // Needed so that insights persist
+      default: null, 
     },
 
-    // *******************************
-    // ⭐ STORE FILE IN DATABASE ⭐
-    // *******************************
     fileName: {
       type: String,
       required: true,
@@ -61,7 +54,6 @@ const marksheetSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Fast lookups
 marksheetSchema.index({ studentId: 1, uploadedAt: -1 });
 
 export default mongoose.model("Marksheet", marksheetSchema);

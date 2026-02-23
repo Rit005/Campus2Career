@@ -39,7 +39,7 @@ const MarksheetUpload = () => {
     if (typeof item === "string") return item;
 
     if (typeof item === "object" && item !== null) {
-      // Convert ML object into readable text
+
       if ("subject" in item && "recommendation" in item) {
         return `${item.subject}: ${item.recommendation}`;
       }
@@ -170,7 +170,6 @@ const MarksheetUpload = () => {
         </div>
       )}
 
-      {/* Upload Form */}
       <form className="bg-white shadow p-6 rounded-xl" onSubmit={handleUpload}>
         <label className="block mb-2 font-medium">Semester *</label>
         <select
@@ -206,7 +205,6 @@ const MarksheetUpload = () => {
         </button>
       </form>
 
-      {/* ML Insights */}
       {mlInsights && (
         <div className="bg-white p-6 rounded-xl shadow space-y-6">
           <h3 className="text-xl font-bold">🤖 AI Academic Insights</h3>
@@ -241,7 +239,6 @@ const MarksheetUpload = () => {
             </div>
           </div>
 
-          {/* Weak Subjects */}
           <div>
             <p className="font-semibold text-red-600">Weak Subjects</p>
             {mlInsights.weakSubjects?.length ? (
@@ -279,7 +276,6 @@ const MarksheetUpload = () => {
         </div>
       )}
 
-      {/* Uploaded Marksheets */}
       <div>
         <h3 className="text-xl font-semibold mb-3">Uploaded Marksheets</h3>
 
@@ -295,7 +291,6 @@ const MarksheetUpload = () => {
                 <div>
                   <p className="font-semibold">{m.semester}</p>
 
-                  {/* FIXED: Show CGPA properly */}
                   <p className="text-sm text-gray-500">
                     {m.subjects.length} subjects |{" "}
                     {m.cgpa

@@ -27,7 +27,6 @@ export const matchCandidates = async (req, res) => {
     for (const resume of resumes) {
       if (!resume || !resume.studentId) continue;
 
-      // 👍 FIXED: Always convert skills to array safely
       let skillArr = [];
 
       if (Array.isArray(resume.skills)) {
@@ -38,7 +37,7 @@ export const matchCandidates = async (req, res) => {
 
       const candidateSkills = skillArr.map((s) => String(s).toLowerCase());
 
-      // Skill match
+
       const matchedSkills = normalizedSkills.filter((reqSkill) =>
         candidateSkills.includes(reqSkill)
       );
@@ -48,7 +47,7 @@ export const matchCandidates = async (req, res) => {
           ? Math.round((matchedSkills.length / normalizedSkills.length) * 100)
           : 0;
 
-      // Experience
+
       const expText = String(resume.experience_summary || "").toLowerCase();
       const matchedExpWords = descKeywords.filter((w) => expText.includes(w));
 

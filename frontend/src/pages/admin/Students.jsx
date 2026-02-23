@@ -1,4 +1,3 @@
-// frontend/src/pages/admin/Students.jsx
 import { useState, useEffect } from "react";
 import adminAPI from "../../api/admin";
 
@@ -16,10 +15,9 @@ export default function Students() {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      // Fetch all users with role=student and filter client-side for now
       const params = {
         page: 1,
-        limit: 100, // Get more to filter
+        limit: 100,
         role: "student",
         ...(filters.search && { search: filters.search }),
       };
@@ -48,7 +46,6 @@ export default function Students() {
     <div>
       <h2 className="text-2xl font-bold text-gray-800 mb-6">All Students</h2>
 
-      {/* Search */}
       <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
         <form onSubmit={handleSearch} className="flex gap-4">
           <input
@@ -67,7 +64,6 @@ export default function Students() {
         </form>
       </div>
 
-      {/* Students Table */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">

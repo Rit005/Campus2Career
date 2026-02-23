@@ -18,8 +18,6 @@ import {
   PolarRadiusAxis,
 } from "recharts";
 
-/* ================= HELPERS ================= */
-
 const getGradeColor = (grade) => {
   if (!grade) return "text-gray-600 bg-gray-100";
   if (grade.startsWith("A")) return "text-green-700 bg-green-100";
@@ -46,7 +44,6 @@ const semesterColors = [
   "#eab308",
 ];
 
-/* ================= COMPONENT ================= */
 
 const StudentDashboard = () => {
   const [analytics, setAnalytics] = useState(null);
@@ -54,7 +51,6 @@ const StudentDashboard = () => {
   const [selectedSem, setSelectedSem] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /* ================= FETCH DATA ================= */
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -83,7 +79,6 @@ const StudentDashboard = () => {
     fetchAll();
   }, []);
 
-  /* ================= LOADING ================= */
 
   if (loading) {
     return (
@@ -92,8 +87,6 @@ const StudentDashboard = () => {
       </div>
     );
   }
-
-  /* ================= EMPTY STATE ================= */
 
   if (!analytics || semesters.length === 0) {
     return (
@@ -116,8 +109,6 @@ const StudentDashboard = () => {
     );
   }
 
-  /* ================= SAFE DESTRUCTURE ================= */
-
   const {
     subjectWise = [],
     radarChart = { data: [], semesters: [] },
@@ -125,12 +116,9 @@ const StudentDashboard = () => {
     consistencyScore = 0,
   } = analytics;
 
-  /* ================= RENDER ================= */
-
   return (
     <div className="space-y-10">
 
-      {/* HEADER */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">
           📊 Academic Dashboard
@@ -139,8 +127,6 @@ const StudentDashboard = () => {
           Overview of your academic journey
         </p>
       </div>
-
-      {/* ================= TOP CARDS ================= */}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="bg-white shadow rounded-xl p-6">
@@ -170,8 +156,6 @@ const StudentDashboard = () => {
         </div>
       </div>
 
-      {/* ================= SEMESTER SELECT ================= */}
-
       <div className="bg-white shadow rounded-xl p-6">
         <label className="font-medium">Select Semester:</label>
         <select
@@ -190,8 +174,6 @@ const StudentDashboard = () => {
           ))}
         </select>
       </div>
-
-      {/* ================= SUBJECT TABLE ================= */}
 
       {selectedSem && (
         <div className="bg-white rounded-xl shadow overflow-hidden">
@@ -250,8 +232,6 @@ const StudentDashboard = () => {
         </div>
       )}
 
-      {/* ================= RADAR ================= */}
-
       {radarChart.data.length > 0 && (
         <div className="bg-white p-6 rounded-xl shadow overflow-x-auto">
           <div className="min-w-[900px]">
@@ -284,8 +264,6 @@ const StudentDashboard = () => {
         </div>
       )}
 
-      {/* ================= PROGRESS ================= */}
-
       {progressTrend.length > 0 && (
         <div className="bg-white p-6 rounded-xl shadow">
           <h3 className="font-semibold mb-4">
@@ -305,8 +283,6 @@ const StudentDashboard = () => {
           </ResponsiveContainer>
         </div>
       )}
-
-      {/* ================= CONSISTENCY ================= */}
 
       <div className="bg-white p-6 rounded-xl shadow">
         <h3 className="font-semibold">Consistency Score</h3>

@@ -1,8 +1,3 @@
-// src/ml/academicML.js
-
-/*============================================================
-  SUBJECT → DOMAIN MAP
-============================================================*/
 const DOMAIN_MAP = {
   Programming: ["PROGRAMMING", "JAVA", "PYTHON", "C++", "DSA"],
   Mathematics: ["MATH", "STATISTICS", "CALCULUS"],
@@ -10,9 +5,6 @@ const DOMAIN_MAP = {
   AI: ["AI", "ML", "DATA", "INTELLIGENCE"],
 };
 
-/*============================================================
-  PREDICT STRONGEST DOMAIN
-============================================================*/
 export function predictAcademicDomain(subjectWisePerformance) {
   const domainScores = {};
 
@@ -38,18 +30,13 @@ export function predictAcademicDomain(subjectWisePerformance) {
     : { domain: "General", score: 0 };
 }
 
-/*============================================================
-  DETECT WEAK SUBJECTS
-============================================================*/
 export function detectWeakSubjects(subjectWisePerformance) {
   return subjectWisePerformance
     .filter((s) => Number(s.average) < 60)
     .map((s) => s.name);
 }
 
-/*============================================================
-  SEMESTER IMPROVEMENT TREND
-============================================================*/
+
 export function analyzeTrend(semesterTrend) {
   if (semesterTrend.length < 2) return "Insufficient Data";
 
@@ -63,9 +50,6 @@ export function analyzeTrend(semesterTrend) {
   return "Stable";
 }
 
-/*============================================================
-  ACADEMIC RISK SCORE
-============================================================*/
 export function calculateRiskScore(overallPerformance, weakSubjects) {
   let risk = 0;
 
@@ -76,9 +60,7 @@ export function calculateRiskScore(overallPerformance, weakSubjects) {
   return Math.min(risk, 100);
 }
 
-/*============================================================
-  CAREER READINESS SCORE
-============================================================*/
+
 export function calculateCareerReadiness(
   overallPerformance,
   semesterTrend
@@ -90,9 +72,7 @@ export function calculateCareerReadiness(
 
   return Math.max(0, Math.min(score, 100));
 }
-/*============================================================
-  PREDICT NEXT SEMESTER PERFORMANCE
-============================================================*/
+
 export function predictNextSemester(semesterTrend) {
   if (semesterTrend.length < 2) {
     return semesterTrend[0]?.percentage || 0;
@@ -106,9 +86,6 @@ export function predictNextSemester(semesterTrend) {
   return Math.max(0, Math.min(100, last + growth)).toFixed(2);
 }
 
-/*============================================================
-  IMPROVEMENT ROADMAP
-============================================================*/
 export function generateImprovementRoadmap(weakSubjects) {
   return weakSubjects.map((subject) => ({
     subject,
@@ -117,9 +94,6 @@ export function generateImprovementRoadmap(weakSubjects) {
   }));
 }
 
-/*============================================================
-  PLACEMENT PROBABILITY
-============================================================*/
 export function predictPlacementProbability(
   overallPerformance,
   careerReadinessScore

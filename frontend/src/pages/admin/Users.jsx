@@ -1,4 +1,3 @@
-// frontend/src/pages/admin/Users.jsx
 import { useState, useEffect } from "react";
 import adminAPI from "../../api/admin";
 
@@ -99,7 +98,6 @@ export default function Users() {
     <div>
       <h2 className="text-2xl font-bold text-gray-800 mb-6">User Management</h2>
 
-      {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
         <form onSubmit={handleSearch} className="flex flex-wrap gap-4">
           <input
@@ -137,7 +135,6 @@ export default function Users() {
         </form>
       </div>
 
-      {/* Users Table */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">
@@ -206,7 +203,6 @@ export default function Users() {
         )}
       </div>
 
-      {/* Pagination */}
       {pagination.pages > 1 && (
         <div className="flex justify-center gap-2 mt-6">
           <button

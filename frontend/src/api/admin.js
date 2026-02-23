@@ -1,7 +1,7 @@
-// frontend/src/api/admin.js
 import api from "./api";
 
 const adminAPI = {
+  
   // Overview
   getOverview: () => api.get("/admin/overview"),
 

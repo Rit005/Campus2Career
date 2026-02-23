@@ -11,7 +11,6 @@ export const hrAssistantChat = async (req, res) => {
       });
     }
 
-    // Call Groq API
     const response = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
@@ -20,7 +19,6 @@ export const hrAssistantChat = async (req, res) => {
       ],
     });
 
-    // Extract correct Groq message
     const aiReply = response.choices?.[0]?.message?.content || "No response from AI.";
 
     return res.json({

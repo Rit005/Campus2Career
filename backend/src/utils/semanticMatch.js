@@ -27,6 +27,6 @@ Return ONLY JSON format:
 
   } catch (error) {
     console.error("Similarity error:", error);
-    return 0; // fallback safe
+    return 0; 
   }
 };

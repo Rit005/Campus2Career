@@ -28,7 +28,6 @@ const Login = () => {
     if (result.success) {
       const role = result.data?.user?.role;
 
-      // 🔥 ROLE-BASED REDIRECTION
       if (role === "admin") {
         navigate("/admin/dashboard", { replace: true });
       } else if (role === "recruiter") {
@@ -62,7 +61,6 @@ const Login = () => {
           required
         />
 
-        {/* PASSWORD */}
         <div className="relative">
           <div className="flex items-center justify-between mb-1">
             <label className="label">Password</label>
@@ -92,7 +90,6 @@ const Login = () => {
           Sign in
         </Button>
 
-        {/* OAuth */}
         <OAuthButtons
           onGoogleClick={loginWithGoogle}
           onGithubClick={loginWithGithub}

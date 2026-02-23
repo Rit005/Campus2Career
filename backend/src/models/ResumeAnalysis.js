@@ -15,7 +15,6 @@ const resumeSchema = new mongoose.Schema(
       index: true,
     },
 
-    // ---------- STORED FILE BINARY ----------
     fileData: {
       type: Buffer,
       required: true,

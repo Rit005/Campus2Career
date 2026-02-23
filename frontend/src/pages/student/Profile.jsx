@@ -1,35 +1,25 @@
 import React, { useState } from 'react';
 
-/**
- * My Academic Profile Page
- * Form for inputting academic details, attendance, and skills
- */
 const Profile = () => {
-  // Form state
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     dateOfBirth: '',
     address: '',
-    // Academic details
     currentSemester: '',
     cgpa: '',
     totalCredits: '',
-    // Skills
     skills: [],
     currentSkillInput: '',
-    // Interests
     interests: [],
     currentInterestInput: '',
   });
 
-  // Validation errors state
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // Pre-defined options
   const semesterOptions = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
   const availableSkills = [
     'JavaScript', 'Python', 'Java', 'C++', 'React', 'Node.js', 'SQL', 'Git',
@@ -42,20 +32,17 @@ const Profile = () => {
     'Product Management', 'UI/UX Design', 'Embedded Systems', 'Robotics',
   ];
 
-  // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
-  // Add skill
   const handleAddSkill = () => {
     const skill = formData.currentSkillInput.trim();
     if (skill && !formData.skills.includes(skill)) {
@@ -67,7 +54,6 @@ const Profile = () => {
     }
   };
 
-  // Add skill on Enter key
   const handleSkillKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -75,7 +61,6 @@ const Profile = () => {
     }
   };
 
-  // Remove skill
   const handleRemoveSkill = (skillToRemove) => {
     setFormData((prev) => ({
       ...prev,
@@ -83,7 +68,6 @@ const Profile = () => {
     }));
   };
 
-  // Add interest
   const handleAddInterest = (interest) => {
     if (!formData.interests.includes(interest)) {
       setFormData((prev) => ({
@@ -93,7 +77,6 @@ const Profile = () => {
     }
   };
 
-  // Remove interest
   const handleRemoveInterest = (interestToRemove) => {
     setFormData((prev) => ({
       ...prev,
@@ -101,7 +84,6 @@ const Profile = () => {
     }));
   };
 
-  // Validate form
   const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = 'Name is required';
@@ -118,14 +100,12 @@ const Profile = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitSuccess(false);
     
     if (validateForm()) {
       setIsSubmitting(true);
-      // Simulate API call
       setTimeout(() => {
         setIsSubmitting(false);
         setSubmitSuccess(true);
@@ -136,10 +116,7 @@ const Profile = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Page Title */}
       <h1 className="text-3xl font-bold text-gray-800 mb-6">My Academic Profile</h1>
-
-      {/* Success Message */}
       {submitSuccess && (
         <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
           <div className="flex items-center">
@@ -153,7 +130,6 @@ const Profile = () => {
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Personal Information */}
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <svg className="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,7 +139,6 @@ const Profile = () => {
             </h2>
 
             <div className="space-y-4">
-              {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name <span className="text-red-500">*</span>
@@ -181,7 +156,6 @@ const Profile = () => {
                 {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
               </div>
 
-              {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address <span className="text-red-500">*</span>
@@ -199,7 +173,6 @@ const Profile = () => {
                 {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
               </div>
 
-              {/* Phone */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                 <input
@@ -212,7 +185,6 @@ const Profile = () => {
                 />
               </div>
 
-              {/* Date of Birth */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
                 <input
@@ -226,7 +198,6 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Academic Details */}
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <svg className="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,7 +207,6 @@ const Profile = () => {
             </h2>
 
             <div className="space-y-4">
-              {/* Current Semester */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Current Semester <span className="text-red-500">*</span>
@@ -261,7 +231,6 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* CGPA */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Current CGPA <span className="text-red-500">*</span>
@@ -282,7 +251,6 @@ const Profile = () => {
                 {errors.cgpa && <p className="mt-1 text-sm text-red-500">{errors.cgpa}</p>}
               </div>
 
-              {/* Total Credits */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Total Credits Completed
@@ -298,7 +266,6 @@ const Profile = () => {
                 />
               </div>
 
-              {/* Attendance */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Attendance Percentage
@@ -322,7 +289,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Skills Section */}
         <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
             <svg className="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -330,8 +296,6 @@ const Profile = () => {
             </svg>
             Skills
           </h2>
-
-          {/* Selected skills */}
           {formData.skills.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {formData.skills.map((skill) => (
@@ -354,7 +318,6 @@ const Profile = () => {
             </div>
           )}
 
-          {/* Add skill input */}
           <div className="flex gap-2 mb-4">
             <input
               type="text"
@@ -373,7 +336,6 @@ const Profile = () => {
             </button>
           </div>
 
-          {/* Suggested skills */}
           <div>
             <p className="text-sm text-gray-500 mb-2">Suggested skills:</p>
             <div className="flex flex-wrap gap-2">
@@ -399,7 +361,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Interests Section */}
         <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
             <svg className="w-5 h-5 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -408,7 +369,6 @@ const Profile = () => {
             Areas of Interest
           </h2>
 
-          {/* Selected interests */}
           {formData.interests.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
               {formData.interests.map((interest) => (
@@ -431,7 +391,6 @@ const Profile = () => {
             </div>
           )}
 
-          {/* Interest options */}
           <div className="flex flex-wrap gap-2">
             {availableInterests.map((interest) => (
               <button
@@ -454,7 +413,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Submit Button */}
         <div className="mt-6 flex justify-end">
           <button
             type="button"

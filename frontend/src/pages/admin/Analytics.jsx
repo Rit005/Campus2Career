@@ -29,7 +29,6 @@ export default function Analytics() {
     }
   };
 
-  // Combine data for display
   const combinedData = [];
   const allDates = new Set([
     ...data.userGrowth.map(d => d._id),
@@ -43,7 +42,7 @@ export default function Analytics() {
     const marksheetEntry = data.marksheetUploads.find(d => d._id === date);
     
     combinedData.push({
-      date: date.slice(5), // MM-DD format
+      date: date.slice(5), 
       users: userEntry?.total || 0,
       resumes: resumeEntry?.count || 0,
       marksheets: marksheetEntry?.count || 0
@@ -82,7 +81,6 @@ export default function Analytics() {
         </select>
       </div>
 
-      {/* User Growth Chart */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
         <h3 className="text-lg font-semibold mb-4">User Growth</h3>
         <ResponsiveContainer width="100%" height={300}>
@@ -97,7 +95,6 @@ export default function Analytics() {
         </ResponsiveContainer>
       </div>
 
-      {/* Resume & Marksheet Uploads */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h3 className="text-lg font-semibold mb-4">Resume Uploads</h3>

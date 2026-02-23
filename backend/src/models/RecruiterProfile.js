@@ -9,14 +9,13 @@ const recruiterProfileSchema = new mongoose.Schema(
     },
 
     companyName: { type: String, required: true },
-    designation: { type: String },  // HR Manager, Talent Lead, etc.
+    designation: { type: String },
     department: { type: String },
     companyWebsite: { type: String },
 
-    // AI dashboards
     hiringPipeline: [
       {
-        stage: String,         // Applied / Shortlisted / Interview / Selected
+        stage: String,  
         count: Number,
       }
     ],

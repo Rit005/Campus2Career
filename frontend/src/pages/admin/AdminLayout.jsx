@@ -1,4 +1,3 @@
-// frontend/src/pages/admin/AdminLayout.jsx
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -26,7 +25,6 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Topbar */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-white shadow-sm z-50 flex items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <button
@@ -64,7 +62,6 @@ export default function AdminLayout() {
         </div>
       </header>
 
-      {/* Sidebar */}
       <aside
         className={`fixed left-0 top-16 bottom-0 bg-white shadow-lg z-40 transition-all duration-300 ${
           sidebarOpen ? "w-64" : "w-0 -translate-x-full lg:w-64 lg:translate-x-0"
@@ -88,7 +85,6 @@ export default function AdminLayout() {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main
         className={`pt-16 min-h-screen transition-all duration-300 ${
           sidebarOpen ? "lg:ml-64" : "lg:ml-64"

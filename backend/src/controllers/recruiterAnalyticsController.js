@@ -5,14 +5,8 @@ import Application from "../models/Application.js";
 
 export const getRecruiterAnalytics = async (req, res) => {
   try {
-    // ---------------------------
-    // 1. TOTAL STUDENTS
-    // ---------------------------
     const totalStudents = await Student.countDocuments();
 
-    // ---------------------------
-    // 2. STUDENT SKILL DISTRIBUTION
-    // ---------------------------
     const skillDistribution = await Resume.aggregate([
       { $unwind: "$skills" },
       { $group: { _id: "$skills", count: { $sum: 1 } } },
@@ -20,11 +14,9 @@ export const getRecruiterAnalytics = async (req, res) => {
       { $limit: 25 }
     ]);
 
-    // ---------------------------
-    // 3. JOB SKILL DEMAND (FIXED)
-    // ---------------------------
+
     const jobSkillDemand = await Job.aggregate([
-      { $unwind: "$requiredSkills" }, // <-- CORRECT FIELD
+      { $unwind: "$requiredSkills" }, 
       {
         $group: {
           _id: "$requiredSkills",
@@ -35,14 +27,10 @@ export const getRecruiterAnalytics = async (req, res) => {
       { $limit: 20 }
     ]);
 
-
-    // ---------------------------
-    // 6. MONTHLY JOB POSTING TREND
-    // ---------------------------
     const jobPostingTrend = await Job.aggregate([
       {
         $group: {
-          _id: { $substr: ["$createdAt", 0, 7] }, // YYYY-MM
+          _id: { $substr: ["$createdAt", 0, 7] },
           count: { $sum: 1 }
         }
       },
