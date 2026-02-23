@@ -26,9 +26,17 @@ const marksheetSchema = new mongoose.Schema(
 
     subjects: [subjectSchema],
 
-    // ---------------------
-    // STORE FILE IN DATABASE
-    // ---------------------
+    // *******************************
+    // ⭐ STORE ML INSIGHTS IN DB ⭐
+    // *******************************
+    mlInsights: {
+      type: Object,
+      default: null, // Needed so that insights persist
+    },
+
+    // *******************************
+    // ⭐ STORE FILE IN DATABASE ⭐
+    // *******************************
     fileName: {
       type: String,
       required: true,
@@ -44,7 +52,7 @@ const marksheetSchema = new mongoose.Schema(
     },
 
     fileData: {
-      type: Buffer,   // ⬅️ MAIN FIX — file stored inside MongoDB
+      type: Buffer,
       required: true,
     },
 

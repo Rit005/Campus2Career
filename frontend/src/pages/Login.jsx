@@ -26,8 +26,19 @@ const Login = () => {
     const result = await login(email, password);
 
     if (result.success) {
-      // 🔥 ALWAYS go to choose-dashboard
-      navigate("/choose-dashboard", { replace: true });
+      const role = result.data?.user?.role;
+
+      // 🔥 ROLE-BASED REDIRECTION
+      if (role === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else if (role === "recruiter") {
+        navigate("/recruiter/dashboard", { replace: true });
+      } else if (role === "student") {
+        navigate("/student/dashboard", { replace: true });
+      } else {
+        navigate("/choose-dashboard", { replace: true });
+      }
+
     } else {
       setError(result.error);
     }

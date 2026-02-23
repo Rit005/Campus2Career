@@ -22,10 +22,14 @@ const resumeSchema = new mongoose.Schema(
     suitable_roles: [String],
 
     // ⭐ NEW FIELDS
-    projects: [projectSchema],             // <-- This fixes project extraction
-    missing_skills: [String],              // <-- Needed for displaying missing skills
-    project_recommendations: [String],     // <-- AI recommendations
+    projects: [projectSchema],            
+    missing_skills: [String],              
+    project_recommendations: [String],  
 
+
+     predictedDomain: String,
+    domainConfidence: Number,
+    resumeStrengthScore: Number,
     aiScore: Number,
   },
   { timestamps: true }

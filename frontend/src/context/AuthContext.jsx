@@ -51,34 +51,38 @@ export const AuthProvider = ({ children }) => {
      LOGIN — COOKIE IS SET AUTOMATICALLY
   ------------------------------------------------------ */
   const login = useCallback(
-    async (email, password) => {
-      try {
-        setLoading(true);
-        setError(null);
+  async (email, password) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        // Sends cookie due to withCredentials:true inside api.js
-        const res = await authAPI.login({ email, password });
+      const res = await authAPI.login({ email, password });
 
-        if (res.data.success) {
-          // user is stored in cookie, NOT localStorage
-          await refreshUser();
-          return { success: true };
-        }
+      if (res.data.success) {
+        // Refresh user from token cookie
+        const usr = await refreshUser();
 
         return {
-          success: false,
-          error: res.data.message || "Login failed",
+          success: true,
+          data: { user: usr }, // ⭐ RETURN ROLE BACK TO CALLER
         };
-      } catch (err) {
-        const msg = err.response?.data?.message || "Login failed";
-        setError(msg);
-        return { success: false, error: msg };
-      } finally {
-        setLoading(false);
       }
-    },
-    [refreshUser]
-  );
+
+      return {
+        success: false,
+        error: res.data.message || "Login failed",
+      };
+    } catch (err) {
+      const msg = err.response?.data?.message || "Login failed";
+      setError(msg);
+      return { success: false, error: msg };
+    } finally {
+      setLoading(false);
+    }
+  },
+  [refreshUser]
+);
+
 
   /* -----------------------------------------------------
      SIGNUP — Same logic as login

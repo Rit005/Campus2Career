@@ -14,19 +14,74 @@ const MarksheetUpload = () => {
     loadMarksheets();
   }, []);
 
-  const loadMarksheets = async () => {
-    try {
-      const res = await studentAPI.getAllMarksheets();
-      if (res.data.success) {
-        setMarksheets(res.data.data);
-      }
-    } catch (err) {
-      setMessage({
-        type: "error",
-        text: "Failed to load marksheets",
-      });
+  const sanitizeNumber = (n) => {
+    if (typeof n === "number") return n;
+    if (typeof n === "string") return Number(n);
+    if (typeof n === "object" && n !== null) {
+      if ("value" in n) return Number(n.value);
     }
+    return 0;
   };
+
+  const sanitizeString = (v) => {
+    if (typeof v === "string") return v;
+    if (typeof v === "object" && v !== null) {
+      if ("domain" in v) return v.domain;
+      if ("value" in v) return String(v.value);
+    }
+    return "";
+  };
+
+  const sanitizeArrayText = (arr) => {
+  if (!Array.isArray(arr)) return [];
+
+  return arr.map((item) => {
+    if (typeof item === "string") return item;
+
+    if (typeof item === "object" && item !== null) {
+      // Convert ML object into readable text
+      if ("subject" in item && "recommendation" in item) {
+        return `${item.subject}: ${item.recommendation}`;
+      }
+      if ("recommendation" in item) return item.recommendation;
+      return JSON.stringify(item);
+    }
+
+    return String(item);
+  });
+};
+
+
+  const loadMarksheets = async () => {
+  try {
+    const res = await studentAPI.getAllMarksheets();
+
+    if (res.data.success) {
+      const list = res.data.data;
+      setMarksheets(list);
+
+      if (list.length > 0 && list[0].mlInsights) {
+        const clean = list[0].mlInsights;
+
+        setMlInsights({
+          predictedStrongDomain: sanitizeString(clean.predictedStrongDomain),
+          weakSubjects: clean.weakSubjects || [],
+          academicTrend: sanitizeString(clean.academicTrend),
+          academicRiskScore: sanitizeNumber(clean.academicRiskScore),
+          nextSemesterPrediction: sanitizeNumber(clean.nextSemesterPrediction),
+          placementProbability: sanitizeNumber(clean.placementProbability),
+          improvementRoadmap: sanitizeArrayText(clean.improvementRoadmap),
+        });
+      }
+    }
+  } catch (err) {
+    setMessage({
+      type: "error",
+      text: "Failed to load marksheets",
+    });
+  }
+};
+
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -54,12 +109,20 @@ const MarksheetUpload = () => {
           text: "Marksheet uploaded successfully!",
         });
 
-        // 🔥 Capture ML results
-        setMlInsights(res.data.mlInsights);
+        const clean = res.data.mlInsights;
+
+        setMlInsights({
+          predictedStrongDomain: sanitizeString(clean.predictedStrongDomain),
+          weakSubjects: clean.weakSubjects || [],
+          academicTrend: sanitizeString(clean.academicTrend),
+          academicRiskScore: sanitizeNumber(clean.academicRiskScore),
+          nextSemesterPrediction: sanitizeNumber(clean.nextSemesterPrediction),
+          placementProbability: sanitizeNumber(clean.placementProbability),
+          improvementRoadmap: clean.improvementRoadmap || [],
+        });
 
         setFile(null);
         setSemester("");
-
         if (fileRef.current) fileRef.current.value = "";
 
         loadMarksheets();
@@ -67,9 +130,7 @@ const MarksheetUpload = () => {
     } catch (err) {
       setMessage({
         type: "error",
-        text:
-          err.response?.data?.message ||
-          "Upload failed",
+        text: err.response?.data?.message || "Upload failed",
       });
     }
 
@@ -78,21 +139,25 @@ const MarksheetUpload = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this marksheet?")) return;
-
     await studentAPI.deleteMarksheet(id);
     loadMarksheets();
   };
 
   const semesterOptions = [
-    "Semester 1","Semester 2","Semester 3","Semester 4",
-    "Semester 5","Semester 6","Semester 7","Semester 8"
+    "Semester 1",
+    "Semester 2",
+    "Semester 3",
+    "Semester 4",
+    "Semester 5",
+    "Semester 6",
+    "Semester 7",
+    "Semester 8",
   ];
 
   return (
     <div className="max-w-5xl mx-auto pt-6 space-y-8">
       <h2 className="text-3xl font-bold">Upload Marksheet</h2>
 
-      {/* MESSAGE */}
       {message && (
         <div
           className={`p-3 rounded ${
@@ -105,11 +170,8 @@ const MarksheetUpload = () => {
         </div>
       )}
 
-      {/* ================= UPLOAD FORM ================= */}
-      <form
-        className="bg-white shadow p-6 rounded-xl"
-        onSubmit={handleUpload}
-      >
+      {/* Upload Form */}
+      <form className="bg-white shadow p-6 rounded-xl" onSubmit={handleUpload}>
         <label className="block mb-2 font-medium">Semester *</label>
         <select
           value={semester}
@@ -133,11 +195,7 @@ const MarksheetUpload = () => {
           onChange={(e) => setFile(e.target.files[0])}
         />
 
-        {file && (
-          <p className="text-sm text-gray-600 mb-4">
-            Selected: {file.name}
-          </p>
-        )}
+        {file && <p className="text-sm text-gray-600 mb-4">Selected: {file.name}</p>}
 
         <button
           type="submit"
@@ -148,19 +206,16 @@ const MarksheetUpload = () => {
         </button>
       </form>
 
-      {/* ================= ML RESULTS SECTION ================= */}
+      {/* ML Insights */}
       {mlInsights && (
         <div className="bg-white p-6 rounded-xl shadow space-y-6">
-          <h3 className="text-xl font-bold">
-            🤖 AI Academic Insights
-          </h3>
+          <h3 className="text-xl font-bold">🤖 AI Academic Insights</h3>
 
           <div className="grid md:grid-cols-2 gap-6">
-
             <div>
               <p className="text-gray-500">Predicted Strong Domain</p>
               <h4 className="text-2xl font-bold text-green-600">
-                {mlInsights.predictedStrongDomain?.domain}
+                {mlInsights.predictedStrongDomain}
               </h4>
             </div>
 
@@ -188,9 +243,7 @@ const MarksheetUpload = () => {
 
           {/* Weak Subjects */}
           <div>
-            <p className="font-semibold text-red-600">
-              Weak Subjects
-            </p>
+            <p className="font-semibold text-red-600">Weak Subjects</p>
             {mlInsights.weakSubjects?.length ? (
               <ul className="list-disc ml-6 text-red-600">
                 {mlInsights.weakSubjects.map((s, i) => (
@@ -202,29 +255,21 @@ const MarksheetUpload = () => {
             )}
           </div>
 
-          {/* Improvement Roadmap */}
           <div>
-            <p className="font-semibold text-blue-600">
-              Improvement Roadmap
-            </p>
+            <p className="font-semibold text-blue-600">Improvement Roadmap</p>
             <ul className="list-disc ml-6 text-blue-700">
-              {mlInsights.improvementRoadmap?.map((r, i) => (
+              {mlInsights.improvementRoadmap.map((r, i) => (
                 <li key={i}>{r}</li>
               ))}
             </ul>
           </div>
 
-          {/* Risk Score */}
           <div>
-            <p className="font-semibold text-red-600">
-              Academic Risk Score
-            </p>
+            <p className="font-semibold text-red-600">Academic Risk Score</p>
             <div className="w-full bg-gray-200 h-3 rounded-full">
               <div
                 className="h-3 rounded-full bg-red-500"
-                style={{
-                  width: `${mlInsights.academicRiskScore}%`,
-                }}
+                style={{ width: `${mlInsights.academicRiskScore}%` }}
               />
             </div>
             <p className="text-red-600 font-bold mt-1">
@@ -234,16 +279,12 @@ const MarksheetUpload = () => {
         </div>
       )}
 
-      {/* ================= UPLOADED MARKSHEETS ================= */}
+      {/* Uploaded Marksheets */}
       <div>
-        <h3 className="text-xl font-semibold mb-3">
-          Uploaded Marksheets
-        </h3>
+        <h3 className="text-xl font-semibold mb-3">Uploaded Marksheets</h3>
 
         {marksheets.length === 0 ? (
-          <p className="text-gray-500">
-            No marksheets uploaded yet.
-          </p>
+          <p className="text-gray-500">No marksheets uploaded yet.</p>
         ) : (
           <div className="space-y-4">
             {marksheets.map((m) => (
@@ -253,11 +294,15 @@ const MarksheetUpload = () => {
               >
                 <div>
                   <p className="font-semibold">{m.semester}</p>
+
+                  {/* FIXED: Show CGPA properly */}
                   <p className="text-sm text-gray-500">
-                    {m.subjects.length} subjects | {m.percentage}%
+                    {m.subjects.length} subjects |{" "}
+                    {m.cgpa
+                      ? `CGPA: ${m.cgpa}`
+                      : `${m.percentage}%`}
                   </p>
 
-                  {/* IMPORTANT FIX */}
                   <a
                     href={`http://localhost:5001/api/student/marksheet/file/${m._id}`}
                     target="_blank"

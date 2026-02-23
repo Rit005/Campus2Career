@@ -37,7 +37,11 @@ export default function AdminLayout() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 className="text-xl font-bold text-indigo-600">Campus2Career Admin</h1>
+        <h1 className="text-xl font-bold text-indigo-600 flex items-center gap-2">
+         <span>Campus2Career</span>
+        <span className="text-white bg-indigo-600 px-2 py-1 rounded-md text-sm shadow">
+    ADMIN </span>
+</h1>
         </div>
         
         <div className="flex items-center gap-4">

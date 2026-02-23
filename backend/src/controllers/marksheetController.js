@@ -1,5 +1,3 @@
-// src/controllers/marksheetController.js
-
 import pdfParse from "pdf-parse-fixed";
 import mammoth from "mammoth";
 import Marksheet from "../models/Marksheet.js";
@@ -14,9 +12,10 @@ import {
   generateImprovementRoadmap,
   predictPlacementProbability,
 } from "../ml/academicML.js";
-/*============================================================
-  RAW TEXT EXTRACTOR
-============================================================*/
+
+/* ============================================================
+   RAW TEXT EXTRACTION
+============================================================ */
 const extractTextFromFile = async (buffer, mimeType) => {
   if (mimeType === "application/pdf") {
     const data = await pdfParse(buffer);
@@ -31,16 +30,14 @@ const extractTextFromFile = async (buffer, mimeType) => {
     return result.value;
   }
 
-  if (mimeType === "text/plain") {
-    return buffer.toString("utf8");
-  }
+  if (mimeType === "text/plain") return buffer.toString("utf8");
 
-  throw new Error("Unsupported file type");
+  throw new Error("Unsupported file format");
 };
 
-/*============================================================
-  AUTO GRADE (Fallback Only)
-============================================================*/
+/* ============================================================
+   FALLBACK GRADE
+============================================================ */
 const autoAssignGrade = (percentage) => {
   if (percentage >= 80) return "A";
   if (percentage >= 70) return "B";
@@ -49,31 +46,17 @@ const autoAssignGrade = (percentage) => {
   return "F";
 };
 
-/*============================================================
-  PROPER MARKSHEET PARSER (NO AI)
-============================================================*/
+/* ============================================================
+   MARKSHEET PARSER
+============================================================ */
 const parseMarksheetProperly = (text) => {
-  /*----------------------------------------------------------
-    1️⃣ Extract Subjects (Page 1 First Column)
-  -----------------------------------------------------------*/
   const subjectRegex = /^[A-Z]{2,4}\s*\d+-[A-Za-z0-9\s&()]+/gm;
-  const subjectMatches = text.match(subjectRegex) || [];
+  const subjectsUnique = [...new Set(text.match(subjectRegex) || [])];
 
-  // Remove duplicates while preserving order
-  const subjectsUnique = [...new Set(subjectMatches)];
-
-  /*----------------------------------------------------------
-    2️⃣ Extract Final Total Marks + Grades (Page 3)
-       Example format:
-       76.00/100.00
-       00
-       B
-  -----------------------------------------------------------*/
   const totalRegex = /(\d+\.\d+\/100\.00)\s*0*\s*([A-F])/g;
-
   const totals = [];
-  let match;
 
+  let match;
   while ((match = totalRegex.exec(text)) !== null) {
     totals.push({
       marks: match[1],
@@ -81,74 +64,73 @@ const parseMarksheetProperly = (text) => {
     });
   }
 
-  /*----------------------------------------------------------
-    3️⃣ Match Subjects With Totals By Index
-  -----------------------------------------------------------*/
   const finalSubjects = subjectsUnique
-    .map((name, index) => {
-      const total = totals[index];
-      if (!total) return null;
+    .map((name, idx) => {
+      const t = totals[idx];
+      if (!t) return null;
 
-      const [obtained, max] = total.marks.split("/");
+      const [obtained, max] = t.marks.split("/");
 
       return {
         name: name.trim(),
         marks: Number(obtained),
         maxMarks: Number(max),
-        grade: total.grade,
+        grade: t.grade,
       };
     })
     .filter(Boolean);
 
-  /*----------------------------------------------------------
-    4️⃣ Extract Semester, Year, CGPA
-  -----------------------------------------------------------*/
-  const semesterMatch = text.match(
-    /Registration Pattern\s*:\s*(Semester\s*[IVX]+)/i
-  );
-
-  const yearMatch = text.match(/Session\s*:\s*(\d{4}-\d{4})/);
-
-  const cgpaMatch = text.match(/CGPA\s*:\s*(\d+\.\d+)/);
-
   return {
-    semester: semesterMatch ? semesterMatch[1] : "",
-    year: yearMatch ? yearMatch[1] : "",
-    cgpa: cgpaMatch ? cgpaMatch[1] : "",
+    semester: text.match(/Registration Pattern\s*:\s*(Semester\s*[IVX]+)/i)?.[1] || "",
+    year: text.match(/Session\s*:\s*(\d{4}-\d{4})/)?.[1] || "",
+    cgpa: text.match(/CGPA\s*:\s*(\d+\.\d+)/)?.[1] || "",
     subjects: finalSubjects,
   };
 };
 
-/*============================================================
-  UPLOAD MARKSHEET CONTROLLER
-============================================================*/
+/* ============================================================
+   SANITIZERS
+============================================================ */
+const sanitizeNumber = (v) => {
+  if (typeof v === "number") return v;
+  if (typeof v === "string") return Number(v);
+  if (typeof v === "object" && v !== null) return Number(v.value || 0);
+  return 0;
+};
+
+const sanitizeString = (v) => {
+  if (typeof v === "string") return v;
+  if (typeof v === "object" && v !== null) {
+    if (v.domain) return v.domain;
+    if (v.value) return String(v.value);
+  }
+  return "";
+};
+
+/* ============================================================
+   UPLOAD MARKSHEET
+============================================================ */
 export const uploadMarksheetController = async (req, res) => {
   try {
     if (!req.file)
-      return res
-        .status(400)
-        .json({ success: false, message: "No file uploaded" });
-
-    const buffer = req.file.buffer;
-
-    const rawText = await extractTextFromFile(
-      buffer,
-      req.file.mimetype
-    );
-
-    const parsed = parseMarksheetProperly(rawText);
-
-    if (!parsed.subjects.length) {
       return res.status(400).json({
         success: false,
-        message: "Could not extract subject data properly",
+        message: "No file uploaded",
       });
-    }
 
-    /* ================= PROCESS SUBJECTS ================= */
+    const buffer = req.file.buffer;
+    const rawText = await extractTextFromFile(buffer, req.file.mimetype);
+    const parsed = parseMarksheetProperly(rawText);
+
+    if (!parsed.subjects.length)
+      return res.status(400).json({
+        success: false,
+        message: "Could not extract subject data",
+      });
+
+    /* SUBJECT STRUCTURE */
     const subjects = parsed.subjects.map((sub) => {
       const pct = (sub.marks / sub.maxMarks) * 100;
-
       return {
         name: sub.name,
         marks: sub.marks,
@@ -157,19 +139,28 @@ export const uploadMarksheetController = async (req, res) => {
       };
     });
 
-    /* ================= CALCULATE PERCENTAGE ================= */
-    const totalMarks = subjects.reduce((sum, s) => sum + s.marks, 0);
-    const totalMax = subjects.reduce((sum, s) => sum + s.maxMarks, 0);
+    const totalMarks = subjects.reduce((s, x) => s + x.marks, 0);
+    const totalMax = subjects.reduce((s, x) => s + x.maxMarks, 0);
+    const percentage = totalMax ? ((totalMarks / totalMax) * 100).toFixed(2) : "0";
 
-    const percentage =
-      totalMax > 0
-        ? ((totalMarks / totalMax) * 100).toFixed(2)
-        : 0;
+    const sem = parsed.semester || req.body.semester;
 
-    /* ================= SAVE ================= */
+    const existing = await Marksheet.findOne({
+      studentId: req.user._id,
+      semester: sem,
+    });
+
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: `Marksheet for ${sem} already exists`,
+      });
+    }
+
+    /* CREATE MARKSHEET */
     const saved = await Marksheet.create({
       studentId: req.user._id,
-      semester: parsed.semester || req.body.semester || "",
+      semester: parsed.semester || req.body.semester,
       year: parsed.year || "",
       subjects,
       cgpa: parsed.cgpa || "",
@@ -181,91 +172,107 @@ export const uploadMarksheetController = async (req, res) => {
       uploadedAt: new Date(),
     });
 
-    /* ================= FETCH ALL FOR ML ================= */
+    /* ============================================================
+       GLOBAL ML ANALYSIS
+    ============================================================ */
     const allMarksheets = await Marksheet.find({
       studentId: req.user._id,
     }).sort({ semester: 1 });
 
+    /* SEMESTER TREND */
     const semesterTrend = allMarksheets.map((m) => ({
       semester: m.semester,
       percentage: Number(m.percentage),
     }));
 
+    /* OVERALL PERFORMANCE */
     const overallPerformance =
-      allMarksheets.reduce(
-        (sum, m) => sum + Number(m.percentage),
-        0
-      ) / allMarksheets.length;
+      allMarksheets.reduce((a, m) => a + Number(m.percentage), 0) /
+      allMarksheets.length;
 
-    /* ================= SUBJECT PERFORMANCE ================= */
+    /* SUBJECT-WISE GLOBAL PERFORMANCE */
     const subjectStats = {};
-
     allMarksheets.forEach((m) => {
       m.subjects.forEach((sub) => {
-        if (!subjectStats[sub.name]) {
-          subjectStats[sub.name] = { total: 0, count: 0 };
-        }
+        if (!subjectStats[sub.name])
+          subjectStats[sub.name] = { totalMarks: 0, totalMax: 0 };
 
-        subjectStats[sub.name].total +=
-          (sub.marks / sub.maxMarks) * 100;
-
-        subjectStats[sub.name].count++;
+        subjectStats[sub.name].totalMarks += sub.marks;
+        subjectStats[sub.name].totalMax += sub.maxMarks;
       });
     });
 
-    const subjectWisePerformance = Object.keys(subjectStats).map(
-      (name) => ({
-        name,
-        average:
-          subjectStats[name].total /
-          subjectStats[name].count,
-      })
+    const subjectWisePerformance = Object.keys(subjectStats).map((name) => {
+      const s = subjectStats[name];
+      const avg = (s.totalMarks / s.totalMax) * 100;
+      return { name, average: avg };
+    });
+
+    const globalWeakSubjects = detectWeakSubjects(subjectWisePerformance);
+
+    /* ML PREDICTIONS */
+    const predictedDomain = sanitizeString(
+      predictAcademicDomain(subjectWisePerformance)
     );
 
-    /* ================= ML ANALYSIS ================= */
+    const trendStatus = sanitizeString(
+      analyzeTrend(semesterTrend)
+    );
 
-    const predictedDomain =
-      predictAcademicDomain(subjectWisePerformance);
+    const riskScore = sanitizeNumber(
+      calculateRiskScore(overallPerformance, globalWeakSubjects)
+    );
 
-    const weakSubjects =
-      detectWeakSubjects(subjectWisePerformance);
+    const careerReadiness = sanitizeNumber(
+      calculateCareerReadiness(overallPerformance, trendStatus)
+    );
 
-    const trendStatus =
-      analyzeTrend(semesterTrend);
+    const nextSemesterPrediction = sanitizeNumber(
+      predictNextSemester(semesterTrend)
+    );
 
-    const riskScore =
-      calculateRiskScore(
-        overallPerformance,
-        weakSubjects
-      );
+    const roadmapRaw = generateImprovementRoadmap(globalWeakSubjects);
+    const roadmap = roadmapRaw.map((item) => {
+      if (typeof item === "string") return item;
+      if (item?.subject && item?.recommendation)
+        return `${item.subject}: ${item.recommendation}`;
+      if (item?.recommendation) return item.recommendation;
+      return JSON.stringify(item);
+    });
 
-    const careerReadiness =
-      calculateCareerReadiness(
-        overallPerformance,
-        trendStatus
-      );
+    const placementProbability = sanitizeNumber(
+      predictPlacementProbability(overallPerformance, careerReadiness)
+    );
 
-    const nextSemesterPrediction =
-      predictNextSemester(semesterTrend);
+    /* CLEAR OLD ML INSIGHTS */
+    await Marksheet.updateMany(
+      { studentId: req.user._id },
+      { $unset: { mlInsights: "" } }
+    );
 
-    const roadmap =
-      generateImprovementRoadmap(weakSubjects);
+    /* WRITE ML INSIGHTS ONLY ON NEWEST MARKSHEET */
+    await Marksheet.findByIdAndUpdate(saved._id, {
+      mlInsights: {
+        predictedStrongDomain: predictedDomain,
+        weakSubjects: globalWeakSubjects,
+        academicTrend: trendStatus,
+        academicRiskScore: riskScore,
+        careerReadinessScore: careerReadiness,
+        nextSemesterPrediction,
+        improvementRoadmap: roadmap,
+        placementProbability,
+      },
+    });
 
-    const placementProbability =
-      predictPlacementProbability(
-        overallPerformance,
-        careerReadiness
-      );
-
-    /* ================= RESPONSE ================= */
+    /* IMPORTANT FIX — DO NOT SAVE AGAIN */
+    // await saved.save();  // ❌ REMOVED
 
     res.json({
       success: true,
       data: saved,
-
       mlInsights: {
         predictedStrongDomain: predictedDomain,
-        weakSubjects,
+        weakSubjects: globalWeakSubjects,
         academicTrend: trendStatus,
         academicRiskScore: riskScore,
         careerReadinessScore: careerReadiness,
@@ -275,7 +282,7 @@ export const uploadMarksheetController = async (req, res) => {
       },
     });
   } catch (err) {
-    console.log("UPLOAD ERROR:", err);
+    console.error("UPLOAD ERROR:", err);
     res.status(500).json({
       success: false,
       message: err.message || "Upload failed",
@@ -283,9 +290,9 @@ export const uploadMarksheetController = async (req, res) => {
   }
 };
 
-/*============================================================
-  GET ALL MARKSHEETS
-============================================================*/
+/* ============================================================
+   GET ALL MARKSHEETS
+============================================================ */
 export const getAllMarksheets = async (req, res) => {
   try {
     const list = await Marksheet.find({
@@ -301,9 +308,9 @@ export const getAllMarksheets = async (req, res) => {
   }
 };
 
-/*============================================================
-  DELETE MARKSHEET
-============================================================*/
+/* ============================================================
+   DELETE MARKSHEET
+============================================================ */
 export const deleteMarksheet = async (req, res) => {
   try {
     await Marksheet.findOneAndDelete({
@@ -320,18 +327,16 @@ export const deleteMarksheet = async (req, res) => {
   }
 };
 
-/*============================================================
-  DASHBOARD ANALYTICS
-============================================================*/
+/* ============================================================
+   DASHBOARD ANALYTICS
+============================================================ */
 export const getAcademicDashboard = async (req, res) => {
   try {
-    const studentId = req.user._id;
-
     const marksheets = await Marksheet.find({
-      studentId,
+      studentId: req.user._id,
     }).sort({ semester: 1 });
 
-    if (!marksheets.length) {
+    if (!marksheets.length)
       return res.json({
         success: true,
         data: {
@@ -340,38 +345,29 @@ export const getAcademicDashboard = async (req, res) => {
           semesterTrend: [],
         },
       });
-    }
 
+    /* Subject Aggregation */
     const subjectStats = {};
-
     marksheets.forEach((m) => {
-      m.subjects.forEach((sub) => {
-        if (!subjectStats[sub.name]) {
-          subjectStats[sub.name] = { total: 0, count: 0 };
-        }
-
-        subjectStats[sub.name].total +=
-          (sub.marks / sub.maxMarks) * 100;
-
-        subjectStats[sub.name].count++;
+      m.subjects.forEach((s) => {
+        if (!subjectStats[s.name])
+          subjectStats[s.name] = { total: 0, count: 0 };
+        subjectStats[s.name].total += (s.marks / s.maxMarks) * 100;
+        subjectStats[s.name].count++;
       });
     });
 
-    const subjectWisePerformance = Object.keys(subjectStats).map(
-      (name) => ({
-        name,
-        average: (
-          subjectStats[name].total /
-          subjectStats[name].count
-        ).toFixed(2),
-      })
-    );
+    const subjectWisePerformance = Object.keys(subjectStats).map((name) => ({
+      name,
+      average: (
+        subjectStats[name].total /
+        subjectStats[name].count
+      ).toFixed(2),
+    }));
 
     const overallPerformance = (
-      marksheets.reduce(
-        (sum, m) => sum + Number(m.percentage),
-        0
-      ) / marksheets.length
+      marksheets.reduce((a, m) => a + Number(m.percentage), 0) /
+      marksheets.length
     ).toFixed(2);
 
     const semesterTrend = marksheets.map((m) => ({
