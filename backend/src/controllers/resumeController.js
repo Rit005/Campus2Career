@@ -154,7 +154,7 @@ ${resumeText}
     });
 
   } catch (err) {
-    console.error("❌ Resume Analyzer Error:", err);
+    console.error(" Resume Analyzer Error:", err);
     return res.status(500).json({ error: err.message });
   }
 };
