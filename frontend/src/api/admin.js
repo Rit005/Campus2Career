@@ -24,6 +24,9 @@ const adminAPI = {
   
   getGrowthAnalytics: (period = 30) => 
     api.get(`/admin/analytics/growth?period=${period}`),
+
+  // Admins (for profile dropdown)
+  getAdmins: () => api.get("/admin/admins"),
 };
 
 export default adminAPI;

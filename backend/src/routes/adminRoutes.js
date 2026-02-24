@@ -6,7 +6,8 @@ import {
   deleteUser, 
   getAtRiskStudents, 
   getSkillTrends,
-  getGrowthAnalytics 
+  getGrowthAnalytics,
+  getAdmins
 } from '../controllers/adminController.js';
 import { protect, requireRole } from '../middleware/auth.js';
 
@@ -28,6 +29,8 @@ router.get('/students/at-risk', getAtRiskStudents);
 router.get('/skill-trends', getSkillTrends);
 
 router.get('/analytics/growth', getGrowthAnalytics);
+
+router.get('/admins', getAdmins);
 
 export default router;
 

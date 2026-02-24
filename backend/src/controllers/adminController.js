@@ -367,3 +367,44 @@ export const getGrowthAnalytics = async (req, res) => {
   }
 };
 
+// Get all admins (for admin profile dropdown)
+export const getAdmins = async (req, res) => {
+  try {
+    // Fetch all users with role === "admin"
+    const admins = await User.find({ role: 'admin' })
+      .select('name email createdAt isBlocked updatedAt')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Format the response
+    const formattedAdmins = admins.map(admin => ({
+      id: admin._id,
+      name: admin.name,
+      email: admin.email,
+      createdAt: admin.createdAt,
+      isActive: !admin.isBlocked
+    }));
+
+    // Get current admin info (from req.user set by middleware)
+    const currentAdmin = {
+      id: req.user._id,
+      name: req.user.name,
+      email: req.user.email
+    };
+
+    res.status(200).json({
+      success: true,
+      data: {
+        currentAdmin,
+        admins: formattedAdmins
+      }
+    });
+  } catch (error) {
+    console.error("Error in getAdmins:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching admins"
+    });
+  }
+};
+

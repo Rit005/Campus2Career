@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import AdminProfileDropdown from "../../components/AdminProfileDropdown";
 
 const menuItems = [
   { name: "Dashboard", path: "/admin/dashboard", icon: "📊" },
@@ -43,22 +44,7 @@ export default function AdminLayout() {
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-              <span className="text-indigo-600 font-medium">
-                {user?.name?.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <span className="hidden md:block text-sm font-medium text-gray-700">
-              {user?.name}
-            </span>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600"
-          >
-            Logout
-          </button>
+          <AdminProfileDropdown user={user} onLogout={handleLogout} />
         </div>
       </header>
 
