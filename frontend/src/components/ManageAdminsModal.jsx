@@ -92,7 +92,7 @@ const ManageAdminsModal = ({ isOpen, onClose, currentAdminId }) => {
           </button>
         </div>
 
-        
+       
         <div className="flex-1 overflow-y-auto p-4">
           {loading && (
             <div className="flex items-center justify-center py-12">
@@ -239,7 +239,7 @@ const ManageAdminsModal = ({ isOpen, onClose, currentAdminId }) => {
           )}
         </div>
 
-       
+        
         <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
           <div className="flex justify-end">
             <button
@@ -256,4 +256,3 @@ const ManageAdminsModal = ({ isOpen, onClose, currentAdminId }) => {
 };
 
 export default ManageAdminsModal;
-
