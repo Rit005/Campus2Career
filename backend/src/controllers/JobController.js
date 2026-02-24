@@ -34,7 +34,7 @@ export const postJob = async (req, res) => {
       job,
     });
   } catch (error) {
-    console.error("❌ Post Job Error:", error);
+    console.error(" Post Job Error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to post job",
@@ -53,7 +53,7 @@ export const getMyJobs = async (req, res) => {
       jobs,
     });
   } catch (error) {
-    console.error("❌ Get Jobs Error:", error);
+    console.error(" Get Jobs Error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch jobs",
