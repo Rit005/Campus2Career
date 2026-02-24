@@ -83,7 +83,7 @@ export const matchCandidates = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("❌ Smart Matching Error:", err);
+    console.error(" Smart Matching Error:", err);
     return res.status(500).json({
       success: false,
       message: "Candidate matching failed",
