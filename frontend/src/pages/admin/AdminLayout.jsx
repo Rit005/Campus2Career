@@ -18,6 +18,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -36,8 +37,12 @@ export default function AdminLayout() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-        <h1 className="text-xl font-bold text-indigo-600 flex items-center gap-2">
-         <span>Campus2Career</span>
+        <h1 
+          onClick={() => setCollapsed(!collapsed)}
+          className="text-xl font-bold text-indigo-600 flex items-center gap-2 cursor-pointer hover:text-indigo-700 transition-colors"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+         <span className={collapsed ? "hidden" : ""}>Campus2Career</span>
         <span className="text-white bg-indigo-600 px-2 py-1 rounded-md text-sm shadow">
     ADMIN </span>
 </h1>
@@ -49,11 +54,15 @@ export default function AdminLayout() {
       </header>
 
       <aside
-        className={`fixed left-0 top-16 bottom-0 bg-white shadow-lg z-40 transition-all duration-300 ${
-          sidebarOpen ? "w-64" : "w-0 -translate-x-full lg:w-64 lg:translate-x-0"
+        className={`fixed left-0 top-16 bottom-0 bg-white shadow-lg z-40 transition-all duration-300 ease-in-out ${
+          sidebarOpen 
+            ? collapsed 
+              ? "w-20" 
+              : "w-64" 
+            : "-translate-x-full lg:translate-x-0 lg:w-64"
         }`}
       >
-        <nav className="p-4 space-y-1">
+        <nav className="p-4 space-y-1 overflow-hidden">
           {menuItems.map((item) => (
             <Link
               key={item.path}
@@ -64,16 +73,22 @@ export default function AdminLayout() {
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
-              <span className="text-xl">{item.icon}</span>
-              <span className="font-medium">{item.name}</span>
+              <span className="text-xl flex-shrink-0">{item.icon}</span>
+              <span className={`font-medium whitespace-nowrap transition-all duration-300 ${
+                collapsed ? "opacity-0 hidden lg:inline" : "opacity-100"
+              }`}>{item.name}</span>
             </Link>
           ))}
         </nav>
       </aside>
 
       <main
-        className={`pt-16 min-h-screen transition-all duration-300 ${
-          sidebarOpen ? "lg:ml-64" : "lg:ml-64"
+        className={`pt-16 min-h-screen transition-all duration-300 ease-in-out ${
+          sidebarOpen 
+            ? collapsed 
+              ? "lg:ml-20" 
+              : "lg:ml-64" 
+            : "lg:ml-64"
         }`}
       >
         <div className="p-6">
