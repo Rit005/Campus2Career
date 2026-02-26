@@ -1,10 +1,9 @@
 import { useEffect } from "react";
-import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const Home = () => {
-  const { user, isAuthenticated, handleOAuthCallback, logout, loading } = useAuth();
-  const navigate = useNavigate();
+  const { handleOAuthCallback, loading } = useAuth();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
@@ -12,12 +11,7 @@ const Home = () => {
     if (token) {
       handleOAuthCallback(token);
     }
-  }, [searchParams, handleOAuthCallback]);
-
-  if (!loading && user?.role) {
-    if (user.role === "student") return <Navigate to="/student/dashboard" replace />;
-    if (user.role === "recruiter") return <Navigate to="/recruiter/dashboard" replace />;
-  }
+  }, []);
 
   if (loading) {
     return (
@@ -30,71 +24,59 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
 
-  <nav className="bg-white shadow-sm fixed top-0 left-0 w-full z-50">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="flex justify-between h-16">
-        <div className="flex items-center">
-          <div className="flex-shrink-0 flex items-center">
-            <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-lg font-bold">C2C</span>
-            </div>
-            <span className="ml-2 text-xl font-bold text-gray-900">Campus2Career</span>
-          </div>
-        </div>
+      <nav className="bg-white shadow-sm fixed top-0 left-0 w-full z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
 
-        <div className="flex items-center space-x-4">
-          {isAuthenticated ? (
-            <Link to="/redirect" className="btn-primary">
-              Go to Dashboard
-            </Link>
-          ) : (
-            <>
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
+                <span className="text-white text-lg font-bold">C2C</span>
+              </div>
+              <span className="ml-2 text-xl font-bold text-gray-900">
+                Campus2Career
+              </span>
+            </div>
+
+            <div className="flex items-center space-x-4">
               <Link
                 to="/login"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Sign in
               </Link>
+
               <Link to="/signup" className="btn-primary">
                 Get Started
               </Link>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  </nav>
+            </div>
 
-  <main className="pt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center animate-fade-in">
+          </div>
+        </div>
+      </nav>
+
+      <main className="pt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="text-center">
+
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6">
             Bridge Your Campus
             <span className="text-primary-600"> to Career</span>
           </h1>
 
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10">
-            Campus2Career is your comprehensive platform for navigating the journey from
-            academics to professional success. Discover opportunities, build skills,
+            Campus2Career is your comprehensive platform for navigating the journey
+            from academics to professional success. Discover opportunities, build skills,
             and connect with mentors.
           </p>
 
-          {!isAuthenticated ? (
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link to="/signup" className="btn-primary text-lg px-8 py-3">
-                Start Your Journey
-              </Link>
-              <Link to="/login" className="btn-secondary text-lg px-8 py-3">
-                Sign In
-              </Link>
-            </div>
-          ) : (
-            <button
-              onClick={() => navigate("/redirect")}
-              className="btn-primary text-lg px-8 py-3"
-            >
-              Continue to Dashboard
-            </button>
-          )}
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link to="/signup" className="btn-primary text-lg px-8 py-3">
+              Start Your Journey
+            </Link>
+
+            <Link to="/login" className="btn-secondary text-lg px-8 py-3">
+              Sign In
+            </Link>
+          </div>
         </div>
 
         <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -138,40 +120,23 @@ const Home = () => {
           </div>
         </div>
 
-        <div className="mt-24 bg-primary-600 rounded-2xl shadow-xl p-8 md:p-12 text-center">
+        <div className="mt-24 bg-primary-600 rounded-2xl shadow-xl p-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
             Ready to Start Your Career Journey?
           </h2>
-          <p className="text-primary-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of students who've already taken the first step.
-          </p>
 
-          {!isAuthenticated && (
-            <Link
-              to="/signup"
-              className="inline-block bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-primary-50 transition-colors"
-            >
-              Create Free Account
-            </Link>
-          )}
+          <Link
+            to="/signup"
+            className="inline-block bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold"
+          >
+            Create Free Account
+          </Link>
         </div>
       </main>
 
       <footer className="bg-white border-t mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-sm font-bold">C2C</span>
-              </div>
-              <span className="ml-2 text-gray-600">© 2025 Campus2Career. All rights reserved.</span>
-            </div>
-            <div className="flex space-x-6">
-              <a href="#" className="text-gray-400 hover:text-gray-600">Privacy</a>
-              <a href="#" className="text-gray-400 hover:text-gray-600">Terms</a>
-              <a href="#" className="text-gray-400 hover:text-gray-600">Contact</a>
-            </div>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-gray-600">
+          © 2025 Campus2Career. All rights reserved.
         </div>
       </footer>
     </div>
