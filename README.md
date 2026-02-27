@@ -144,7 +144,7 @@ npm install
 # Start development server
 npm run dev
 
-Then open : `http://localhost:5000` |
+Then open : `http://localhost:5000` 
 ```
 
 ---
@@ -167,7 +167,7 @@ Then open : `http://localhost:5000` |
 <img src="./screenshots/career.png" />
 
 <h3 style="color:#1E90FF;">Recruiter Dashboard</h3>
-<img src="./screenshots/recruiter_Dashboard.png"  />
+<img src="./screenshots/Recruiter_Dashboard.png"  />
 
 <h3 style="color:#1E90FF;">Jobs</h3>
 <img src="./screenshots/Job_Matching.png"  />
@@ -185,4 +185,4 @@ Then open : `http://localhost:5000` |
 <img src="./screenshots/Admin_user.png"  />
 
 <h3 style="color:#1E90FF;">Admin Analytics</h3>
-<img src="./screenshots/Admin_Analytics.png"  />
+<img src="./screenshots/Admin_analytics.png"  />
