@@ -1,3 +1,5 @@
+// src/controllers/resumeController.js
+
 import { groq } from "../groqClient.js";
 import mammoth from "mammoth";
 import pdfParse from "pdf-parse-fixed";
@@ -18,6 +20,9 @@ export const analyzeResume = async (req, res) => {
 
     let resumeText = req.body.resumeText || "";
 
+    // ----------------------------
+    // FILE → RAW TEXT EXTRACTION
+    // ----------------------------
     if (req.file) {
       const buffer = req.file.buffer;
       const type = req.file.mimetype;
@@ -26,8 +31,7 @@ export const analyzeResume = async (req, res) => {
         const pdfData = await pdfParse(buffer);
         resumeText = pdfData.text;
       } else if (
-        type ===
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
       ) {
         const docxData = await mammoth.extractRawText({ buffer });
         resumeText = docxData.value;
@@ -43,6 +47,9 @@ export const analyzeResume = async (req, res) => {
     if (!resumeText.trim())
       return res.status(400).json({ error: "Resume text is empty" });
 
+    // ----------------------------
+    // AI STRUCTURED EXTRACTION
+    // ----------------------------
     const prompt = `
 Extract structured details from the resume strictly in JSON format.
 
@@ -86,7 +93,6 @@ ${resumeText}
 
     let parsed = JSON.parse(jsonMatch[0]);
 
-
     parsed = {
       skills: parsed.skills || [],
       experience_summary: parsed.experience_summary || "",
@@ -97,11 +103,29 @@ ${resumeText}
       project_recommendations: parsed.project_recommendations || [],
     };
 
+    // ----------------------------
+    // IMPORTANT FIX 🔥
+    // Normalize all extracted skills to lowercase
+    // ----------------------------
+    parsed.skills = parsed.skills.map((s) =>
+      String(s).trim().toLowerCase()
+    );
+
+    parsed.missing_skills = parsed.missing_skills.map((s) =>
+      String(s).trim().toLowerCase()
+    );
+
+    // ----------------------------
+    // ML MODELS
+    // ----------------------------
     const domainPrediction = predictDomain(parsed.skills);
     const resumeStrength = calculateResumeStrength(parsed);
 
     parsed = autoFillMissingSkills(parsed, domainPrediction.predictedDomain);
 
+    // ----------------------------
+    // EMAIL + PHONE EXTRACTION
+    // ----------------------------
     const extractedEmail =
       resumeText.match(
         /[a-zA-Z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/
@@ -110,6 +134,9 @@ ${resumeText}
     const extractedPhone =
       resumeText.match(/\+?\d[\d\s]{7,15}\d/)?.[0] || "";
 
+    // ----------------------------
+    // SAVE RESUME TO DB
+    // ----------------------------
     const savedResume = await Resume.findOneAndUpdate(
       { studentId },
       {
@@ -128,6 +155,9 @@ ${resumeText}
       { upsert: true, new: true }
     );
 
+    // ----------------------------
+    // ALSO UPDATE STUDENT MODEL
+    // ----------------------------
     await Student.findOneAndUpdate(
       { userId: studentId },
       {
@@ -167,7 +197,7 @@ export const getStudentResume = async (req, res) => {
 
     return res.json({
       success: true,
-      data: resume || null, 
+      data: resume || null,
     });
   } catch (err) {
     return res.status(500).json({

@@ -114,7 +114,7 @@ const Matching = () => {
   return (
     <div className="space-y-10 py-6">
 
-      <h1 className="text-3xl font-bold text-gray-900">🤝 Candidate Matching</h1>
+      <h1 className="text-3xl font-bold text-gray-900">🤝 Post Jobs</h1>
 
       <div className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold mb-4">Post a Job</h2>

@@ -1,6 +1,7 @@
 import pdfParse from "pdf-parse-fixed";
 import mammoth from "mammoth";
 import Marksheet from "../models/Marksheet.js";
+import Tesseract from "tesseract.js";
 
 import {
   predictAcademicDomain,
@@ -15,22 +16,37 @@ import {
 
 
 const extractTextFromFile = async (buffer, mimeType) => {
-  if (mimeType === "application/pdf") {
-    const data = await pdfParse(buffer);
-    return data.text;
+  try {
+    if (mimeType === "application/pdf") {
+      const data = await pdfParse(buffer);
+      return data.text;
+    }
+
+    if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      const result = await mammoth.extractRawText({ buffer });
+      return result.value;
+    }
+
+    if (mimeType === "text/plain") {
+      return buffer.toString("utf8");
+    }
+
+    const imageFormats = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (imageFormats.includes(mimeType)) {
+      console.log("Running OCR on uploaded image...");
+
+      const { data: { text } } = await Tesseract.recognize(buffer, "eng", {
+        logger: m => console.log(m.progress), 
+      });
+
+      return text;
+    }
+
+    throw new Error("Unsupported file format");
+  } catch (err) {
+    console.error("TEXT EXTRACTION ERROR:", err);
+    throw new Error("Failed to extract text from file");
   }
-
-  if (
-    mimeType ===
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-  ) {
-    const result = await mammoth.extractRawText({ buffer });
-    return result.value;
-  }
-
-  if (mimeType === "text/plain") return buffer.toString("utf8");
-
-  throw new Error("Unsupported file format");
 };
 
 

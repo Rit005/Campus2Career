@@ -1,5 +1,30 @@
 import Resume from "../models/Resume.js";
 
+const SKILL_ALIASES = {
+  postgreesql: "postgresql",
+  postgre: "postgresql",
+  vscode: "visualstudiocode",
+  html5: "html",
+  js: "javascript",
+  nodejs: "nodejs",
+  groqllm: "groq",
+  expressjs: "expressjs",
+  springboot: "springboot",
+  "visualstudiocode": "visualstudiocode",
+};
+
+const normalizeSkill = (skill = "") => {
+  let cleaned = String(skill)
+    .toLowerCase()
+    .trim()
+    .replace(/\./g, "")  
+    .replace(/\s+/g, "")  
+    .replace(/-/g, "")       
+    .replace(/_/g, "");     
+
+  return SKILL_ALIASES[cleaned] || cleaned;
+};
+
 export const matchCandidates = async (req, res) => {
   try {
     const { requiredSkills = [], jobDescription = "" } = req.body;
@@ -11,16 +36,17 @@ export const matchCandidates = async (req, res) => {
       });
     }
 
-    const normalizedSkills = requiredSkills.map((s) =>
-      String(s).toLowerCase().trim()
-    );
+    const normalizedSkills = requiredSkills.map(normalizeSkill);
 
     const descKeywords = jobDescription
       .toLowerCase()
       .split(/[\s,.-]+/)
       .filter((w) => w.length > 3);
 
-    const resumes = await Resume.find().populate("studentId", "name email phone");
+    const resumes = await Resume.find().populate(
+      "studentId",
+      "name email phone"
+    );
 
     const rankedCandidates = [];
 
@@ -35,8 +61,7 @@ export const matchCandidates = async (req, res) => {
         skillArr = resume.skills.split(",").map((s) => s.trim());
       }
 
-      const candidateSkills = skillArr.map((s) => String(s).toLowerCase());
-
+      const candidateSkills = skillArr.map(normalizeSkill);
 
       const matchedSkills = normalizedSkills.filter((reqSkill) =>
         candidateSkills.includes(reqSkill)
@@ -44,18 +69,23 @@ export const matchCandidates = async (req, res) => {
 
       const skillScore =
         normalizedSkills.length > 0
-          ? Math.round((matchedSkills.length / normalizedSkills.length) * 100)
+          ? Math.round(
+              (matchedSkills.length / normalizedSkills.length) * 100
+            )
           : 0;
 
-
       const expText = String(resume.experience_summary || "").toLowerCase();
-      const matchedExpWords = descKeywords.filter((w) => expText.includes(w));
+      const matchedExpWords = descKeywords.filter((w) =>
+        expText.includes(w)
+      );
 
       const experienceScore =
         descKeywords.length > 0
           ? Math.min(
               30,
-              Math.round((matchedExpWords.length / descKeywords.length) * 30)
+              Math.round(
+                (matchedExpWords.length / descKeywords.length) * 30
+              )
             )
           : 0;
 
@@ -81,9 +111,8 @@ export const matchCandidates = async (req, res) => {
       success: true,
       candidates: rankedCandidates,
     });
-
   } catch (err) {
-    console.error(" Smart Matching Error:", err);
+    console.error("Smart Matching Error:", err);
     return res.status(500).json({
       success: false,
       message: "Candidate matching failed",
