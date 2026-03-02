@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { studentAPI } from "../../api/student";
-import { Upload, FileText, Loader2, Brain } from "lucide-react";
+import { Upload, FileText, Loader2, Brain, Briefcase } from "lucide-react";
 
 const ResumeAnalyzer = () => {
   const [file, setFile] = useState(null);
@@ -18,6 +18,8 @@ const ResumeAnalyzer = () => {
   const [predictedDomain, setPredictedDomain] = useState("");
   const [confidence, setConfidence] = useState(0);
   const [resumeStrength, setResumeStrength] = useState(0);
+
+  const [jobRecommendations, setJobRecommendations] = useState([]);
 
   const [dragActive, setDragActive] = useState(false);
 
@@ -39,6 +41,8 @@ const ResumeAnalyzer = () => {
           setPredictedDomain(d.predictedDomain || "");
           setConfidence(d.domainConfidence || 0);
           setResumeStrength(d.resumeStrengthScore || 0);
+
+          setJobRecommendations(d.recommendedJobs || []);
         }
       } catch (err) {
         console.error("Failed to load resume", err);
@@ -90,6 +94,8 @@ const ResumeAnalyzer = () => {
       setConfidence(ml?.confidence || 0);
       setResumeStrength(ml?.resumeStrengthScore || 0);
 
+      setJobRecommendations(res.data.jobRecommendations || []);
+
     } catch (err) {
       console.error(err);
       alert("Resume analysis failed.");
@@ -104,6 +110,7 @@ const ResumeAnalyzer = () => {
         📄 Resume Analyzer
       </h1>
 
+      {/* Upload Box */}
       <div
         className={`border-2 border-dashed rounded-xl p-10 text-center transition-all
         ${dragActive ? "border-blue-600 bg-blue-50" : "border-gray-300 bg-white"}`}
@@ -145,10 +152,10 @@ const ResumeAnalyzer = () => {
         Analyze Resume
       </button>
 
+      {/* AI insights */}
       {(predictedDomain || resumeStrength > 0) && (
         <Section title="🧠 AI Resume Intelligence">
           <div className="space-y-6">
-
             <div>
               <h3 className="font-semibold text-lg flex items-center gap-2">
                 <Brain className="h-5 w-5 text-purple-600" />
@@ -166,14 +173,12 @@ const ResumeAnalyzer = () => {
               <h3 className="font-semibold text-lg">
                 Resume Strength Score
               </h3>
-
               <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
                 <div
                   className="bg-green-600 h-4 rounded-full transition-all"
                   style={{ width: `${resumeStrength}%` }}
                 ></div>
               </div>
-
               <p className="text-gray-600 mt-1">
                 {resumeStrength}/100
               </p>
@@ -182,6 +187,7 @@ const ResumeAnalyzer = () => {
         </Section>
       )}
 
+      {/* Extracted skills */}
       <Section title="Extracted Skills">
         {skills.length ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -199,6 +205,7 @@ const ResumeAnalyzer = () => {
         )}
       </Section>
 
+      {/* Extracted Projects */}
       <Section title="Extracted Projects">
         {projects.length ? (
           <div className="space-y-4">
@@ -219,6 +226,7 @@ const ResumeAnalyzer = () => {
         )}
       </Section>
 
+      {/* Missing Skills */}
       <Section title="Missing Skills (Recommended)">
         {missingSkills.length ? (
           <ul className="list-disc ml-6 text-gray-700">
@@ -229,6 +237,7 @@ const ResumeAnalyzer = () => {
         )}
       </Section>
 
+      {/* AI Recommended Projects */}
       <Section title="AI Recommended Projects">
         {recommendedProjects.length ? (
           <ul className="list-disc ml-6 text-gray-700">
@@ -239,18 +248,21 @@ const ResumeAnalyzer = () => {
         )}
       </Section>
 
+      {/* AI Summary */}
       <Section title="AI Summary">
         <p className="text-gray-700 whitespace-pre-line">
           {summary || "Summary will appear here."}
         </p>
       </Section>
 
+      {/* Education */}
       <Section title="Education">
         <p className="text-gray-700">
           {education || "Education details will appear here."}
         </p>
       </Section>
 
+      {/* Suggested Roles */}
       <Section title="Suggested Roles">
         {roles.length ? (
           <ul className="list-disc ml-6 text-gray-700">
@@ -258,6 +270,49 @@ const ResumeAnalyzer = () => {
           </ul>
         ) : (
           <Empty text="AI-suggested roles will appear here." />
+        )}
+      </Section>
+
+      {/* Recommended Jobs */}
+      <Section title="Recommended Jobs Based on Your Skills">
+        {jobRecommendations.length ? (
+          <div className="space-y-4">
+            {jobRecommendations.map((job, idx) => (
+              <div
+                key={idx}
+                className="p-4 border rounded-xl shadow-sm bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <Briefcase className="text-blue-600 h-6 w-6" />
+                  <h3 className="text-lg font-semibold">
+                    {job.title}
+                  </h3>
+                </div>
+
+                <p className="text-gray-700 mt-1 font-medium">
+                  Company: {job.company}
+                </p>
+
+                <p className="text-green-700 font-bold mt-2">
+                  Match Score: {job.matchScore}%
+                </p>
+
+                {job.matchingSkills.length > 0 && (
+                  <p className="text-blue-700 text-sm mt-2">
+                    Matching Skills: {job.matchingSkills.join(", ")}
+                  </p>
+                )}
+
+                {job.missingSkills.length > 0 && (
+                  <p className="text-red-700 text-sm mt-1">
+                    Missing Skills: {job.missingSkills.join(", ")}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Empty text="AI will recommend jobs based on your resume." />
         )}
       </Section>
     </div>

@@ -29,14 +29,23 @@ export const getAllStudents = async (req, res) => {
 export const applyForJob = async (req, res) => {
   try {
     console.log("BODY:", req.body);
-console.log("FILE:", req.file);
-console.log("USER:", req.user);
-    const { jobId, jobRole, message, expectedSalary } = req.body;
+    console.log("FILE:", req.file);
+    console.log("USER:", req.user);
 
-    if (!jobId || !jobRole) {
+    const {
+      jobId,
+      jobRole,
+      message,
+      expectedSalary,
+      name,
+      email,
+      phone
+    } = req.body;
+
+    if (!jobId || !jobRole || !name || !email || !phone) {
       return res.status(400).json({
         success: false,
-        message: "Job ID and Job Role are required",
+        message: "All required fields must be provided",
       });
     }
 
@@ -58,10 +67,6 @@ console.log("USER:", req.user);
         message: "You have already applied for this job",
       });
     }
-
-    const name = req.user.name;
-    const email = req.user.email;
-    const phone = req.user.phone || "Not Provided";
 
     const application = await Application.create({
       jobId,

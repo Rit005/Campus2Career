@@ -45,17 +45,26 @@ const CareerGuidance = () => {
 
 const submitJobApplication = async ({
   jobId,
+  name,
+  email,
+  phone,
   message,
-  resume,
   expectedSalary,
+  resume,
 }) => {
   try {
     const form = new FormData();
 
     form.append("jobId", jobId);
-    form.append("jobRole", selectedJob.jobTitle); 
+    form.append("jobRole", selectedJob.jobTitle);
+
+    form.append("name", name);
+    form.append("email", email);
+    form.append("phone", phone);
+
     form.append("message", message || "");
     form.append("expectedSalary", expectedSalary || "");
+
     form.append("resume", resume);
 
     const res = await studentAPI.applyForJob(form);
@@ -65,8 +74,8 @@ const submitJobApplication = async ({
       setApplyModalOpen(false);
     }
   } catch (err) {
-    console.error(err);
-    alert("Failed to apply.");
+    console.error("Apply Error:", err);
+    alert(err.response?.data?.message || "Failed to apply.");
   }
 };
 

@@ -18,6 +18,11 @@ const recruiterAPI = {
   
   updateJob: (id, data) => API.put(`/job/${id}`, data),
   getAllJobs: () => API.get("/all-jobs"),
+
+  getApplicants: (jobId) => API.get(`/job/${jobId}/applicants`),
+
+  updateStatus: (id, status) =>
+    API.patch(`/status/${id}`, { status }),
 };
 
 export default recruiterAPI;

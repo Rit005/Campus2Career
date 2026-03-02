@@ -29,6 +29,8 @@ import Recruiters from "./pages/admin/Recruiters";
 import Analytics from "./pages/admin/Analytics";
 import SkillTrends from "./pages/admin/SkillTrends";
 import RiskStudents from "./pages/admin/RiskStudents";
+import ViewApplicants from "./pages/recruiter/ViewApplicants";
+import ApplicantsHome from "./pages/recruiter/ApplicantsHome";
 
 function App() {
   return (
@@ -82,7 +84,9 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="matching" element={<Matching />} />
             <Route path="analytics" element={<RecruiterAnalytics />} />
-            <Route path="hr-assistant" element={<HrAssistant />} />
+             <Route path="applicants/:jobId" element={<ViewApplicants />} />
+             <Route path="applicants" element={<ApplicantsHome />} />
+             <Route path="hr-assistant" element={<HrAssistant />} />
           </Route>
 
           <Route

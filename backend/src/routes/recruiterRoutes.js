@@ -1,6 +1,5 @@
 import express from "express";
 import { protect, requireRole } from "../middleware/auth.js";
-import { getRecruiterAnalytics } from "../controllers/recruiterAnalyticsController.js";
 
 import { 
   postJob, 
@@ -10,9 +9,15 @@ import {
   getAllJobs
 } from "../controllers/JobController.js";
 
+import {
+  getApplicantsForJob,
+  updateApplicationStatus,
+} from "../controllers/applicationController.js";
+
 import { matchCandidates } from "../controllers/matchingController.js";
 import { getHiringDashboard } from "../controllers/dashboardController.js";
 import { hrAssistantChat } from "../controllers/hrAssistantController.js";
+import { getRecruiterAnalytics } from "../controllers/recruiterAnalyticsController.js";
 
 const router = express.Router();
 
@@ -24,7 +29,7 @@ router.get("/jobs", getMyJobs);
 router.delete("/job/:id", deleteJob);
 router.put("/job/:id", updateJob);
 
-// GET ALL JOBS (fixed)
+// GET ALL JOBS 
 router.get("/all-jobs", getAllJobs);
 
 // MATCHING
@@ -33,10 +38,14 @@ router.post("/match", matchCandidates);
 // DASHBOARD
 router.post("/dashboard", getHiringDashboard);
 
-
 // HR Chatbot
 router.post("/hr-assistant", hrAssistantChat);
 
-router.get("/analytics", protect, requireRole("recruiter"), getRecruiterAnalytics);
+// ANALYTICS 
+router.get("/analytics", getRecruiterAnalytics);
+
+// APPLICANTS 
+router.get("/applicants/:jobId", getApplicantsForJob);
+router.patch("/applicants/:id/status", updateApplicationStatus);
 
 export default router;

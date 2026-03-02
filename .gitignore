@@ -17,6 +17,8 @@ dist-ssr
 node_modules/
 .env
 dist/
+*.h5
+*.pb
 build/
 .DS_Store
 

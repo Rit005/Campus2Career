@@ -1,4 +1,3 @@
-
 import axios from "axios";
 
 const StudentAPI = axios.create({
@@ -8,24 +7,26 @@ const StudentAPI = axios.create({
 
 export const studentAPI = {
 
-saveProfile: (data) => axios.post("/api/profile/save", data),
-  getProfile: () => axios.get("/api/profile/get"),
-  addSkill: (skill) => axios.post("/api/profile/skill/add", { skill }),
-  removeSkill: (skill) => axios.post("/api/profile/skill/remove", { skill }),
-  addInterest: (interest) => axios.post("/api/profile/interest/add", { interest }),
-  removeInterest: (interest) => axios.post("/api/profile/interest/remove", { interest }),
+  saveProfile: (data) => StudentAPI.post("/profile/save", data),
+  getProfile: () => StudentAPI.get("/profile/get"),
+
+  addSkill: (skill) => StudentAPI.post("/profile/skill/add", { skill }),
+  removeSkill: (skill) => StudentAPI.post("/profile/skill/remove", { skill }),
+
+  addInterest: (interest) =>
+    StudentAPI.post("/profile/interest/add", { interest }),
+  removeInterest: (interest) =>
+    StudentAPI.post("/profile/interest/remove", { interest }),
 
   analyzeResume: (formData) =>
     StudentAPI.post("/resume", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: { /* let axios auto set */ },
     }),
 
   getResume: () => StudentAPI.get("/resume"),
 
   uploadMarksheet: (formData) =>
-    StudentAPI.post("/marksheet", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
+    StudentAPI.post("/marksheet", formData),
 
   getAllMarksheets: () => StudentAPI.get("/marksheet"),
 
@@ -44,12 +45,9 @@ saveProfile: (data) => axios.post("/api/profile/save", data),
   getAllJobs: () => StudentAPI.get("/jobs"),
 
   applyForJob: (formData) =>
-    StudentAPI.post("/apply", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
+    StudentAPI.post("/apply", formData),   // FIXED
 
   getAllStudents: () => StudentAPI.get("/students"),
-
 
   aiMentor: (data) => StudentAPI.post("/mentor-assistant", data),
 };
