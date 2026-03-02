@@ -20,13 +20,15 @@ export const studentAPI = {
 
   analyzeResume: (formData) =>
     StudentAPI.post("/resume", formData, {
-      headers: { /* let axios auto set */ },
+      headers: { "Content-Type": "multipart/form-data" },
     }),
 
   getResume: () => StudentAPI.get("/resume"),
 
   uploadMarksheet: (formData) =>
-    StudentAPI.post("/marksheet", formData),
+    StudentAPI.post("/marksheet", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
 
   getAllMarksheets: () => StudentAPI.get("/marksheet"),
 
