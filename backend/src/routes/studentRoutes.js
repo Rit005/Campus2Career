@@ -5,38 +5,34 @@ import { uploadMarksheet } from "../middleware/uploadMarksheet.js";
 import { getStudentAnalytics,getSemesterWiseAnalytics} from "../controllers/academicAnalyticsController.js";
 
 import {
-  getAllStudents,
-  applyForJob
+  getAllStudents,applyForJob
 } from "../controllers/studentController.js";
 
-// JOBS FOR STUDENTS
+import {
+  saveStudentProfile,getStudentProfile,addSkill, removeSkill,addInterest,removeInterest
+} from "../controllers/profileController.js"; 
+
 import { getAllJobs } from "../controllers/careerGuidanceController.js";
 
-// MENTOR CHAT
 import { mentorAssistantChat } from "../controllers/mentorAssistantController.js";
 
-// RESUME MODULE
 import {
-  analyzeResume,
-  getStudentResume
+  analyzeResume,getStudentResume
 } from "../controllers/resumeController.js";
 
-// MARKSHEET + ACADEMIC
+
 import {
-  uploadMarksheetController,
-  getAllMarksheets,
-  deleteMarksheet,
-  getAcademicDashboard
+  uploadMarksheetController,getAllMarksheets,deleteMarksheet, getAcademicDashboard
 } from "../controllers/marksheetController.js";
 
-// CAREER ANALYSIS
 import {
-  analyzeCareer,
-  getCareerProfile
+  analyzeCareer,getCareerProfile
 } from "../controllers/careerGuidanceController.js";  
+
 
 const router = express.Router();
 
+// RESUME 
 router.post(
   "/resume",
   protect,
@@ -52,6 +48,7 @@ router.get(
   getStudentResume
 );
 
+// MARKSHEET 
 router.post(
   "/marksheet",
   protect,
@@ -81,7 +78,7 @@ router.get(
   getAcademicDashboard
 );
 
-
+// CAREER ANALYSIS
 router.post(
   "/career/analyze",
   protect,
@@ -96,17 +93,58 @@ router.get(
   getCareerProfile  
 );
 
-
+// Student
 router.get("/students", getAllStudents);
 
+router.post(
+  "/profile/save",
+  protect,
+  requireRole("student"),
+  saveStudentProfile
+);
 
+router.get(
+  "/profile/get",
+  protect,
+  requireRole("student"),
+  getStudentProfile
+);
+
+router.post(
+  "/profile/skill/add",
+  protect,
+  requireRole("student"),
+  addSkill
+);
+
+router.post(
+  "/profile/skill/remove",
+  protect,
+  requireRole("student"),
+  removeSkill
+);
+
+router.post(
+  "/profile/interest/add",
+  protect,
+  requireRole("student"),
+  addInterest
+);
+
+router.post(
+  "/profile/interest/remove",
+  protect,
+  requireRole("student"),
+  removeInterest
+);
+
+// MENTOR CHAT
 router.post(
   "/mentor-assistant",
   protect,
   requireRole("student"),
   mentorAssistantChat
 );
-
 
 router.post(
   "/apply",
@@ -115,7 +153,7 @@ router.post(
   applyForJob
 );
 
-
+// JOBS FOR STUDENTS
 router.get(
   "/jobs",
   protect,
@@ -123,13 +161,14 @@ router.get(
   getAllJobs
 );
 
-
+// Dashboard
 router.get(
   "/dashboard/analytics",
   protect,
   requireRole("student"),
   getStudentAnalytics
 );
+
 router.get(
   "/marksheet/semester-wise",
   protect,

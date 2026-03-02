@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { studentAPI } from "../../api/student";
 
 const Profile = () => {
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -10,6 +12,7 @@ const Profile = () => {
     currentSemester: '',
     cgpa: '',
     totalCredits: '',
+    attendance: 75,
     skills: [],
     currentSkillInput: '',
     interests: [],
@@ -20,33 +23,69 @@ const Profile = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  const semesterOptions = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
+  const semesterOptions = [
+    '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'
+  ];
+
   const availableSkills = [
     'JavaScript', 'Python', 'Java', 'C++', 'React', 'Node.js', 'SQL', 'Git',
     'HTML/CSS', 'TypeScript', 'Docker', 'AWS', 'Machine Learning', 'Data Analysis',
-    'Communication', 'Teamwork', 'Problem Solving', 'Project Management',
+    'Communication', 'Teamwork', 'Problem Solving', 'Project Management'
   ];
+
   const availableInterests = [
     'Web Development', 'Mobile Development', 'Data Science', 'AI/ML',
     'Cloud Computing', 'Cybersecurity', 'DevOps', 'Blockchain',
-    'Product Management', 'UI/UX Design', 'Embedded Systems', 'Robotics',
+    'Product Management', 'UI/UX Design', 'Embedded Systems', 'Robotics'
   ];
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const res = await studentAPI.getProfile();
+
+      if (res.data.success && res.data.data) {
+        const p = res.data.data;
+
+        setFormData(prev => ({
+          ...prev,
+          name: p.fullName || "",
+          email: p.email || "",
+          phone: p.phone || "",
+          dateOfBirth: p.dateOfBirth || "",
+          currentSemester: p.currentSemester || "",
+          cgpa: p.currentCGPA || "",
+          totalCredits: p.totalCreditsCompleted || "",
+          attendance: p.attendancePercentage || 75,
+          skills: p.skills || [],
+          interests: p.areasOfInterest || [],
+        }));
+      }
+    } catch (err) {
+      console.error("PROFILE LOAD ERROR:", err);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+
+    setFormData(prev => ({
       ...prev,
       [name]: value,
     }));
+
     if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
   const handleAddSkill = () => {
     const skill = formData.currentSkillInput.trim();
     if (skill && !formData.skills.includes(skill)) {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         skills: [...prev.skills, skill],
         currentSkillInput: '',
@@ -55,68 +94,93 @@ const Profile = () => {
   };
 
   const handleSkillKeyDown = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleAddSkill();
     }
   };
 
   const handleRemoveSkill = (skillToRemove) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      skills: prev.skills.filter((skill) => skill !== skillToRemove),
+      skills: prev.skills.filter(skill => skill !== skillToRemove)
     }));
   };
 
   const handleAddInterest = (interest) => {
     if (!formData.interests.includes(interest)) {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        interests: [...prev.interests, interest],
+        interests: [...prev.interests, interest]
       }));
     }
   };
 
   const handleRemoveInterest = (interestToRemove) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      interests: prev.interests.filter((interest) => interest !== interestToRemove),
+      interests: prev.interests.filter(i => i !== interestToRemove)
     }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Name is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
-    }
-    if (!formData.currentSemester) newErrors.currentSemester = 'Please select a semester';
-    if (!formData.cgpa) newErrors.cgpa = 'CGPA is required';
-    if (formData.cgpa && (parseFloat(formData.cgpa) < 0 || parseFloat(formData.cgpa) > 10)) {
-      newErrors.cgpa = 'CGPA must be between 0 and 10';
-    }
+
+    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = "Please enter a valid email";
+
+    if (!formData.currentSemester)
+      newErrors.currentSemester = "Please select a semester";
+
+    if (!formData.cgpa)
+      newErrors.cgpa = "CGPA is required";
+
+    if (formData.cgpa && (parseFloat(formData.cgpa) < 0 || parseFloat(formData.cgpa) > 10))
+      newErrors.cgpa = "CGPA must be between 0 and 10";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitSuccess(false);
-    
-    if (validateForm()) {
+
+    if (!validateForm()) return;
+
+    const payload = {
+      fullName: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      dateOfBirth: formData.dateOfBirth,
+      currentSemester: formData.currentSemester,
+      currentCGPA: formData.cgpa,
+      totalCreditsCompleted: formData.totalCredits,
+      attendancePercentage: formData.attendance,
+      skills: formData.skills,
+      areasOfInterest: formData.interests
+    };
+
+    try {
       setIsSubmitting(true);
-      setTimeout(() => {
-        setIsSubmitting(false);
+      const res = await studentAPI.saveProfile(payload);
+
+      if (res.data.success) {
         setSubmitSuccess(true);
-        console.log('Profile data:', formData);
-      }, 1500);
+      }
+    } catch (err) {
+      console.error("Save failed", err);
     }
+
+    setIsSubmitting(false);
   };
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">My Academic Profile</h1>
+
       {submitSuccess && (
         <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
           <div className="flex items-center">
@@ -129,6 +193,7 @@ const Profile = () => {
       )}
 
       <form onSubmit={handleSubmit}>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -148,9 +213,7 @@ const Profile = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.name ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.name ? "border-red-500" : "border-gray-300"}`}
                   placeholder="Enter your full name"
                 />
                 {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
@@ -165,9 +228,7 @@ const Profile = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.email ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.email ? "border-red-500" : "border-gray-300"}`}
                   placeholder="your.email@university.edu"
                 />
                 {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
@@ -207,25 +268,29 @@ const Profile = () => {
             </h2>
 
             <div className="space-y-4">
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Current Semester <span className="text-red-500">*</span>
                 </label>
+
                 <select
                   name="currentSemester"
                   value={formData.currentSemester}
                   onChange={handleChange}
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.currentSemester ? 'border-red-500' : 'border-gray-300'
+                    errors.currentSemester ? "border-red-500" : "border-gray-300"
                   }`}
                 >
                   <option value="">Select semester</option>
-                  {semesterOptions.map((sem) => (
+
+                  {semesterOptions.map(sem => (
                     <option key={sem} value={sem}>
                       {sem} Semester
                     </option>
                   ))}
                 </select>
+
                 {errors.currentSemester && (
                   <p className="mt-1 text-sm text-red-500">{errors.currentSemester}</p>
                 )}
@@ -235,6 +300,7 @@ const Profile = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Current CGPA <span className="text-red-500">*</span>
                 </label>
+
                 <input
                   type="number"
                   name="cgpa"
@@ -244,10 +310,11 @@ const Profile = () => {
                   min="0"
                   max="10"
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.cgpa ? 'border-red-500' : 'border-gray-300'
+                    errors.cgpa ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="e.g., 8.5"
                 />
+
                 {errors.cgpa && <p className="mt-1 text-sm text-red-500">{errors.cgpa}</p>}
               </div>
 
@@ -255,12 +322,12 @@ const Profile = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Total Credits Completed
                 </label>
+
                 <input
                   type="number"
                   name="totalCredits"
                   value={formData.totalCredits}
                   onChange={handleChange}
-                  min="0"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="e.g., 90"
                 />
@@ -270,21 +337,26 @@ const Profile = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Attendance Percentage
                 </label>
+
                 <div className="flex items-center gap-4">
                   <input
                     type="range"
                     name="attendance"
                     min="0"
                     max="100"
-                    value={formData.attendance || 75}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, attendance: e.target.value }))}
+                    value={formData.attendance}
+                    onChange={(e) =>
+                      setFormData(prev => ({ ...prev, attendance: e.target.value }))
+                    }
                     className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   />
+
                   <span className="text-sm font-medium text-gray-700 w-12">
-                    {formData.attendance || 75}%
+                    {formData.attendance}%
                   </span>
                 </div>
               </div>
+
             </div>
           </div>
         </div>
@@ -296,14 +368,16 @@ const Profile = () => {
             </svg>
             Skills
           </h2>
+
           {formData.skills.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
-              {formData.skills.map((skill) => (
+              {formData.skills.map(skill => (
                 <span
                   key={skill}
                   className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm"
                 >
                   {skill}
+
                   <button
                     type="button"
                     onClick={() => handleRemoveSkill(skill)}
@@ -313,6 +387,7 @@ const Profile = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
+
                 </span>
               ))}
             </div>
@@ -322,11 +397,12 @@ const Profile = () => {
             <input
               type="text"
               value={formData.currentSkillInput}
-              onChange={(e) => setFormData((prev) => ({ ...prev, currentSkillInput: e.target.value }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, currentSkillInput: e.target.value }))}
               onKeyDown={handleSkillKeyDown}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Type a skill and press Enter"
             />
+
             <button
               type="button"
               onClick={handleAddSkill}
@@ -338,19 +414,17 @@ const Profile = () => {
 
           <div>
             <p className="text-sm text-gray-500 mb-2">Suggested skills:</p>
+
             <div className="flex flex-wrap gap-2">
               {availableSkills
-                .filter((skill) => !formData.skills.includes(skill))
+                .filter(skill => !formData.skills.includes(skill))
                 .slice(0, 10)
-                .map((skill) => (
+                .map(skill => (
                   <button
                     key={skill}
                     type="button"
                     onClick={() =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        skills: [...prev.skills, skill],
-                      }))
+                      setFormData(prev => ({ ...prev, skills: [...prev.skills, skill] }))
                     }
                     className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm hover:bg-gray-200 transition-colors"
                   >
@@ -359,6 +433,7 @@ const Profile = () => {
                 ))}
             </div>
           </div>
+
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
@@ -371,12 +446,13 @@ const Profile = () => {
 
           {formData.interests.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
-              {formData.interests.map((interest) => (
+              {formData.interests.map(interest => (
                 <span
                   key={interest}
                   className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm"
                 >
                   {interest}
+
                   <button
                     type="button"
                     onClick={() => handleRemoveInterest(interest)}
@@ -392,7 +468,7 @@ const Profile = () => {
           )}
 
           <div className="flex flex-wrap gap-2">
-            {availableInterests.map((interest) => (
+            {availableInterests.map(interest => (
               <button
                 key={interest}
                 type="button"
@@ -403,14 +479,15 @@ const Profile = () => {
                 }
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   formData.interests.includes(interest)
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? "bg-orange-500 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
                 {interest}
               </button>
             ))}
           </div>
+
         </div>
 
         <div className="mt-6 flex justify-end">
@@ -420,11 +497,12 @@ const Profile = () => {
           >
             Cancel
           </button>
+
           <button
             type="submit"
             disabled={isSubmitting}
             className={`px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center ${
-              isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
+              isSubmitting ? "opacity-75 cursor-not-allowed" : ""
             }`}
           >
             {isSubmitting ? (
@@ -445,10 +523,10 @@ const Profile = () => {
             )}
           </button>
         </div>
+
       </form>
     </div>
   );
 };
 
 export default Profile;
-

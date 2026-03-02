@@ -11,6 +11,7 @@ import StudentLayout from "./pages/student/StudentLayout";
 import StudentDashboard from "./pages/StudentDashboard";
 import Career from "./pages/student/Career";
 import Profile from "./pages/student/Profile";
+import RecruiterProfile from "./pages/recruiter/RecruiterProfile";
 import AiMentor from "./pages/student/AiMentor";
 import ResumeAnalyzer from "./pages/student/ResumeAnalyzer";
 import MarksheetUpload from "./pages/student/MarksheetUpload";
@@ -87,6 +88,7 @@ function App() {
              <Route path="applicants/:jobId" element={<ViewApplicants />} />
              <Route path="applicants" element={<ApplicantsHome />} />
              <Route path="hr-assistant" element={<HrAssistant />} />
+              <Route path="/recruiter/profile" element={<RecruiterProfile />} />
           </Route>
 
           <Route
