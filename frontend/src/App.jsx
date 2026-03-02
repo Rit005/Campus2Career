@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import ChooseDashboard from "./pages/ChooseDashboard";
 import RouteRedirect from "./pages/RouteRedirect";
 import StudentLayout from "./pages/student/StudentLayout";
+import MyApplications from "./pages/student/MyApplications";
 import StudentDashboard from "./pages/StudentDashboard";
 import Career from "./pages/student/Career";
 import Profile from "./pages/student/Profile";
@@ -71,6 +72,8 @@ function App() {
             <Route path="career" element={<Career />} />
             <Route path="ai-mentor" element={<AiMentor />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="my-applications" element={<MyApplications />} />
+
 
           </Route>
 

@@ -52,6 +52,10 @@ export const studentAPI = {
 
    // AI MENTOR
   aiMentor: (data) => StudentAPI.post("/mentor-assistant", data),
+
+  getMyApplications: () => StudentAPI.get("/applications"),
+  deleteApplication: (id) => StudentAPI.delete(`/applications/${id}`),
 };
+
 
 export default studentAPI;

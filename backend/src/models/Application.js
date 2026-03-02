@@ -20,9 +20,10 @@ const applicationSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true },
     phone: { type: String, required: true },
+
     expectedSalary: { type: String },
 
-    // ✅ STORE FILE IN DB
+    // Resume metadata (safe to store in DB)
     resumeData: { type: Buffer, required: true },
     resumeName: { type: String, required: true },
     resumeType: { type: String, required: true },
@@ -30,9 +31,11 @@ const applicationSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["applied", "shortlisted", "rejected", "selected"],
+      enum: ["applied", "under review", "shortlisted", "rejected", "selected"],
       default: "applied",
     },
+
+    recruiterNotes: { type: String }, 
   },
   { timestamps: true }
 );

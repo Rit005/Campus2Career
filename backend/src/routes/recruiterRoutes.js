@@ -10,8 +10,13 @@ import {
 } from "../controllers/JobController.js";
 
 import {
+  saveRecruiterProfile,
+  getRecruiterProfile,
+} from "../controllers/recruiterProfileController.js";
+
+import {
   getApplicantsForJob,
-  updateApplicationStatus,
+  updateApplicationStatus,updateRecruiterNote ,
 } from "../controllers/applicationController.js";
 
 import { matchCandidates } from "../controllers/matchingController.js";
@@ -47,5 +52,12 @@ router.get("/analytics", getRecruiterAnalytics);
 // APPLICANTS 
 router.get("/applicants/:jobId", getApplicantsForJob);
 router.patch("/applicants/:id/status", updateApplicationStatus);
+router.patch("/applicants/:id/note",protect,requireRole("recruiter"),updateRecruiterNote);
+
+//recruiter profile
+router.post("/profile/save",protect,requireRole("recruiter"),saveRecruiterProfile);
+
+router.get("/profile/get",protect,requireRole("recruiter"),getRecruiterProfile);
+
 
 export default router;

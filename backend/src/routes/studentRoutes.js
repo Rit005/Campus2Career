@@ -3,6 +3,7 @@ import { protect, requireRole } from "../middleware/auth.js";
 import { uploadResume } from "../middleware/upload.js";
 import { uploadMarksheet } from "../middleware/uploadMarksheet.js";
 import { getStudentAnalytics,getSemesterWiseAnalytics} from "../controllers/academicAnalyticsController.js";
+import { getStudentApplications ,deleteApplication} from "../controllers/myApplicationController.js";
 
 import {
   getAllStudents,applyForJob
@@ -175,4 +176,20 @@ router.get(
   requireRole("student"),
   getSemesterWiseAnalytics
 );
+
+//my Application
+router.get(
+  "/applications",
+  protect,
+  requireRole("student"),
+  getStudentApplications
+);
+
+router.delete(
+  "/applications/:id",
+  protect,
+  requireRole("student"),
+  deleteApplication
+);
+
 export default router;

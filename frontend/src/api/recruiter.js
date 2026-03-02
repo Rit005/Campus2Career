@@ -1,28 +1,32 @@
 import axios from "axios";
 
-const API = axios.create({
+const RecruiterAPI = axios.create({
   baseURL: "http://localhost:5001/api/recruiter",
   withCredentials: true,
 });
 
 const recruiterAPI = {
-  postJob: (data) => API.post("/post-job", data),
-  getMyJobs: () => API.get("/jobs"),
-  deleteJob: (id) => API.delete(`/job/${id}`),
-  matchCandidates: (data) => API.post("/match", data),
-  dashboard: (data) => API.post("/dashboard", data),
+  postJob: (data) => RecruiterAPI.post("/post-job", data),
+  getMyJobs: () => RecruiterAPI.get("/jobs"),
+  deleteJob: (id) => RecruiterAPI.delete(`/job/${id}`),
+  matchCandidates: (data) => RecruiterAPI.post("/match", data),
+  dashboard: (data) => RecruiterAPI.post("/dashboard", data),
 
-  getAnalytics: () => API.get("/analytics"),
+  getAnalytics: () => RecruiterAPI.get("/analytics"),
 
-  hrAssistant: (data) => API.post("/hr-assistant", data),
+  hrAssistant: (data) => RecruiterAPI.post("/hr-assistant", data),
   
-  updateJob: (id, data) => API.put(`/job/${id}`, data),
-  getAllJobs: () => API.get("/all-jobs"),
+  updateJob: (id, data) => RecruiterAPI.put(`/job/${id}`, data),
+  getAllJobs: () => RecruiterAPI.get("/all-jobs"),
 
-  getApplicants: (jobId) => API.get(`/job/${jobId}/applicants`),
+  getApplicants: (jobId) => RecruiterAPI.get(`/job/${jobId}/applicants`),
 
   updateStatus: (id, status) =>
-    API.patch(`/status/${id}`, { status }),
+    RecruiterAPI.patch(`/status/${id}`, { status }),
+
+   saveProfile: (data) => RecruiterAPI.post("/profile/save", data),
+  getProfile: () => RecruiterAPI.get("/profile/get"),
+
 };
 
 export default recruiterAPI;

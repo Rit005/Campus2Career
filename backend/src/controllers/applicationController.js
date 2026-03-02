@@ -42,3 +42,21 @@ export const updateApplicationStatus = async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to update status" });
   }
 };
+
+export const updateRecruiterNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { note } = req.body;
+
+    const app = await Application.findByIdAndUpdate(
+      id,
+      { recruiterNotes: note },
+      { new: true }
+    );
+
+    res.json({ success: true, data: app });
+  } catch (err) {
+    console.error("RECRUITER NOTE ERROR:", err);
+    res.status(500).json({ success: false, message: "Failed to update note" });
+  }
+};

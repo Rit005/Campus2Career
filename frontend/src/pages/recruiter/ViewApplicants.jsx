@@ -19,6 +19,18 @@ const ViewApplicants = () => {
     }
   };
 
+ const updateNote = async (id, note) => {
+  try {
+    await axios.patch(
+      `http://localhost:5001/api/recruiter/applicants/${id}/note`,
+      { note },
+      { withCredentials: true }
+    );
+  } catch (error) {
+    console.error("NOTE UPDATE ERROR:", error);
+  }
+};
+
   const updateStatus = async (id, status) => {
     await axios.patch(
       `http://localhost:5001/api/recruiter/applicants/${id}/status`,
@@ -67,7 +79,16 @@ const ViewApplicants = () => {
                   </a>
                 </td>
 
-                <td className="p-3 border font-semibold">{app.status}</td>
+                <td className="p-3 border">
+                <p className="font-semibold">{app.status}</p>
+
+                <textarea
+                    className="w-full mt-2 p-2 border rounded text-sm"
+                    placeholder="Add recruiter notes..."
+                    defaultValue={app.recruiterNotes || ""}
+                    onBlur={(e) => updateNote(app._id, e.target.value)}
+                />
+                </td>
 
                 <td className="p-3 border space-x-2">
                   <button
