@@ -155,7 +155,7 @@ const MarksheetUpload = () => {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto pt-6 space-y-8">
+    <div className="max-w-5xl mx-auto pt-2 space-y-8">
       <h2 className="text-3xl font-bold">Upload Marksheet</h2>
 
       {message && (

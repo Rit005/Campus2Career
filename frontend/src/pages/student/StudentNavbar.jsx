@@ -64,19 +64,19 @@ const StudentNavbar = () => {
                            transition-all duration-200 z-50"
               >
                 <div className="px-4 py-3 border-b">
-                  <p className="text-sm font-semibold">{user?.name}</p>
-                  <p className="text-xs text-gray-500">Student</p>
+                  <p className="text-l font-semibold">{user?.name}</p>
+                  <p className="text-s text-gray-500">Student</p>
                 </div>
 
                 <button
                   onClick={() => navigate("/student/profile")}
-                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  className="w-full text-left px-4 py-2 text-l hover:bg-gray-100"
                 >
                   View Profile
                 </button>
                 <button
                   onClick={() => navigate("/student/my-applications")}
-                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  className="w-full text-left px-4 py-2 text-l hover:bg-gray-100"
                 >
                   My Applications
                 </button>

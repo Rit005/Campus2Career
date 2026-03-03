@@ -112,22 +112,6 @@ const Dashboard = () => {
       >
         <h1 className="text-4xl font-bold">📊 Hiring Dashboard</h1>
 
-        <div className="flex gap-4">
-          <button
-            onClick={loadAllJobs}
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow"
-          >
-            📄 View All Jobs
-          </button>
-
-          <button
-            onClick={loadAllStudents}
-            className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow"
-          >
-            👨‍🎓 View All Students
-          </button>
-        </div>
-
         <div className="grid md:grid-cols-4 gap-6">
           <Card title="🧑‍💼 Applicants" value={pipeline.applicants} color="blue" />
           <Card title="📌 Shortlisted" value={pipeline.shortlisted} color="green" />
