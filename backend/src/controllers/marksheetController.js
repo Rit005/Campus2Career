@@ -2,18 +2,14 @@ import pdfParse from "pdf-parse-fixed";
 import mammoth from "mammoth";
 import Marksheet from "../models/Marksheet.js";
 import Tesseract from "tesseract.js";
+import { getMLPredictions } from "../ml/mlService.js";
 
 import {
   predictAcademicDomain,
   detectWeakSubjects,
   analyzeTrend,
-  calculateRiskScore,
-  calculateCareerReadiness,
-  predictNextSemester,
   generateImprovementRoadmap,
-  predictPlacementProbability,
 } from "../ml/academicML.js";
-
 
 const extractTextFromFile = async (buffer, mimeType) => {
   try {
@@ -22,7 +18,10 @@ const extractTextFromFile = async (buffer, mimeType) => {
       return data.text;
     }
 
-    if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+    if (
+      mimeType ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ) {
       const result = await mammoth.extractRawText({ buffer });
       return result.value;
     }
@@ -32,12 +31,11 @@ const extractTextFromFile = async (buffer, mimeType) => {
     }
 
     const imageFormats = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    if (imageFormats.includes(mimeType)) {
-      console.log("Running OCR on uploaded image...");
 
-      const { data: { text } } = await Tesseract.recognize(buffer, "eng", {
-        logger: m => console.log(m.progress), 
-      });
+    if (imageFormats.includes(mimeType)) {
+      const {
+        data: { text },
+      } = await Tesseract.recognize(buffer, "eng");
 
       return text;
     }
@@ -48,7 +46,6 @@ const extractTextFromFile = async (buffer, mimeType) => {
     throw new Error("Failed to extract text from file");
   }
 };
-
 
 const autoAssignGrade = (percentage) => {
   if (percentage >= 80) return "A";
@@ -66,6 +63,7 @@ const parseMarksheetProperly = (text) => {
   const totals = [];
 
   let match;
+
   while ((match = totalRegex.exec(text)) !== null) {
     totals.push({
       marks: match[1],
@@ -90,30 +88,13 @@ const parseMarksheetProperly = (text) => {
     .filter(Boolean);
 
   return {
-    semester: text.match(/Registration Pattern\s*:\s*(Semester\s*[IVX]+)/i)?.[1] || "",
+    semester:
+      text.match(/Registration Pattern\s*:\s*(Semester\s*[IVX]+)/i)?.[1] || "",
     year: text.match(/Session\s*:\s*(\d{4}-\d{4})/)?.[1] || "",
     cgpa: text.match(/CGPA\s*:\s*(\d+\.\d+)/)?.[1] || "",
     subjects: finalSubjects,
   };
 };
-
-
-const sanitizeNumber = (v) => {
-  if (typeof v === "number") return v;
-  if (typeof v === "string") return Number(v);
-  if (typeof v === "object" && v !== null) return Number(v.value || 0);
-  return 0;
-};
-
-const sanitizeString = (v) => {
-  if (typeof v === "string") return v;
-  if (typeof v === "object" && v !== null) {
-    if (v.domain) return v.domain;
-    if (v.value) return String(v.value);
-  }
-  return "";
-};
-
 
 export const uploadMarksheetController = async (req, res) => {
   try {
@@ -122,9 +103,10 @@ export const uploadMarksheetController = async (req, res) => {
         success: false,
         message: "No file uploaded",
       });
-
     const buffer = req.file.buffer;
+
     const rawText = await extractTextFromFile(buffer, req.file.mimetype);
+
     const parsed = parseMarksheetProperly(rawText);
 
     if (!parsed.subjects.length)
@@ -133,9 +115,9 @@ export const uploadMarksheetController = async (req, res) => {
         message: "Could not extract subject data",
       });
 
-
     const subjects = parsed.subjects.map((sub) => {
       const pct = (sub.marks / sub.maxMarks) * 100;
+
       return {
         name: sub.name,
         marks: sub.marks,
@@ -144,9 +126,16 @@ export const uploadMarksheetController = async (req, res) => {
       };
     });
 
+    console.log("Formatted Subjects:", subjects);
+
     const totalMarks = subjects.reduce((s, x) => s + x.marks, 0);
     const totalMax = subjects.reduce((s, x) => s + x.maxMarks, 0);
-    const percentage = totalMax ? ((totalMarks / totalMax) * 100).toFixed(2) : "0";
+
+    const percentage = totalMax
+      ? ((totalMarks / totalMax) * 100).toFixed(2)
+      : "0";
+
+    console.log("Total Percentage:", percentage);
 
     const sem = parsed.semester || req.body.semester;
 
@@ -156,6 +145,7 @@ export const uploadMarksheetController = async (req, res) => {
     });
 
     if (existing) {
+      console.log("Duplicate semester upload prevented");
       return res.status(400).json({
         success: false,
         message: `Marksheet for ${sem} already exists`,
@@ -164,7 +154,7 @@ export const uploadMarksheetController = async (req, res) => {
 
     const saved = await Marksheet.create({
       studentId: req.user._id,
-      semester: parsed.semester || req.body.semester,
+      semester: sem,
       year: parsed.year || "",
       subjects,
       cgpa: parsed.cgpa || "",
@@ -176,23 +166,29 @@ export const uploadMarksheetController = async (req, res) => {
       uploadedAt: new Date(),
     });
 
+    console.log("Marksheet saved to DB:", saved._id);
 
     const allMarksheets = await Marksheet.find({
       studentId: req.user._id,
     }).sort({ semester: 1 });
+
+    console.log("Total marksheets for student:", allMarksheets.length);
 
     const semesterTrend = allMarksheets.map((m) => ({
       semester: m.semester,
       percentage: Number(m.percentage),
     }));
 
+    console.log("Semester Trend:", semesterTrend);
 
     const overallPerformance =
       allMarksheets.reduce((a, m) => a + Number(m.percentage), 0) /
       allMarksheets.length;
 
-    
+    console.log("Overall Performance:", overallPerformance);
+
     const subjectStats = {};
+
     allMarksheets.forEach((m) => {
       m.subjects.forEach((sub) => {
         if (!subjectStats[sub.name])
@@ -206,43 +202,93 @@ export const uploadMarksheetController = async (req, res) => {
     const subjectWisePerformance = Object.keys(subjectStats).map((name) => {
       const s = subjectStats[name];
       const avg = (s.totalMarks / s.totalMax) * 100;
+
       return { name, average: avg };
     });
 
+    console.log("Subject Performance:", subjectWisePerformance);
+
     const globalWeakSubjects = detectWeakSubjects(subjectWisePerformance);
 
-    const predictedDomain = sanitizeString(
-      predictAcademicDomain(subjectWisePerformance)
-    );
+    console.log("Weak Subjects:", globalWeakSubjects);
 
-    const trendStatus = sanitizeString(
-      analyzeTrend(semesterTrend)
-    );
+    const predictedDomain = predictAcademicDomain(subjectWisePerformance);
 
-    const riskScore = sanitizeNumber(
-      calculateRiskScore(overallPerformance, globalWeakSubjects)
-    );
+    console.log("Predicted Domain:", predictedDomain);
 
-    const careerReadiness = sanitizeNumber(
-      calculateCareerReadiness(overallPerformance, trendStatus)
-    );
+    const trendStatus = analyzeTrend(semesterTrend);
 
-    const nextSemesterPrediction = sanitizeNumber(
-      predictNextSemester(semesterTrend)
-    );
+    console.log("Trend Status:", trendStatus);
 
     const roadmapRaw = generateImprovementRoadmap(globalWeakSubjects);
+
     const roadmap = roadmapRaw.map((item) => {
       if (typeof item === "string") return item;
+
       if (item?.subject && item?.recommendation)
         return `${item.subject}: ${item.recommendation}`;
+
       if (item?.recommendation) return item.recommendation;
+
       return JSON.stringify(item);
     });
 
-    const placementProbability = sanitizeNumber(
-      predictPlacementProbability(overallPerformance, careerReadiness)
+    console.log("Improvement Roadmap:", roadmap);
+
+let improvementTrend = 0;
+
+if (semesterTrend.length >= 2) {
+  const last = semesterTrend[semesterTrend.length - 1].percentage;
+  const prev = semesterTrend[semesterTrend.length - 2].percentage;
+  improvementTrend = last - prev;
+}
+
+const weakSubjectCount = globalWeakSubjects.length;
+
+const studyHours = Math.min(10, Math.max(2, Math.round(overallPerformance / 10)));
+
+const motivation = improvementTrend > 0 ? 8 : improvementTrend < 0 ? 4 : 6;
+
+const stressLevel = weakSubjectCount >= 3 ? 8 : weakSubjectCount === 2 ? 6 : 3;
+
+const assignmentCompletion = Math.max(
+  40,
+  Math.min(100, overallPerformance - weakSubjectCount * 5)
+);
+
+const mlFeatures = {
+  StudyHours: studyHours,
+  Attendance: overallPerformance,
+  AssignmentCompletion: assignmentCompletion,
+  Motivation: motivation,
+  StressLevel: stressLevel,
+};
+
+console.log("Dynamic ML Features:", mlFeatures);
+
+    const mlInsights = await getMLPredictions(mlFeatures);
+
+    console.log("ML Response:", mlInsights);
+
+    const nextSemesterPrediction =
+      mlInsights?.data?.nextSemesterPrediction || 0;
+
+    const placementProbability =
+      mlInsights?.data?.placementProbability || 0;
+
+    const riskScore =
+      mlInsights?.data?.riskScore || 0;
+
+    console.log("Next Semester Prediction:", nextSemesterPrediction);
+    console.log("Placement Probability:", placementProbability);
+    console.log("Risk Score:", riskScore);
+
+    const careerReadiness = Math.min(
+      100,
+      Math.round((overallPerformance + nextSemesterPrediction) / 2)
     );
+
+    console.log("Career Readiness Score:", careerReadiness);
 
     await Marksheet.updateMany(
       { studentId: req.user._id },
@@ -262,6 +308,10 @@ export const uploadMarksheetController = async (req, res) => {
       },
     });
 
+    console.log("ML Insights saved to DB");
+
+    console.log("----- MARKSHEET PROCESS COMPLETE -----");
+
     res.json({
       success: true,
       data: saved,
@@ -276,8 +326,11 @@ export const uploadMarksheetController = async (req, res) => {
         placementProbability,
       },
     });
+
   } catch (err) {
+
     console.error("UPLOAD ERROR:", err);
+
     res.status(500).json({
       success: false,
       message: err.message || "Upload failed",
@@ -299,7 +352,6 @@ export const getAllMarksheets = async (req, res) => {
     });
   }
 };
-
 
 export const deleteMarksheet = async (req, res) => {
   try {
@@ -334,10 +386,12 @@ export const getAcademicDashboard = async (req, res) => {
       });
 
     const subjectStats = {};
+
     marksheets.forEach((m) => {
       m.subjects.forEach((s) => {
         if (!subjectStats[s.name])
           subjectStats[s.name] = { total: 0, count: 0 };
+
         subjectStats[s.name].total += (s.marks / s.maxMarks) * 100;
         subjectStats[s.name].count++;
       });

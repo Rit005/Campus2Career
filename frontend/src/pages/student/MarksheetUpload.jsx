@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { studentAPI } from "../../api/student";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+
 const MarksheetUpload = () => {
   const [file, setFile] = useState(null);
   const [semester, setSemester] = useState("");
@@ -13,6 +15,11 @@ const MarksheetUpload = () => {
   useEffect(() => {
     loadMarksheets();
   }, []);
+
+  const refreshMarksheets = async () => {
+    await loadMarksheets();
+  };
+
 
   const sanitizeNumber = (n) => {
     if (typeof n === "number") return n;
@@ -33,54 +40,59 @@ const MarksheetUpload = () => {
   };
 
   const sanitizeArrayText = (arr) => {
-  if (!Array.isArray(arr)) return [];
+    if (!Array.isArray(arr)) return [];
 
-  return arr.map((item) => {
-    if (typeof item === "string") return item;
+    return arr.map((item) => {
+      if (typeof item === "string") return item;
 
-    if (typeof item === "object" && item !== null) {
+      if (typeof item === "object" && item !== null) {
+        if ("subject" in item && "recommendation" in item) {
+          return `${item.subject}: ${item.recommendation}`;
+        }
 
-      if ("subject" in item && "recommendation" in item) {
-        return `${item.subject}: ${item.recommendation}`;
+        if ("recommendation" in item) return item.recommendation;
+
+        return JSON.stringify(item);
       }
-      if ("recommendation" in item) return item.recommendation;
-      return JSON.stringify(item);
-    }
 
-    return String(item);
-  });
-};
+      return String(item);
+    });
+  };
 
 
   const loadMarksheets = async () => {
-  try {
-    const res = await studentAPI.getAllMarksheets();
+    try {
+      const res = await studentAPI.getAllMarksheets();
 
-    if (res.data.success) {
-      const list = res.data.data;
-      setMarksheets(list);
+      if (res.data.success) {
+        const list = res.data.data;
 
-      if (list.length > 0 && list[0].mlInsights) {
-        const clean = list[0].mlInsights;
+        setMarksheets(list);
 
-        setMlInsights({
-          predictedStrongDomain: sanitizeString(clean.predictedStrongDomain),
-          weakSubjects: clean.weakSubjects || [],
-          academicTrend: sanitizeString(clean.academicTrend),
-          academicRiskScore: sanitizeNumber(clean.academicRiskScore),
-          nextSemesterPrediction: sanitizeNumber(clean.nextSemesterPrediction),
-          placementProbability: sanitizeNumber(clean.placementProbability),
-          improvementRoadmap: sanitizeArrayText(clean.improvementRoadmap),
-        });
+        if (list.length > 0 && list[0].mlInsights) {
+          const clean = list[0].mlInsights;
+
+          setMlInsights({
+            predictedStrongDomain: sanitizeString(clean.predictedStrongDomain),
+            weakSubjects: clean.weakSubjects || [],
+            academicTrend: sanitizeString(clean.academicTrend),
+            academicRiskScore: sanitizeNumber(clean.academicRiskScore),
+            nextSemesterPrediction: sanitizeNumber(clean.nextSemesterPrediction),
+            placementProbability:
+              Math.round(sanitizeNumber(clean.placementProbability) * 100),
+            improvementRoadmap: sanitizeArrayText(clean.improvementRoadmap),
+          });
+        } else {
+          setMlInsights(null);
+        }
       }
+    } catch {
+      setMessage({
+        type: "error",
+        text: "Failed to load marksheets",
+      });
     }
-  } catch (err) {
-    setMessage({
-      type: "error",
-      text: "Failed to load marksheets",
-    });
-  }
-};
+  };
 
 
   const handleUpload = async (e) => {
@@ -109,7 +121,7 @@ const MarksheetUpload = () => {
           text: "Marksheet uploaded successfully!",
         });
 
-        const clean = res.data.mlInsights;
+        const clean = res.data.mlInsights || {};
 
         setMlInsights({
           predictedStrongDomain: sanitizeString(clean.predictedStrongDomain),
@@ -117,15 +129,17 @@ const MarksheetUpload = () => {
           academicTrend: sanitizeString(clean.academicTrend),
           academicRiskScore: sanitizeNumber(clean.academicRiskScore),
           nextSemesterPrediction: sanitizeNumber(clean.nextSemesterPrediction),
-          placementProbability: sanitizeNumber(clean.placementProbability),
-          improvementRoadmap: clean.improvementRoadmap || [],
+          placementProbability:
+            Math.round(sanitizeNumber(clean.placementProbability) * 100),
+          improvementRoadmap: sanitizeArrayText(clean.improvementRoadmap),
         });
 
         setFile(null);
         setSemester("");
+
         if (fileRef.current) fileRef.current.value = "";
 
-        loadMarksheets();
+        await refreshMarksheets();
       }
     } catch (err) {
       setMessage({
@@ -139,9 +153,24 @@ const MarksheetUpload = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this marksheet?")) return;
-    await studentAPI.deleteMarksheet(id);
-    loadMarksheets();
+
+    try {
+      await studentAPI.deleteMarksheet(id);
+
+      setMessage({
+        type: "success",
+        text: "Marksheet deleted successfully",
+      });
+
+      await refreshMarksheets();
+    } catch {
+      setMessage({
+        type: "error",
+        text: "Delete failed",
+      });
+    }
   };
+
 
   const semesterOptions = [
     "Semester 1",
@@ -170,14 +199,18 @@ const MarksheetUpload = () => {
         </div>
       )}
 
+      {/* Upload Form */}
+
       <form className="bg-white shadow p-6 rounded-xl" onSubmit={handleUpload}>
         <label className="block mb-2 font-medium">Semester *</label>
+
         <select
           value={semester}
           onChange={(e) => setSemester(e.target.value)}
           className="w-full border p-3 rounded mb-4"
         >
           <option value="">Select semester</option>
+
           {semesterOptions.map((s) => (
             <option key={s} value={s}>
               {s}
@@ -186,15 +219,18 @@ const MarksheetUpload = () => {
         </select>
 
         <label className="block mb-2 font-medium">Upload File *</label>
+
         <input
           ref={fileRef}
           type="file"
-          accept=".pdf,.docx,.txt"
+          accept=".pdf,.docx,.txt,.png,.jpg,.jpeg"
           className="w-full border p-3 rounded mb-4"
           onChange={(e) => setFile(e.target.files[0])}
         />
 
-        {file && <p className="text-sm text-gray-600 mb-4">Selected: {file.name}</p>}
+        {file && (
+          <p className="text-sm text-gray-600 mb-4">Selected: {file.name}</p>
+        )}
 
         <button
           type="submit"
@@ -204,6 +240,8 @@ const MarksheetUpload = () => {
           {loading ? "Uploading..." : "Upload"}
         </button>
       </form>
+
+      {/* AI Insights */}
 
       {mlInsights && (
         <div className="bg-white p-6 rounded-xl shadow space-y-6">
@@ -239,8 +277,11 @@ const MarksheetUpload = () => {
             </div>
           </div>
 
+          {/* Weak Subjects */}
+
           <div>
             <p className="font-semibold text-red-600">Weak Subjects</p>
+
             {mlInsights.weakSubjects?.length ? (
               <ul className="list-disc ml-6 text-red-600">
                 {mlInsights.weakSubjects.map((s, i) => (
@@ -252,8 +293,11 @@ const MarksheetUpload = () => {
             )}
           </div>
 
+          {/* Improvement Roadmap */}
+
           <div>
             <p className="font-semibold text-blue-600">Improvement Roadmap</p>
+
             <ul className="list-disc ml-6 text-blue-700">
               {mlInsights.improvementRoadmap.map((r, i) => (
                 <li key={i}>{r}</li>
@@ -261,20 +305,26 @@ const MarksheetUpload = () => {
             </ul>
           </div>
 
+          {/* Risk Score */}
+
           <div>
             <p className="font-semibold text-red-600">Academic Risk Score</p>
+
             <div className="w-full bg-gray-200 h-3 rounded-full">
               <div
                 className="h-3 rounded-full bg-red-500"
                 style={{ width: `${mlInsights.academicRiskScore}%` }}
               />
             </div>
+
             <p className="text-red-600 font-bold mt-1">
               {mlInsights.academicRiskScore}%
             </p>
           </div>
         </div>
       )}
+
+      {/* Uploaded Marksheets */}
 
       <div>
         <h3 className="text-xl font-semibold mb-3">Uploaded Marksheets</h3>
@@ -293,13 +343,11 @@ const MarksheetUpload = () => {
 
                   <p className="text-sm text-gray-500">
                     {m.subjects.length} subjects |{" "}
-                    {m.cgpa
-                      ? `CGPA: ${m.cgpa}`
-                      : `${m.percentage}%`}
+                    {m.cgpa ? `CGPA: ${m.cgpa}` : `${m.percentage}%`}
                   </p>
 
                   <a
-                    href={`http://localhost:5001/api/student/marksheet/file/${m._id}`}
+                    href={`${API_URL}/api/student/marksheet/file/${m._id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 text-sm underline"
