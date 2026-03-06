@@ -12,7 +12,7 @@ const Signup = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState(""); 
+  const [role, setRole] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -22,65 +22,55 @@ const Signup = () => {
   const { signup, loginWithGoogle, loginWithGithub, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
-
   useEffect(() => {
     if (isAuthenticated) {
-      if (!user?.role) {
-        navigate("/choose-dashboard");
-      } else if (user.role === "student") {
-        navigate("/student/dashboard");
-      } else if (user.role === "recruiter") {
-        navigate("/recruiter/dashboard");
-      }
+      if (!user?.role) navigate("/choose-dashboard");
+      else if (user.role === "student") navigate("/student/dashboard");
+      else if (user.role === "recruiter") navigate("/recruiter/dashboard");
     }
   }, [isAuthenticated, user, navigate]);
 
-
   const validateForm = () => {
     const errors = {};
-
     if (!name.trim()) errors.name = "Name is required";
     if (!email.trim()) errors.email = "Email is required";
     if (!/\S+@\S+\.\S+/.test(email)) errors.email = "Enter a valid email";
     if (!role) errors.role = "Please select a role";
-
     if (!password) errors.password = "Password is required";
     else if (password.length < 6) errors.password = "Password must be 6+ characters";
-
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
     if (!validateForm()) return;
 
     setLoading(true);
-
     const result = await signup(name, email, password, role);
 
-    if (result.success) {
-      navigate(result.redirectPath || "/choose-dashboard");
-    } else {
-      setError(result.error);
-    }
+    if (result.success) navigate(result.redirectPath || "/choose-dashboard");
+    else setError(result.error);
 
     setLoading(false);
   };
 
   return (
-    <Layout title="Create your account" subtitle="Start your journey with Campus2Career">
-      <form className="space-y-6" onSubmit={handleSubmit}>
-
+    <Layout
+      title="Create your account"
+      subtitle="Start your journey with Campus2Career"
+    >
+      <form
+        className="w-full max-w-md mx-auto space-y-5 px-4 sm:px-0"
+        onSubmit={handleSubmit}
+      >
         {error && (
           <Alert type="error" message={error} onClose={() => setError("")} />
         )}
 
         <Input
-          label="Full name"
+          label="Full Name"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -90,7 +80,7 @@ const Signup = () => {
         />
 
         <Input
-          label="Email address"
+          label="Email Address"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -99,23 +89,28 @@ const Signup = () => {
           error={validationErrors.email}
         />
 
+        {/* ROLE SELECT */}
         <div>
-          <label className="label mb-1">Select Role</label>
+          <label className="block text-sm font-medium mb-1">
+            Select Role
+          </label>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="input w-full"
+            className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="">-- Choose Role --</option>
             <option value="student">Student</option>
             <option value="recruiter">Recruiter</option>
-            <option value="recruiter">Null</option>
           </select>
           {validationErrors.role && (
-            <p className="text-red-500 text-sm mt-1">{validationErrors.role}</p>
+            <p className="text-red-500 text-sm mt-1">
+              {validationErrors.role}
+            </p>
           )}
         </div>
 
+        {/* PASSWORD */}
         <div className="relative">
           <Input
             label="Password"
@@ -130,25 +125,29 @@ const Signup = () => {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-10 text-gray-600"
+            className="absolute right-4 top-[42px] text-gray-500"
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
 
         <Button type="submit" className="w-full" loading={loading}>
-          Create account
+          Create Account
         </Button>
 
-        <OAuthButtons
-          onGoogleClick={loginWithGoogle}
-          onGithubClick={loginWithGithub}
-          loading={loading}
-        />
+        <div className="pt-2">
+          <OAuthButtons
+            onGoogleClick={loginWithGoogle}
+            onGithubClick={loginWithGithub}
+            loading={loading}
+          />
+        </div>
 
-        <p className="text-center text-sm text-gray-600">
+        <p className="text-center text-sm text-gray-600 pt-2">
           Already have an account?{" "}
-          <Link to="/login" className="link">Sign in</Link>
+          <Link to="/login" className="text-primary-600 font-medium hover:underline">
+            Sign in
+          </Link>
         </p>
       </form>
     </Layout>

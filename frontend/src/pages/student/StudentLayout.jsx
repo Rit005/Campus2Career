@@ -4,13 +4,11 @@ import StudentNavbar from "./StudentNavbar";
 const StudentLayout = () => {
   return (
     <div className="min-h-screen bg-gray-50">
-
       <StudentNavbar />
 
-      <main className="max-w-7xl mx-auto px-6 py-10">
+      <main className="w-full px-6 lg:px-10 py-10">
         <Outlet />
       </main>
-
     </div>
   );
 };

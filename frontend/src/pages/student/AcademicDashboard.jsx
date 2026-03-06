@@ -116,69 +116,62 @@ const Analytics = () => {
           </h3>
         </div>
 
-        <table className="w-full">
-          <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-            <tr>
-              <th className="px-6 py-3 text-left">Subject</th>
-              <th className="px-6 py-3 text-left">Marks (%)</th>
-              <th className="px-6 py-3 text-left">Grade</th>
-              <th className="px-6 py-3 text-left">Status</th>
-            </tr>
-          </thead>
+        <div className="overflow-x-auto">
+  <table className="w-full table-fixed">
 
-          <tbody className="divide-y">
-            {subjectWise.length === 0 ? (
-              <tr>
-                <td colSpan="4" className="text-center py-6 text-gray-500">
-                  No marksheet uploaded yet
-                </td>
-              </tr>
-            ) : (
-              subjectWise.map((item) => (
-                <tr key={item.subject} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium">
-                    {item.subject}
-                  </td>
+    <thead className="bg-gray-50 text-sm uppercase text-gray-600">
+      <tr>
+        <th className="w-[45%] px-6 py-4 text-left font-semibold">
+          Subject
+        </th>
+        <th className="w-[15%] px-6 py-4 text-right font-semibold">
+          Marks (%)
+        </th>
+        <th className="w-[15%] px-6 py-4 text-center font-semibold">
+          Grade
+        </th>
+        <th className="w-[25%] px-6 py-4 text-left font-semibold">
+          Status
+        </th>
+      </tr>
+    </thead>
 
-                  <td className="px-6 py-4">
-                    <div>{item.marks}%</div>
+    <tbody className="divide-y">
+      {subjectWise.map((item) => (
+        <tr key={item.subject} className="hover:bg-gray-50">
 
-                    <div className="w-full bg-gray-200 h-1.5 rounded mt-1">
-                      <div
-                        className={`h-1.5 rounded ${
-                          item.marks >= 80
-                            ? "bg-green-500"
-                            : item.marks >= 60
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
-                        }`}
-                        style={{ width: `${item.marks}%` }}
-                      />
-                    </div>
-                  </td>
+          <td className="px-6 py-5 text-left font-medium text-gray-800 truncate">
+            {item.subject}
+          </td>
 
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${getGradeColor(
-                        item.grade
-                      )}`}
-                    >
-                      {item.grade || "N/A"}
-                    </span>
-                  </td>
+          <td className="px-6 py-5 text-right whitespace-nowrap">
+            {item.marks}%
+          </td>
 
-                  <td className="px-6 py-4 font-medium">
-                    {item.marks >= 80
-                      ? "Excellent"
-                      : item.marks >= 60
-                      ? "Needs Work"
-                      : "At Risk"}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+          <td className="px-6 py-5 text-center">
+            <span
+              className={`inline-block w-12 text-center px-2 py-1 rounded-full text-xs font-semibold ${getGradeColor(
+                item.grade
+              )}`}
+            >
+              {item.grade}
+            </span>
+          </td>
+
+          <td className="px-6 py-5 text-left font-medium whitespace-nowrap">
+            {item.marks >= 80
+              ? "Excellent"
+              : item.marks >= 60
+              ? "Needs Work"
+              : "At Risk"}
+          </td>
+
+        </tr>
+      ))}
+    </tbody>
+
+  </table>
+</div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

@@ -3,7 +3,6 @@ import recruiterAPI from "../../api/recruiter";
 import { studentAPI } from "../../api/student";
 import ApplyJobModal from "../student/ApplyJobModal.jsx";
 
-
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [pipeline, setPipeline] = useState({});
@@ -124,7 +123,6 @@ const Dashboard = () => {
         <FancySection title="AI Recommendations" list={insights.recommendations} />
       </div>
 
-      {/* JOBS MODAL */}
       {jobsModalOpen && (
         <JobsModal
           jobs={allJobs}
@@ -136,7 +134,6 @@ const Dashboard = () => {
         />
       )}
 
-      {/* STUDENTS MODAL */}
       {studentsModalOpen && (
         <StudentsModal
           students={allStudents}
@@ -162,22 +159,34 @@ const Card = ({ title, value, color }) => (
   </div>
 );
 
-const FancySection = ({ title, list }) => (
-  <div className="bg-white shadow-lg rounded-xl p-6 border">
-    <h2 className="text-xl font-semibold mb-4">{title}</h2>
-    {list.length === 0 ? (
-      <p className="text-gray-500 italic">AI is analyzing…</p>
-    ) : (
-      <ul className="list-disc ml-6 space-y-2 text-gray-700">
-        {list.map((line, i) => (
-          <li key={i}>{line}</li>
-        ))}
-      </ul>
-    )}
-  </div>
-);
+const FancySection = ({ title, list }) => {
+  const isEmpty = !list || list.length === 0;
+  const placeholders = [1, 2, 3];
 
-/* JOBS MODAL */
+  return (
+    <div className="bg-white shadow-lg rounded-xl p-6 border">
+      <h2 className="text-xl font-semibold mb-4">{title}</h2>
+
+      {isEmpty ? (
+        <div className="space-y-3">
+          {placeholders.map((i) => (
+            <div
+              key={i}
+              className="h-4 bg-gray-200 rounded-md animate-pulse"
+            ></div>
+          ))}
+        </div>
+      ) : (
+        <ul className="list-disc ml-6 space-y-2 text-gray-700">
+          {list.map((line, i) => (
+            <li key={i}>{line}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
 const JobsModal = ({ jobs, close, onApply }) => {
   const [search, setSearch] = useState("");
 
@@ -216,6 +225,7 @@ const JobsModal = ({ jobs, close, onApply }) => {
               <th className="p-3 border text-center">Action</th>
             </tr>
           </thead>
+
           <tbody>
             {filtered.map((job) => (
               <tr key={job._id} className="hover:bg-gray-50">
@@ -240,7 +250,6 @@ const JobsModal = ({ jobs, close, onApply }) => {
   );
 };
 
-/* STUDENTS MODAL */
 const StudentsModal = ({ students, close }) => (
   <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90000] flex justify-center items-center">
     <div className="bg-white rounded-xl p-6 max-w-4xl w-full shadow-xl border">
@@ -263,7 +272,7 @@ const StudentsModal = ({ students, close }) => (
           </thead>
 
           <tbody>
-            {students.map((s, i) => (
+            {students.map((s) => (
               <tr key={s._id} className="hover:bg-gray-50">
                 <td className="p-3 border">{s.name}</td>
                 <td className="p-3 border">{s.email}</td>

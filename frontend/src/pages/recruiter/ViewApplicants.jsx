@@ -12,24 +12,45 @@ const ViewApplicants = () => {
         `http://localhost:5001/api/recruiter/applicants/${jobId}`,
         { withCredentials: true }
       );
-
       if (res.data.success) setApplicants(res.data.applicants);
     } catch (error) {
       console.error("LOAD ERROR:", error);
     }
   };
 
- const updateNote = async (id, note) => {
+  const openResume = async (id) => {
   try {
-    await axios.patch(
-      `http://localhost:5001/api/recruiter/applicants/${id}/note`,
-      { note },
-      { withCredentials: true }
+    const response = await axios.get(
+      `http://localhost:5001/api/recruiter/application/resume/:id`,
+      {
+        responseType: "blob",
+        withCredentials: true,
+      }
     );
+
+    const file = new Blob([response.data], {
+      type: response.headers["content-type"],
+    });
+
+    const fileURL = URL.createObjectURL(file);
+    window.open(fileURL, "_blank");
   } catch (error) {
-    console.error("NOTE UPDATE ERROR:", error);
+    console.error("Resume open error:", error);
+    alert("Unable to open resume");
   }
 };
+
+  const updateNote = async (id, note) => {
+    try {
+      await axios.patch(
+        `http://localhost:5001/api/recruiter/applicants/${id}/note`,
+        { note },
+        { withCredentials: true }
+      );
+    } catch (error) {
+      console.error("NOTE UPDATE ERROR:", error);
+    }
+  };
 
   const updateStatus = async (id, status) => {
     await axios.patch(
@@ -51,71 +72,132 @@ const ViewApplicants = () => {
       {applicants.length === 0 ? (
         <p className="text-gray-500">No students applied yet.</p>
       ) : (
-        <table className="w-full border shadow rounded-lg">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-3 border">Name</th>
-              <th className="p-3 border">Email</th>
-              <th className="p-3 border">Phone</th>
-              <th className="p-3 border">Resume</th>
-              <th className="p-3 border">Status</th>
-              <th className="p-3 border">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {applicants.map((app) => (
-              <tr key={app._id} className="hover:bg-gray-50">
-                <td className="p-3 border">{app.name}</td>
-                <td className="p-3 border">{app.email}</td>
-                <td className="p-3 border">{app.phone}</td>
+        <>
+          <div className="hidden md:block overflow-x-auto rounded-lg shadow">
+            <table className="w-full">
+              <thead className="bg-gray-100 text-sm text-gray-600 sticky top-0 z-10">
+                <tr>
+                  <th className="p-3 text-left">Name</th>
+                  <th className="p-3 text-left">Email</th>
+                  <th className="p-3 text-left">Phone</th>
+                  <th className="p-3 text-center">Resume</th>
+                  <th className="p-3 text-left">Status & Notes</th>
+                  <th className="p-3 text-center">Action</th>
+                </tr>
+              </thead>
 
-                <td className="p-3 border text-center">
+              <tbody>
+                {applicants.map((app) => (
+                  <tr key={app._id} className="border-b hover:bg-gray-50">
+                    <td className="p-3">{app.name}</td>
+                    <td className="p-3">{app.email}</td>
+                    <td className="p-3">{app.phone}</td>
+
+                    <td className="p-3 text-center">
+                      <a
+                        href={`http://localhost:5001/api/application/resume/${app._id}`}
+                        className="text-blue-600 underline"
+                        target="_blank"
+                      >
+                        View
+                      </a>
+                    </td>
+
+                    <td className="p-3">
+                      <p className="font-semibold capitalize">{app.status}</p>
+
+                      <textarea
+                        className="w-full mt-2 p-2 border rounded text-sm"
+                        placeholder="Add recruiter notes..."
+                        defaultValue={app.recruiterNotes || ""}
+                        onBlur={(e) => updateNote(app._id, e.target.value)}
+                      />
+                    </td>
+
+                    <td className="p-3 text-center space-x-2">
+                      <button
+                        className="px-3 py-1 bg-green-600 text-white rounded"
+                        onClick={() => updateStatus(app._id, "selected")}
+                      >
+                        Select
+                      </button>
+
+                      <button
+                        className="px-3 py-1 bg-yellow-600 text-white rounded"
+                        onClick={() => updateStatus(app._id, "shortlisted")}
+                      >
+                        Shortlist
+                      </button>
+
+                      <button
+                        className="px-3 py-1 bg-red-600 text-white rounded"
+                        onClick={() => updateStatus(app._id, "rejected")}
+                      >
+                        Reject
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="md:hidden space-y-4">
+            {applicants.map((app) => (
+              <div
+                key={app._id}
+                className="border rounded-lg p-4 shadow bg-white space-y-4"
+              >
+                <div className="space-y-1">
+                  <p className="font-bold text-lg">{app.name}</p>
+                  <p className="text-gray-600 text-sm">{app.email}</p>
+                  <p className="text-gray-600 text-sm">{app.phone}</p>
+                </div>
+
+                <div>
                   <a
                     href={`http://localhost:5001/api/application/resume/${app._id}`}
-                    className="text-blue-600 underline"
+                    className="text-blue-600 underline text-sm"
                     target="_blank"
                   >
                     View Resume
                   </a>
-                </td>
+                </div>
 
-                <td className="p-3 border">
-                <p className="font-semibold">{app.status}</p>
-
-                <textarea
+                <div>
+                  <p className="font-semibold capitalize">{app.status}</p>
+                  <textarea
                     className="w-full mt-2 p-2 border rounded text-sm"
                     placeholder="Add recruiter notes..."
                     defaultValue={app.recruiterNotes || ""}
                     onBlur={(e) => updateNote(app._id, e.target.value)}
-                />
-                </td>
+                  />
+                </div>
 
-                <td className="p-3 border space-x-2">
+                <div className="flex flex-col sm:flex-row gap-2 w-full">
                   <button
-                    className="px-3 py-1 bg-green-600 text-white rounded"
+                    className="w-full py-2 bg-green-600 text-white rounded"
                     onClick={() => updateStatus(app._id, "selected")}
                   >
                     Select
                   </button>
-
                   <button
-                    className="px-3 py-1 bg-yellow-600 text-white rounded"
+                    className="w-full py-2 bg-yellow-600 text-white rounded"
                     onClick={() => updateStatus(app._id, "shortlisted")}
                   >
                     Shortlist
                   </button>
-
                   <button
-                    className="px-3 py-1 bg-red-600 text-white rounded"
+                    className="w-full py-2 bg-red-600 text-white rounded"
                     onClick={() => updateStatus(app._id, "rejected")}
                   >
                     Reject
                   </button>
-                </td>
-              </tr>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </>
       )}
     </div>
   );

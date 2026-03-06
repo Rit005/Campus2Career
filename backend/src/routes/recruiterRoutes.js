@@ -16,7 +16,7 @@ import {
 
 import {
   getApplicantsForJob,
-  updateApplicationStatus,updateRecruiterNote ,
+  updateApplicationStatus,updateRecruiterNote ,getResumeByApplicationId 
 } from "../controllers/applicationController.js";
 
 import { matchCandidates } from "../controllers/matchingController.js";
@@ -53,6 +53,7 @@ router.get("/analytics", getRecruiterAnalytics);
 router.get("/applicants/:jobId", getApplicantsForJob);
 router.patch("/applicants/:id/status", updateApplicationStatus);
 router.patch("/applicants/:id/note",protect,requireRole("recruiter"),updateRecruiterNote);
+router.get("/application/resume/:id",getResumeByApplicationId);
 
 //recruiter profile
 router.post("/profile/save",protect,requireRole("recruiter"),saveRecruiterProfile);
