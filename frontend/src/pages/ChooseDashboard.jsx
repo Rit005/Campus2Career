@@ -77,19 +77,21 @@ const ChooseDashboard = () => {
             Student Dashboard
           </h2>
           <p className="text-gray-500 mb-6">
-            Access your job search tools, apply to positions, and track your
-            career journey.
+            Analyze your academic performance, build a smart resume, explore job opportunities, and receive AI-powered career guidance.
           </p>
 
           <div className="flex flex-wrap justify-center gap-2 mb-8">
             <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
-              Find Jobs
+              AI Academic Analysis
             </span>
             <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm">
-              Build Profile
+             Smart Job Matching
             </span>
             <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-sm">
-              Track Applications
+             Resume Builder
+            </span>
+            <span className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-sm">
+            Placement Predictions
             </span>
           </div>
 
@@ -97,7 +99,7 @@ const ChooseDashboard = () => {
             disabled={loading}
             className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
           >
-            Select Student →
+            Select Student Dashboard →
           </button>
         </div>
 
@@ -112,7 +114,7 @@ const ChooseDashboard = () => {
             Recruiter Dashboard
           </h2>
           <p className="text-gray-500 mb-6">
-            Post jobs, review candidates, and build your talent pipeline.
+            Post job opportunities, analyze candidate performance, and discover top talent using AI-driven student analytics.
           </p>
 
           <div className="flex flex-wrap justify-center gap-2 mb-8">
@@ -123,7 +125,7 @@ const ChooseDashboard = () => {
               Review Candidates
             </span>
             <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-sm">
-              Manage Team
+              Manage Recruitment Pipeline
             </span>
           </div>
 
@@ -131,7 +133,7 @@ const ChooseDashboard = () => {
             disabled={loading}
             className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
           >
-            Select Recruiter →
+            Select Recruiter Dashboard →
           </button>
         </div>
       </div>

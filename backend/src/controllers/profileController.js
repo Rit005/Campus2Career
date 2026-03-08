@@ -1,5 +1,6 @@
 import StudentProfile from "../models/StudentProfile.js";
 
+// savve student profile
 export const saveStudentProfile = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -34,6 +35,7 @@ export const saveStudentProfile = async (req, res) => {
   }
 };
 
+// get student profile
 export const getStudentProfile = async (req, res) => {
   try {
     const profile = await StudentProfile.findOne({ userId: req.user._id });
@@ -49,7 +51,7 @@ export const getStudentProfile = async (req, res) => {
       .json({ success: false, message: "Failed to fetch profile" });
   }
 };
-
+ // Add skills
 export const addSkill = async (req, res) => {
   try {
     const { skill } = req.body;
@@ -75,6 +77,7 @@ export const addSkill = async (req, res) => {
   }
 };
 
+// Remove Skills
 export const removeSkill = async (req, res) => {
   try {
     const { skill } = req.body;
@@ -94,6 +97,7 @@ export const removeSkill = async (req, res) => {
   }
 };
 
+//Add interest
 export const addInterest = async (req, res) => {
   try {
     const { interest } = req.body;
@@ -119,6 +123,7 @@ export const addInterest = async (req, res) => {
   }
 };
 
+// Remove interests
 export const removeInterest = async (req, res) => {
   try {
     const { interest } = req.body;

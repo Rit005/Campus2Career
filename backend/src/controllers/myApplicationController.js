@@ -1,5 +1,6 @@
 import Application from "../models/Application.js";
 
+// get student application
 export const getStudentApplications = async (req, res) => {
   try {
     const studentId = req.user._id;
@@ -21,6 +22,7 @@ export const getStudentApplications = async (req, res) => {
   }
 };
 
+// delete application
 export const deleteApplication = async (req, res) => {
   try {
     const studentId = req.user._id;

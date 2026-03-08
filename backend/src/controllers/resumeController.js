@@ -4,15 +4,10 @@ import pdfParse from "pdf-parse-fixed";
 import Resume from "../models/Resume.js";
 import Student from "../models/Student.js";
 import Job from "../models/Job.js";
-
 import { matchJobsWithSkills } from "../utils/jobMatcher.js";
+import {predictDomain,calculateResumeStrength,autoFillMissingSkills,} from "../ml/resumeML.js";
 
-import {
-  predictDomain,
-  calculateResumeStrength,
-  autoFillMissingSkills,
-} from "../ml/resumeML.js";
-
+// Analyze resume
 export const analyzeResume = async (req, res) => {
   try {
     const studentId = req.user?._id;
@@ -185,6 +180,7 @@ ${resumeText}
   }
 };
 
+// get resume
 export const getStudentResume = async (req, res) => {
   try {
     const studentId = req.user._id;

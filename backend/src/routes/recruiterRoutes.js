@@ -38,7 +38,7 @@ router.put("/job/:id", updateJob);
 router.get("/all-jobs", getAllJobs);
 
 // MATCHING
-router.post("/match", matchCandidates);
+router.post("/match-candidates", matchCandidates);
 
 // DASHBOARD
 router.post("/dashboard", getHiringDashboard);

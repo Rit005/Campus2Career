@@ -1,30 +1,31 @@
 import Resume from "../models/Resume.js";
 
 const SKILL_ALIASES = {
-  postgreesql: "postgresql",
-  postgre: "postgresql",
-  vscode: "visualstudiocode",
   html5: "html",
   js: "javascript",
+  node: "nodejs",
   nodejs: "nodejs",
-  groqllm: "groq",
+  express: "expressjs",
   expressjs: "expressjs",
+  spring: "springboot",
   springboot: "springboot",
-  "visualstudiocode": "visualstudiocode",
+  postgres: "postgresql",
+  postgre: "postgresql",
+  postgresql: "postgresql",
+  vscode: "vscode",
+  visualstudiocode: "vscode"
 };
 
 const normalizeSkill = (skill = "") => {
   let cleaned = String(skill)
     .toLowerCase()
     .trim()
-    .replace(/\./g, "")  
-    .replace(/\s+/g, "")  
-    .replace(/-/g, "")       
-    .replace(/_/g, "");     
+    .replace(/[.\s_-]/g, "");
 
   return SKILL_ALIASES[cleaned] || cleaned;
 };
 
+//match candidates
 export const matchCandidates = async (req, res) => {
   try {
     const { requiredSkills = [], jobDescription = "" } = req.body;
@@ -32,11 +33,13 @@ export const matchCandidates = async (req, res) => {
     if (!requiredSkills.length) {
       return res.status(400).json({
         success: false,
-        message: "Required skills are required",
+        message: "Required skills are required"
       });
     }
 
-    const normalizedSkills = requiredSkills.map(normalizeSkill);
+    const normalizedSkills = [
+      ...new Set(requiredSkills.map((s) => normalizeSkill(s)))
+    ];
 
     const descKeywords = jobDescription
       .toLowerCase()
@@ -51,7 +54,7 @@ export const matchCandidates = async (req, res) => {
     const rankedCandidates = [];
 
     for (const resume of resumes) {
-      if (!resume || !resume.studentId) continue;
+      if (!resume?.studentId) continue;
 
       let skillArr = [];
 
@@ -61,20 +64,26 @@ export const matchCandidates = async (req, res) => {
         skillArr = resume.skills.split(",").map((s) => s.trim());
       }
 
-      const candidateSkills = skillArr.map(normalizeSkill);
+      const candidateSkills = [
+        ...new Set(skillArr.map((s) => normalizeSkill(s)))
+      ];
+
+      console.log("Required Skills:", normalizedSkills);
+      console.log("Candidate Skills:", candidateSkills);
 
       const matchedSkills = normalizedSkills.filter((reqSkill) =>
-        candidateSkills.includes(reqSkill)
+        candidateSkills.some((skill) => skill.includes(reqSkill))
       );
+
+      console.log("Matched Skills:", matchedSkills);
 
       const skillScore =
         normalizedSkills.length > 0
-          ? Math.round(
-              (matchedSkills.length / normalizedSkills.length) * 100
-            )
+          ? Math.round((matchedSkills.length / normalizedSkills.length) * 70)
           : 0;
 
       const expText = String(resume.experience_summary || "").toLowerCase();
+
       const matchedExpWords = descKeywords.filter((w) =>
         expText.includes(w)
       );
@@ -91,17 +100,22 @@ export const matchCandidates = async (req, res) => {
 
       const finalScore = Math.min(skillScore + experienceScore, 100);
 
+      if (finalScore < 20) continue;
+
       rankedCandidates.push({
         studentId: resume.studentId._id,
         name: resume.studentId.name,
         email: resume.studentId.email,
         phone: resume.studentId.phone,
+
         skills: skillArr,
         matchedSkills,
+
         matchScore: finalScore,
+
         summary: resume.experience_summary || "",
         education: resume.education || "",
-        roles: resume.suitable_roles || [],
+        roles: resume.suitable_roles || []
       });
     }
 
@@ -109,14 +123,17 @@ export const matchCandidates = async (req, res) => {
 
     return res.json({
       success: true,
-      candidates: rankedCandidates,
+      totalCandidates: rankedCandidates.length,
+      candidates: rankedCandidates
     });
+
   } catch (err) {
     console.error("Smart Matching Error:", err);
+
     return res.status(500).json({
       success: false,
       message: "Candidate matching failed",
-      error: err.message,
+      error: err.message
     });
   }
 };

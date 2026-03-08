@@ -63,9 +63,8 @@ const Home = () => {
           </h1>
 
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10">
-            Campus2Career is your comprehensive platform for navigating the journey
-            from academics to professional success. Discover opportunities, build skills,
-            and connect with mentors.
+            Campus2Career is an AI-powered academic and recruitment platform that connects students and recruiters.
+Analyze academic performance, build smart resumes, discover job opportunities, and receive AI-driven career guidance for successful placements.
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -86,10 +85,10 @@ const Home = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Course Catalog</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2"> AI Academic Analyzer</h3>
             <p className="text-gray-600">
-              Access hundreds of courses designed to prepare you for your dream career.
-              From coding to soft skills, we've got you covered.
+              Upload your marksheet and get AI-powered analysis.
+              Our OCR and Machine Learning models detect weak subjects, analyze academic trends, predict domain strengths, and forecast next-semester performance.
             </p>
           </div>
 
@@ -99,10 +98,10 @@ const Home = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Job Opportunities</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Job & Placement Portal</h3>
             <p className="text-gray-600">
-              Find internships and job openings from top companies. Our AI-powered
-              matching helps you discover perfect opportunities.
+              Discover internships and job openings from top companies.
+Our AI system analyzes your academic profile and recommends best-fit job roles and career domains.
             </p>
           </div>
 
@@ -112,10 +111,10 @@ const Home = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Mentorship</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Recruiter Dashboard</h3>
             <p className="text-gray-600">
-              Connect with professionals who can guide you through your career journey
-              and help you make informed decisions.
+              Companies can post jobs, evaluate candidates, and analyze student performance data.
+Advanced analytics help recruiters identify top talent based on academic and skill insights.
             </p>
           </div>
         </div>

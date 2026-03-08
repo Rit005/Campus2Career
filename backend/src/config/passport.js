@@ -7,12 +7,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Serialize user for session
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-// Deserialize user from session
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);
@@ -22,7 +20,6 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Google OAuth Strategy - Only initialize if credentials are provided
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(
     new GoogleStrategy(
@@ -37,31 +34,26 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           const googleId = profile.id;
           const email = profile.emails[0]?.value;
 
-          // Check if user already exists with this Google ID
           let user = await User.findOne({ googleId });
 
           if (user) {
             return done(null, user);
           }
 
-          // Check if user exists with same email
           if (email) {
             user = await User.findOne({ email });
             
             if (user) {
-              // Link existing account with Google
               user.googleId = googleId;
               await user.save();
               return done(null, user);
             }
           }
 
-          // Create new Google user
-          // Note: role is null by default - user will select on dashboard
           user = await User.create({
             name: profile.displayName,
             email: email,
-            password: null, // OAuth users don't have a password
+            password: null,
             googleId: googleId,
             role: null,
             isProfileCompleted: false
@@ -75,10 +67,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     )
   );
 } else {
-  console.warn('⚠️  Google OAuth credentials not found. Google login will be disabled.');
+  console.warn(' Google OAuth credentials not found. Google login will be disabled.');
 }
 
-// GitHub OAuth Strategy - Only initialize if credentials are provided
 if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
   passport.use(
     new GitHubStrategy(
@@ -91,32 +82,26 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
       async (accessToken, refreshToken, profile, done) => {
         try {
           const githubId = profile.id;
-          // GitHub might not always provide email
           const email = profile.emails?.[0]?.value || `${profile.username}@github.local`;
 
-          // Check if user already exists with this GitHub ID
           let user = await User.findOne({ githubId });
 
           if (user) {
             return done(null, user);
           }
 
-          // Check if user exists with same email
           user = await User.findOne({ email });
           
           if (user) {
-            // Link existing account with GitHub
             user.githubId = githubId;
             await user.save();
             return done(null, user);
           }
 
-          // Create new GitHub user
-          // Note: role is null by default - user will select on dashboard
           user = await User.create({
             name: profile.displayName || profile.username,
             email: email,
-            password: null, // OAuth users don't have a password
+            password: null, 
             githubId: githubId,
             role: null,
             isProfileCompleted: false
@@ -130,19 +115,14 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
     )
   );
 } else {
-  console.warn('⚠️  GitHub OAuth credentials not found. GitHub login will be disabled.');
+  console.warn(' GitHub OAuth credentials not found. GitHub login will be disabled.');
 }
 
-/**
- * OAuth callback handler helper
- * Generates JWT and redirects to frontend with token
- */
 export const handleOAuthCallback = (req, res, provider) => {
 const token = generateToken(req.user._id);
 
   sendTokenCookie(res, token);
 
-  // Redirect to frontend with token in URL for localStorage storage
 res.redirect(
   `${process.env.FRONTEND_URL}/choose-dashboard?token=${token}`
 );

@@ -1,5 +1,6 @@
 import RecruiterProfile from "../models/RecruiterProfile.js";
 
+// save recruiter profile
 export const saveRecruiterProfile = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -29,6 +30,7 @@ export const saveRecruiterProfile = async (req, res) => {
   }
 };
 
+// get recruiter profile
 export const getRecruiterProfile = async (req, res) => {
   try {
     const profile = await RecruiterProfile.findOne({ userId: req.user._id });

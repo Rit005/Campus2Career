@@ -4,6 +4,7 @@ import User from "../models/User.js";
 import path from "path";
 import fs from "fs";
 
+// Job Application
 export const getApplicantsForJob = async (req, res) => {
   try {
     const applications = await Application.find({ jobId: req.params.jobId });
@@ -19,6 +20,7 @@ export const getApplicantsForJob = async (req, res) => {
   }
 };
 
+//Update Application
 export const updateApplicationStatus = async (req, res) => {
   try {
     const { status } = req.body;  
@@ -45,6 +47,7 @@ export const updateApplicationStatus = async (req, res) => {
   }
 };
 
+// Recruiter note
 export const updateRecruiterNote = async (req, res) => {
   try {
     const { id } = req.params;
@@ -63,6 +66,7 @@ export const updateRecruiterNote = async (req, res) => {
   }
 };
 
+//Application by Id
 export const getResumeByApplicationId = async (req, res) => {
   try {
     const application = await Application.findById(req.params.id);

@@ -7,12 +7,60 @@ const jobSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    jobTitle: String,
-    company: String,
-    jobLocation: String,
-    salary: String,
-    jobDescription: String,
-    requiredSkills: [String],
+
+    jobTitle: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    company: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    jobLocation: {
+      type: String,
+      trim: true,
+    },
+
+    salary: {
+      type: String,
+    },
+
+    jobDescription: {
+      type: String,
+    },
+
+    requiredSkills: [
+      {
+        type: String,
+        trim: true,
+        lowercase: true,
+      },
+    ],
+
+    experienceLevel: {
+      type: String,
+      enum: ["Intern", "Fresher", "Junior", "Mid", "Senior"],
+      default: "Fresher",
+    },
+
+    jobType: {
+      type: String,
+      enum: ["Full-time", "Internship", "Part-time", "Contract"],
+      default: "Full-time",
+    },
+
+    domain: {
+      type: String, 
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );

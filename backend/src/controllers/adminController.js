@@ -46,6 +46,7 @@ export const getOverview = async (req, res) => {
   }
 };
 
+// Users
 export const getUsers = async (req, res) => {
   try {
     const {
@@ -107,7 +108,7 @@ export const getUsers = async (req, res) => {
   }
 };
 
-
+// block users
 export const toggleUserBlock = async (req, res) => {
   try {
     const { id } = req.params;
@@ -153,6 +154,7 @@ export const toggleUserBlock = async (req, res) => {
   }
 };
 
+//delete users
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -196,6 +198,7 @@ export const deleteUser = async (req, res) => {
   }
 };
 
+// student at risk
 export const getAtRiskStudents = async (req, res) => {
   try {
     const students = await User.find({ role: 'student' })
@@ -234,7 +237,7 @@ export const getAtRiskStudents = async (req, res) => {
   }
 };
 
-
+//Skill Trend
 export const getSkillTrends = async (req, res) => {
   try {
     const skillTrends = await Resume.aggregate([
@@ -287,6 +290,7 @@ export const getSkillTrends = async (req, res) => {
   }
 };
 
+// Growth
 export const getGrowthAnalytics = async (req, res) => {
   try {
     const { period = '30' } = req.query;
@@ -367,16 +371,14 @@ export const getGrowthAnalytics = async (req, res) => {
   }
 };
 
-// Get all admins (for admin profile dropdown)
+//admin
 export const getAdmins = async (req, res) => {
   try {
-    // Fetch all users with role === "admin"
     const admins = await User.find({ role: 'admin' })
       .select('name email createdAt isBlocked updatedAt')
       .sort({ createdAt: -1 })
       .lean();
 
-    // Format the response
     const formattedAdmins = admins.map(admin => ({
       id: admin._id,
       name: admin.name,
@@ -385,7 +387,6 @@ export const getAdmins = async (req, res) => {
       isActive: !admin.isBlocked
     }));
 
-    // Get current admin info (from req.user set by middleware)
     const currentAdmin = {
       id: req.user._id,
       name: req.user.name,

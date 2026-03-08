@@ -6,6 +6,7 @@ import Marksheet from "../models/Marksheet.js";
 import Resume from "../models/Resume.js";
 import { groq } from "../groqClient.js";
 
+// Jobs
 export const getAllJobs = async (req, res) => {
   try {
     const jobs = await Job.find().sort({ createdAt: -1 });
@@ -24,6 +25,7 @@ export const getAllJobs = async (req, res) => {
   }
 };
 
+// Career Analyze
 export const analyzeCareer = async (req, res) => {
   try {
     const studentId = req.user._id;
@@ -152,6 +154,7 @@ RESPOND WITH JSON ONLY.
   }
 };
 
+// Career profile
 export const getCareerProfile = async (req, res) => {
   try {
     const profile = await CareerProfile.findOne({ studentId: req.user._id });

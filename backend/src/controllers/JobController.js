@@ -1,4 +1,6 @@
 import Job from "../models/Job.js";
+
+//post job
 export const postJob = async (req, res) => {
   try {
     const {
@@ -42,6 +44,7 @@ export const postJob = async (req, res) => {
   }
 };
 
+//get jobs
 export const getMyJobs = async (req, res) => {
   try {
     const jobs = await Job.find({ recruiterId: req.user._id }).sort({
@@ -61,7 +64,7 @@ export const getMyJobs = async (req, res) => {
   }
 };
 
-
+//delete jobs
 export const deleteJob = async (req, res) => {
   try {
     const jobId = req.params.id;
@@ -97,6 +100,8 @@ export const deleteJob = async (req, res) => {
     });
   }
 };
+
+//update job
 export const updateJob = async (req, res) => {
   try {
     const jobId = req.params.id;
@@ -120,6 +125,8 @@ export const updateJob = async (req, res) => {
     return res.status(500).json({ success: false, message: "Failed to update job" });
   }
 };
+
+//get all jobs
 export const getAllJobs = async (req, res) => {
   try {
     const jobs = await Job.find().sort({ createdAt: -1 });

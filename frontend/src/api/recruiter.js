@@ -9,7 +9,7 @@ const recruiterAPI = {
   postJob: (data) => RecruiterAPI.post("/post-job", data),
   getMyJobs: () => RecruiterAPI.get("/jobs"),
   deleteJob: (id) => RecruiterAPI.delete(`/job/${id}`),
-  matchCandidates: (data) => RecruiterAPI.post("/match", data),
+  matchCandidates: (data) => RecruiterAPI.post("/match-candidates", data),
   dashboard: (data) => RecruiterAPI.post("/dashboard", data),
 
   getAnalytics: () => RecruiterAPI.get("/analytics"),

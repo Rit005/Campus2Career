@@ -1,5 +1,6 @@
 import Marksheet from "../models/Marksheet.js";
 
+// Student Analytics
 export const getStudentAnalytics = async (req, res) => {
   try {
     const studentId = req.user._id;
@@ -68,6 +69,7 @@ export const getStudentAnalytics = async (req, res) => {
       };
     });
 
+// radar chart
 const radarSubjects = subjectWise.map((s) => s.subject);
 
 const radarDataset = radarSubjects.map((subject) => {
@@ -93,6 +95,7 @@ const radarChart = {
   }))
 };
 
+//progress bar graph
     const progressTrend = marksheets.map((m, i) => {
       const prev = i === 0
         ? 0
@@ -136,6 +139,7 @@ const radarChart = {
   }
 };
 
+// Semester wise analytics
 export const getSemesterWiseAnalytics = async (req, res) => {
   try {
     const studentId = req.user._id;

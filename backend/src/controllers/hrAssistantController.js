@@ -1,5 +1,6 @@
 import { groq } from "../groqClient.js";
 
+// Chat bot
 export const hrAssistantChat = async (req, res) => {
   try {
     const { message } = req.body;

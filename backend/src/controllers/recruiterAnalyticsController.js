@@ -3,6 +3,7 @@ import Resume from "../models/Resume.js";
 import Job from "../models/Job.js";
 import Application from "../models/Application.js";
 
+// recruiter Analytics
 export const getRecruiterAnalytics = async (req, res) => {
   try {
     const totalStudents = await Student.countDocuments();

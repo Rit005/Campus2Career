@@ -6,6 +6,7 @@ import {
   clearTokenCookie
 } from '../middleware/auth.js';
 
+//SIGNUP
 export const signup = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
@@ -60,7 +61,7 @@ export const signup = async (req, res, next) => {
   }
 };
 
-
+// Login
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -105,7 +106,7 @@ export const login = async (req, res, next) => {
   }
 };
 
-
+//Logout
 export const logout = async (req, res, next) => {
   try {
     clearTokenCookie(res);
@@ -156,7 +157,7 @@ export const verifyToken = async (req, res) => {
   }
 };
 
-
+//Role
 export const selectRole = async (req, res) => {
   const { role } = req.body;
 
@@ -183,7 +184,7 @@ export const selectRole = async (req, res) => {
   });
 };
 
-
+// Update Profile
 export const updateProfile = async (req, res, next) => {
   try {
     const { name, email } = req.body;

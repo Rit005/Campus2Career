@@ -1,6 +1,7 @@
 import { groq } from "../groqClient.js";
 import Resume from "../models/Resume.js";
 
+//student chat bot
 export const mentorAssistantChat = async (req, res) => {
   try {
     const { message } = req.body;

@@ -9,33 +9,41 @@ const Matching = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [requiredSkills, setRequiredSkills] = useState("");
 
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
   const [myJobs, setMyJobs] = useState([]);
 
-  const [jobMatches, setJobMatches] = useState({}); 
-  const [matchLoadingFor, setMatchLoadingFor] = useState(null); 
+  const [jobMatches, setJobMatches] = useState({});
+  const [matchLoadingFor, setMatchLoadingFor] = useState(null);
 
   useEffect(() => {
     loadJobs();
   }, []);
 
+  // LOAD JOBS
   const loadJobs = async () => {
     try {
       const res = await recruiterAPI.getMyJobs();
+
+      console.log("Loaded Jobs:", res.data);
+
       if (res.data.success) {
-        setMyJobs(res.data.jobs);
+        setMyJobs(res.data.jobs || []);
       }
     } catch (err) {
       console.error("Failed to load jobs:", err);
     }
   };
 
+  // DELETE JOB
   const handleDeleteJob = async (jobId) => {
     if (!window.confirm("Delete this job?")) return;
 
     try {
       setLoading(true);
+
       const res = await recruiterAPI.deleteJob(jobId);
+
+      console.log("Delete response:", res.data);
 
       if (res.data.success) {
         alert("Job deleted successfully");
@@ -49,12 +57,16 @@ const Matching = () => {
     setLoading(false);
   };
 
+  // POST JOB
   const handlePostJob = async () => {
     if (!jobTitle || !company || !jobLocation || !jobDescription || !requiredSkills) {
       return alert("Please fill required fields");
     }
 
-    const skillsArray = requiredSkills.split(",").map((s) => s.trim()).filter(Boolean);
+    const skillsArray = requiredSkills
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
 
     const jobData = {
       jobTitle,
@@ -65,9 +77,14 @@ const Matching = () => {
       requiredSkills: skillsArray,
     };
 
+    console.log("Posting Job:", jobData);
+
     try {
       setLoading(true);
+
       const res = await recruiterAPI.postJob(jobData);
+
+      console.log("Post job response:", res.data);
 
       if (res.data.success) {
         alert("Job posted successfully!");
@@ -88,19 +105,28 @@ const Matching = () => {
     setLoading(false);
   };
 
+  // MATCH CANDIDATES
   const matchForJob = async (job) => {
-    setMatchLoadingFor(job._id); 
+    setMatchLoadingFor(job._id);
+
+    console.log("Matching for job:", job);
 
     try {
-      const res = await recruiterAPI.matchCandidates({
+      const payload = {
         requiredSkills: job.requiredSkills || [],
         jobDescription: job.jobDescription || "",
-      });
+      };
+
+      console.log("Matching Payload:", payload);
+
+      const res = await recruiterAPI.matchCandidates(payload);
+
+      console.log("Matching Response:", res.data);
 
       if (res.data.success) {
         setJobMatches((prev) => ({
           ...prev,
-          [job._id]: res.data.candidates,
+          [job._id]: res.data.candidates || [],
         }));
       }
     } catch (err) {
@@ -114,7 +140,11 @@ const Matching = () => {
   return (
     <div className="space-y-10 py-6">
 
-      <h1 className="text-3xl font-bold text-gray-900">🤝 Post Jobs</h1>
+      <h1 className="text-3xl font-bold text-gray-900">
+        🤝 Recruiter Job Matching
+      </h1>
+
+      {/* POST JOB FORM */}
 
       <div className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold mb-4">Post a Job</h2>
@@ -122,22 +152,47 @@ const Matching = () => {
         <div className="grid gap-4">
 
           <label>Company Name</label>
-          <input className="input" value={company} onChange={(e) => setCompany(e.target.value)} />
+          <input
+            className="input"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+          />
 
           <label>Job Location</label>
-          <input className="input" value={jobLocation} onChange={(e) => setJobLocation(e.target.value)} />
+          <input
+            className="input"
+            value={jobLocation}
+            onChange={(e) => setJobLocation(e.target.value)}
+          />
 
           <label>Job Title</label>
-          <input className="input" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
+          <input
+            className="input"
+            value={jobTitle}
+            onChange={(e) => setJobTitle(e.target.value)}
+          />
 
           <label>Salary</label>
-          <input className="input" value={salary} onChange={(e) => setSalary(e.target.value)} />
+          <input
+            className="input"
+            value={salary}
+            onChange={(e) => setSalary(e.target.value)}
+          />
 
           <label>Job Description</label>
-          <textarea className="input" rows="3" value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} />
+          <textarea
+            className="input"
+            rows="3"
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+          />
 
           <label>Required Skills (comma separated)</label>
-          <input className="input" value={requiredSkills} onChange={(e) => setRequiredSkills(e.target.value)} />
+          <input
+            className="input"
+            value={requiredSkills}
+            onChange={(e) => setRequiredSkills(e.target.value)}
+          />
 
           <button
             onClick={handlePostJob}
@@ -146,28 +201,46 @@ const Matching = () => {
           >
             {loading ? "Posting..." : "Post Job"}
           </button>
+
         </div>
       </div>
 
+      {/* JOB LIST */}
+
       <div className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold mb-4">📄 Your Posted Jobs</h2>
+
+        <h2 className="text-xl font-semibold mb-4">
+          📄 Your Posted Jobs
+        </h2>
 
         {myJobs.length === 0 ? (
-          <p className="text-gray-500">You haven't posted any jobs yet.</p>
+          <p className="text-gray-500">
+            You haven't posted any jobs yet.
+          </p>
         ) : (
-          <div className="space-y-4">
-            {myJobs.map((job) => (
-              <div key={job._id} className="p-4 border rounded-lg bg-gray-50">
 
+          <div className="space-y-4">
+
+            {myJobs.map((job) => (
+
+              <div
+                key={job._id}
+                className="p-4 border rounded-lg bg-gray-50"
+              >
 
                 <h3 className="font-bold text-lg">{job.jobTitle}</h3>
+
                 <p>Company: {job.company}</p>
                 <p>Salary: {job.salary || "Not specified"}</p>
                 <p>Location: {job.jobLocation}</p>
 
-                <p><strong>Skills:</strong> {(job.requiredSkills || []).join(", ")}</p>
+                <p>
+                  <strong>Skills:</strong>{" "}
+                  {(job.requiredSkills || []).join(", ")}
+                </p>
 
                 <div className="flex gap-3 mt-4">
+
                   <button
                     onClick={() => matchForJob(job)}
                     disabled={!job.requiredSkills?.length}
@@ -177,7 +250,9 @@ const Matching = () => {
                         : "bg-gray-400 cursor-not-allowed"
                     }`}
                   >
-                    {matchLoadingFor === job._id ? "Matching..." : "🔍 Match"}
+                    {matchLoadingFor === job._id
+                      ? "Matching..."
+                      : "🔍 Match"}
                   </button>
 
                   <button
@@ -186,37 +261,77 @@ const Matching = () => {
                   >
                     🗑 Delete
                   </button>
+
                 </div>
 
+                {/* MATCH RESULTS */}
+
                 {jobMatches[job._id] && (
+
                   <div className="mt-4 p-4 bg-white border rounded-lg">
-                    <h4 className="font-semibold mb-2">🎯 Matched Candidates</h4>
+
+                    <h4 className="font-semibold mb-2">
+                      🎯 Matched Candidates
+                    </h4>
 
                     {jobMatches[job._id].length === 0 ? (
-                      <p className="text-gray-500">No matches found.</p>
+
+                      <p className="text-gray-500">
+                        No matching candidates found.
+                      </p>
+
                     ) : (
+
                       <div className="space-y-3">
+
                         {jobMatches[job._id].map((c, i) => (
-                          <div key={i} className="p-3 border rounded-lg bg-gray-100">
+
+                          <div
+                            key={i}
+                            className="p-3 border rounded-lg bg-gray-100"
+                          >
+
                             <div className="flex justify-between">
-                              <p className="font-medium">{c.name}</p>
-                              <span className="text-primary-600 font-semibold">
+
+                              <p className="font-medium">
+                                {c.name}
+                              </p>
+
+                              <span className="text-blue-600 font-semibold">
                                 {c.matchScore}%
                               </span>
+
                             </div>
-                            <p className="text-gray-700">{c.email}</p>
-                            <p><strong>Matched Skills:</strong> {c.matchedSkills.join(", ")}</p>
+
+                            <p className="text-gray-700">
+                              {c.email}
+                            </p>
+
+                            <p>
+                              <strong>Matched Skills:</strong>{" "}
+                              {(c.matchedSkills || []).join(", ")}
+                            </p>
+
                           </div>
+
                         ))}
+
                       </div>
+
                     )}
+
                   </div>
+
                 )}
 
               </div>
+
             ))}
+
           </div>
+
         )}
+
       </div>
 
     </div>

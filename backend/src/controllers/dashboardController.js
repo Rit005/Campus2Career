@@ -2,6 +2,7 @@ import { groq } from "../groqClient.js";
 import { getHiringPipeline } from "../utils/getHiringPipeline.js";
 import { predictHiringSuccess } from "../ml/predictHiring.js";
 
+//dashboard
 export const getHiringDashboard = async (req, res) => {
   try {
     const pipeline = await getHiringPipeline();

@@ -2,6 +2,7 @@ import Application from "../models/Application.js";
 import Student from "../models/Student.js";
 import User from "../models/User.js";
 
+// get all students
 export const getAllStudents = async (req, res) => {
   try {
     const students = await Student.find().populate("userId", "name email");
@@ -25,7 +26,7 @@ export const getAllStudents = async (req, res) => {
   }
 };
 
-
+// apply for job
 export const applyForJob = async (req, res) => {
   try {
     console.log("BODY:", req.body);
@@ -100,6 +101,8 @@ export const applyForJob = async (req, res) => {
     });
   }
 };
+
+// download resume
 export const downloadResume = async (req, res) => {
   try {
     const application = await Application.findById(req.params.id);

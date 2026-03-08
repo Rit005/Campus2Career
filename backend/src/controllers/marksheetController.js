@@ -3,7 +3,6 @@ import mammoth from "mammoth";
 import Marksheet from "../models/Marksheet.js";
 import Tesseract from "tesseract.js";
 import { getMLPredictions } from "../ml/mlService.js";
-
 import {
   predictAcademicDomain,
   detectWeakSubjects,
@@ -11,6 +10,7 @@ import {
   generateImprovementRoadmap,
 } from "../ml/academicML.js";
 
+//pdf Parser
 const extractTextFromFile = async (buffer, mimeType) => {
   try {
     if (mimeType === "application/pdf") {
@@ -96,6 +96,7 @@ const parseMarksheetProperly = (text) => {
   };
 };
 
+//upload marksheet
 export const uploadMarksheetController = async (req, res) => {
   try {
     if (!req.file)
@@ -206,19 +207,11 @@ export const uploadMarksheetController = async (req, res) => {
       return { name, average: avg };
     });
 
-    console.log("Subject Performance:", subjectWisePerformance);
-
     const globalWeakSubjects = detectWeakSubjects(subjectWisePerformance);
-
-    console.log("Weak Subjects:", globalWeakSubjects);
 
     const predictedDomain = predictAcademicDomain(subjectWisePerformance);
 
-    console.log("Predicted Domain:", predictedDomain);
-
     const trendStatus = analyzeTrend(semesterTrend);
-
-    console.log("Trend Status:", trendStatus);
 
     const roadmapRaw = generateImprovementRoadmap(globalWeakSubjects);
 
@@ -232,8 +225,6 @@ export const uploadMarksheetController = async (req, res) => {
 
       return JSON.stringify(item);
     });
-
-    console.log("Improvement Roadmap:", roadmap);
 
 let improvementTrend = 0;
 
@@ -264,11 +255,7 @@ const mlFeatures = {
   StressLevel: stressLevel,
 };
 
-console.log("Dynamic ML Features:", mlFeatures);
-
     const mlInsights = await getMLPredictions(mlFeatures);
-
-    console.log("ML Response:", mlInsights);
 
     const nextSemesterPrediction =
       mlInsights?.data?.nextSemesterPrediction || 0;
@@ -279,16 +266,10 @@ console.log("Dynamic ML Features:", mlFeatures);
     const riskScore =
       mlInsights?.data?.riskScore || 0;
 
-    console.log("Next Semester Prediction:", nextSemesterPrediction);
-    console.log("Placement Probability:", placementProbability);
-    console.log("Risk Score:", riskScore);
-
     const careerReadiness = Math.min(
       100,
       Math.round((overallPerformance + nextSemesterPrediction) / 2)
     );
-
-    console.log("Career Readiness Score:", careerReadiness);
 
     await Marksheet.updateMany(
       { studentId: req.user._id },
@@ -307,10 +288,6 @@ console.log("Dynamic ML Features:", mlFeatures);
         placementProbability,
       },
     });
-
-    console.log("ML Insights saved to DB");
-
-    console.log("----- MARKSHEET PROCESS COMPLETE -----");
 
     res.json({
       success: true,
@@ -338,6 +315,7 @@ console.log("Dynamic ML Features:", mlFeatures);
   }
 };
 
+// get all marksheets
 export const getAllMarksheets = async (req, res) => {
   try {
     const list = await Marksheet.find({
@@ -353,6 +331,7 @@ export const getAllMarksheets = async (req, res) => {
   }
 };
 
+//delete marksheet
 export const deleteMarksheet = async (req, res) => {
   try {
     await Marksheet.findOneAndDelete({
@@ -369,6 +348,7 @@ export const deleteMarksheet = async (req, res) => {
   }
 };
 
+// get academic dahboard
 export const getAcademicDashboard = async (req, res) => {
   try {
     const marksheets = await Marksheet.find({
