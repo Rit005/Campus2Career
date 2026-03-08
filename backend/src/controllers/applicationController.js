@@ -71,24 +71,20 @@ export const getResumeByApplicationId = async (req, res) => {
   try {
     const application = await Application.findById(req.params.id);
 
-    if (!application || !application.resumePath) {
+    if (!application || !application.resumeData) {
       return res.status(404).json({
         success: false,
         message: "Resume not found",
       });
     }
 
-    const filePath = path.resolve(application.resumePath);
+    res.setHeader("Content-Type", application.resumeType);
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${application.resumeName}"`
+    );
 
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        success: false,
-        message: "File does not exist",
-      });
-    }
-
-    res.setHeader("Content-Type", "application/pdf"); 
-    res.sendFile(filePath);
+    res.send(application.resumeData);
 
   } catch (error) {
     console.error("RESUME FETCH ERROR:", error);

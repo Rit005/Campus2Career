@@ -38,7 +38,7 @@ router.put("/job/:id", updateJob);
 router.get("/all-jobs", getAllJobs);
 
 // MATCHING
-router.post("/match-candidates", matchCandidates);
+router.post("/match", matchCandidates);
 
 // DASHBOARD
 router.post("/dashboard", getHiringDashboard);
@@ -52,7 +52,7 @@ router.get("/analytics", getRecruiterAnalytics);
 // APPLICANTS 
 router.get("/applicants/:jobId", getApplicantsForJob);
 router.patch("/applicants/:id/status", updateApplicationStatus);
-router.patch("/applicants/:id/note",protect,requireRole("recruiter"),updateRecruiterNote);
+router.patch("/applicants/:id/note", updateRecruiterNote);
 router.get("/application/resume/:id",getResumeByApplicationId);
 
 //recruiter profile

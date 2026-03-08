@@ -21,7 +21,7 @@ const ViewApplicants = () => {
   const openResume = async (id) => {
   try {
     const response = await axios.get(
-      `http://localhost:5001/api/recruiter/application/resume/:id`,
+      `http://localhost:5001/api/recruiter/application/resume/${id}`,
       {
         responseType: "blob",
         withCredentials: true,
@@ -95,7 +95,7 @@ const ViewApplicants = () => {
 
                     <td className="p-3 text-center">
                       <a
-                        href={`http://localhost:5001/api/application/resume/${app._id}`}
+                        href={`http://localhost:5001/api/recruiter/application/resume/${app._id}`}
                         className="text-blue-600 underline"
                         target="_blank"
                       >

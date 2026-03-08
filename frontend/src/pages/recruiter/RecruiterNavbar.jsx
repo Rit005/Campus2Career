@@ -66,6 +66,31 @@ const RecruiterNavbar = () => {
               Switch Dashboard
             </button>
 
+              <div className="relative group">
+              <div className="w-10 h-10 rounded-full bg-primary-600 text-white 
+                flex items-center justify-center font-bold cursor-pointer">
+                {initials}
+              </div>
+
+              <div
+                className="absolute right-0 mt-3 w-48 bg-white rounded-lg shadow-md border
+                  opacity-0 invisible group-hover:opacity-100 group-hover:visible
+                  transition-all duration-200 z-50"
+              >
+                <div className="px-4 py-3 border-b">
+                  <p className="text-l font-semibold text-gray-900">{user?.name}</p>
+                  <p className="text-s text-gray-500">Recruiter</p>
+                </div>
+
+                <button
+                  onClick={() => navigate("/recruiter/profile")}
+                  className="w-full text-left px-4 py-2 text-l hover:bg-gray-100"
+                >
+                  View Profile
+                </button>
+              </div>
+            </div>
+
             <button
               onClick={handleLogout}
               className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold"
