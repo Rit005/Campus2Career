@@ -6,6 +6,18 @@ const projectSchema = new mongoose.Schema({
   technologies: [String],
 });
 
+const recommendedJobSchema = new mongoose.Schema({
+  jobId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Job"
+  },
+  title: String,
+  company: String,
+  matchScore: Number,
+  matchingSkills: [String],
+  missingSkills: [String]
+});
+
 const resumeSchema = new mongoose.Schema(
   {
     studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true },
@@ -30,6 +42,7 @@ const resumeSchema = new mongoose.Schema(
     domainConfidence: Number,
     resumeStrengthScore: Number,
     aiScore: Number,
+    recommendedJobs:[recommendedJobSchema],
   },
   { timestamps: true }
 );

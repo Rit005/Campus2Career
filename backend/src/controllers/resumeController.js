@@ -114,12 +114,23 @@ ${resumeText}
     const extractedPhone =
       resumeText.match(/\+?\d[\d\s]{7,15}\d/)?.[0] || "";
 
+      // JOB MATCHING
     const allJobs = await Job.find({});
     const matchedJobs = matchJobsWithSkills(allJobs, parsed.skills);
 
     const topJobRecommendations = matchedJobs
       .filter((j) => j.matchScore > 30) 
       .slice(0, 10);
+
+
+      const formattedJobs = topJobRecommendations.map((j) => ({
+      jobId: j.job._id,
+      title: j.job.jobTitle,
+      company: j.job.company,
+      matchScore: j.matchScore,
+      matchingSkills: j.matchingSkills,
+      missingSkills: j.missingSkills,
+    }));
 
     const savedResume = await Resume.findOneAndUpdate(
       { studentId },
@@ -136,14 +147,7 @@ ${resumeText}
         domainConfidence: domainPrediction.confidenceScore,
         resumeStrengthScore: resumeStrength,
 
-        recommendedJobs: topJobRecommendations.map((j) => ({
-          jobId: j.job._id,
-          title: j.job.title,
-          company: j.job.company,
-          matchScore: j.matchScore,
-          matchingSkills: j.matchingSkills,
-          missingSkills: j.missingSkills,
-        })),
+        recommendedJobs: formattedJobs,
       },
       { upsert: true, new: true }
     );
@@ -170,7 +174,7 @@ ${resumeText}
         confidence: domainPrediction.confidenceScore,
         resumeStrengthScore: resumeStrength,
       },
-      jobRecommendations: topJobRecommendations,
+      jobRecommendations: formattedJobs,
       data: savedResume,
     });
 

@@ -24,33 +24,36 @@ const ResumeAnalyzer = () => {
   const [dragActive, setDragActive] = useState(false);
 
   useEffect(() => {
-    const loadResume = async () => {
-      try {
-        const res = await studentAPI.getResume();
-        if (res.data.success && res.data.data) {
-          const d = res.data.data;
+  const loadResume = async () => {
+    try {
+      const res = await studentAPI.getResume();
 
-          setSkills(d.skills || []);
-          setSummary(d.experience_summary || "");
-          setEducation(d.education || "");
-          setRoles(d.suitable_roles || []);
-          setProjects(d.projects || []);
-          setMissingSkills(d.missing_skills || []);
-          setRecommendedProjects(d.project_recommendations || []);
+      if (res.data.success && res.data.data) {
+        const d = res.data.data;
 
-          setPredictedDomain(d.predictedDomain || "");
-          setConfidence(d.domainConfidence || 0);
-          setResumeStrength(d.resumeStrengthScore || 0);
+        setSkills(d.skills || []);
+        setSummary(d.experience_summary || "");
+        setEducation(d.education || "");
+        setRoles(d.suitable_roles || []);
+        setProjects(d.projects || []);
+        setMissingSkills(d.missing_skills || []);
+        setRecommendedProjects(d.project_recommendations || []);
 
-          setJobRecommendations(d.recommendedJobs || []);
-        }
-      } catch (err) {
-        console.error("Failed to load resume", err);
+        setPredictedDomain(d.predictedDomain || "");
+        setConfidence(d.domainConfidence || 0);
+        setResumeStrength(d.resumeStrengthScore || 0);
+
+        setJobRecommendations(
+          Array.isArray(d?.recommendedJobs) ? d.recommendedJobs : []
+        );
       }
-    };
+    } catch (err) {
+      console.error("Failed to load resume", err);
+    }
+  };
 
-    loadResume();
-  }, []);
+  loadResume();
+}, []);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -94,7 +97,11 @@ const ResumeAnalyzer = () => {
       setConfidence(ml?.confidence || 0);
       setResumeStrength(ml?.resumeStrengthScore || 0);
 
-      setJobRecommendations(res.data.jobRecommendations || []);
+      setJobRecommendations(
+        res.data.jobRecommendations ||
+        res.data.data?.recommendedJobs ||
+        []
+      );
 
     } catch (err) {
       console.error(err);
@@ -274,47 +281,52 @@ const ResumeAnalyzer = () => {
       </Section>
 
       {/* Recommended Jobs */}
-      <Section title="Recommended Jobs Based on Your Skills">
-        {jobRecommendations.length ? (
-          <div className="space-y-4">
-            {jobRecommendations.map((job, idx) => (
+    <Section title="Recommended Jobs Based on Your Skills">
+      {jobRecommendations && jobRecommendations.length > 0 ? (
+        <div className="space-y-4">
+          {jobRecommendations.map((job, idx) => {
+            const title = job?.title || "Unknown Role";
+            const company = job?.company || "Unknown Company";
+
+            return (
               <div
                 key={idx}
-                className="p-4 border rounded-xl shadow-sm bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
+                className="p-4 border rounded-xl shadow-sm bg-gray-50 hover:bg-gray-100 transition"
               >
                 <div className="flex items-center gap-3">
                   <Briefcase className="text-blue-600 h-6 w-6" />
                   <h3 className="text-lg font-semibold">
-                    {job.title}
+                    {company}
                   </h3>
                 </div>
 
                 <p className="text-gray-700 mt-1 font-medium">
-                  Company: {job.company}
+                  Role: {title}
                 </p>
 
                 <p className="text-green-700 font-bold mt-2">
-                  Match Score: {job.matchScore}%
+                  Match Score: {job?.matchScore ?? 0}%
                 </p>
 
-                {job.matchingSkills.length > 0 && (
+                {job?.matchingSkills?.length > 0 && (
                   <p className="text-blue-700 text-sm mt-2">
                     Matching Skills: {job.matchingSkills.join(", ")}
                   </p>
                 )}
 
-                {job.missingSkills.length > 0 && (
+                {job?.missingSkills?.length > 0 && (
                   <p className="text-red-700 text-sm mt-1">
                     Missing Skills: {job.missingSkills.join(", ")}
                   </p>
                 )}
               </div>
-            ))}
-          </div>
-        ) : (
-          <Empty text="AI will recommend jobs based on your resume." />
-        )}
-      </Section>
+            );
+          })}
+        </div>
+      ) : (
+        <Empty text="AI will recommend jobs based on your resume." />
+      )}
+    </Section>
     </div>
   );
 };
