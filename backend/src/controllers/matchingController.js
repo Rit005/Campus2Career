@@ -1,4 +1,4 @@
-import Resume from "../models/Resume.js";
+import Student from "../models/Student.js";
 
 const SKILL_ALIASES = {
   html5: "html",
@@ -46,22 +46,32 @@ export const matchCandidates = async (req, res) => {
       .split(/[\s,.-]+/)
       .filter((w) => w.length > 3);
 
-    const resumes = await Resume.find().populate(
-      "studentId",
-      "name email phone"
+    // Fetch from Student model instead of Resume
+    const students = await Student.find().populate(
+      "userId",
+      "name email"
     );
+
+    // Handle case where no students exist
+    if (!students || students.length === 0) {
+      return res.json({
+        success: true,
+        totalCandidates: 0,
+        candidates: []
+      });
+    }
 
     const rankedCandidates = [];
 
-    for (const resume of resumes) {
-      if (!resume?.studentId) continue;
+    for (const student of students) {
+      if (!student?.userId) continue;
 
       let skillArr = [];
 
-      if (Array.isArray(resume.skills)) {
-        skillArr = resume.skills;
-      } else if (typeof resume.skills === "string") {
-        skillArr = resume.skills.split(",").map((s) => s.trim());
+      if (Array.isArray(student.skills)) {
+        skillArr = student.skills;
+      } else if (typeof student.skills === "string") {
+        skillArr = student.skills.split(",").map((s) => s.trim());
       }
 
       const candidateSkills = [
@@ -82,7 +92,7 @@ export const matchCandidates = async (req, res) => {
           ? Math.round((matchedSkills.length / normalizedSkills.length) * 70)
           : 0;
 
-      const expText = String(resume.experience_summary || "").toLowerCase();
+      const expText = String(student.experienceSummary || "").toLowerCase();
 
       const matchedExpWords = descKeywords.filter((w) =>
         expText.includes(w)
@@ -103,19 +113,19 @@ export const matchCandidates = async (req, res) => {
       if (finalScore < 20) continue;
 
       rankedCandidates.push({
-        studentId: resume.studentId._id,
-        name: resume.studentId.name,
-        email: resume.studentId.email,
-        phone: resume.studentId.phone,
+        studentId: student._id,
+        name: student.userId.name,
+        email: student.userId.email,
+        phone: student.phone || "",
 
         skills: skillArr,
         matchedSkills,
 
         matchScore: finalScore,
 
-        summary: resume.experience_summary || "",
-        education: resume.education || "",
-        roles: resume.suitable_roles || []
+        summary: student.experienceSummary || "",
+        education: student.education || "",
+        roles: student.suitableRoles || []
       });
     }
 
