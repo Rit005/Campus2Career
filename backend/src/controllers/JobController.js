@@ -2,7 +2,7 @@ import Job from "../models/Job.js";
 import Student from "../models/Student.js";
 
 
-// ================= POST JOB =================
+//POST JOB 
 export const postJob = async (req, res) => {
   try {
     const {
@@ -48,7 +48,7 @@ export const postJob = async (req, res) => {
 };
 
 
-// ================= GET MY JOBS =================
+// GET MY JOBS
 export const getMyJobs = async (req, res) => {
   try {
     const jobs = await Job.find({ recruiterId: req.user._id })
@@ -70,7 +70,7 @@ export const getMyJobs = async (req, res) => {
 };
 
 
-// ================= DELETE JOB =================
+// DELETE JOB
 export const deleteJob = async (req, res) => {
   try {
     const jobId = req.params.id;
@@ -109,7 +109,7 @@ export const deleteJob = async (req, res) => {
 };
 
 
-// ================= UPDATE JOB =================
+// UPDATE JOB 
 export const updateJob = async (req, res) => {
   try {
     const jobId = req.params.id;
@@ -157,7 +157,7 @@ export const updateJob = async (req, res) => {
 };
 
 
-// ================= GET ALL JOBS =================
+//  GET ALL JOBS 
 export const getAllJobs = async (req, res) => {
   try {
     const jobs = await Job.find()
@@ -179,12 +179,11 @@ export const getAllJobs = async (req, res) => {
 };
 
 
-// ================= MATCH CANDIDATES =================
+//  MATCH CANDIDATES 
 export const matchCandidatesForJob = async (req, res) => {
   try {
     const jobId = req.params.jobId;
 
-    // 1. Fetch the job using jobId
     const job = await Job.findById(jobId);
 
     if (!job) {
@@ -194,7 +193,6 @@ export const matchCandidatesForJob = async (req, res) => {
       });
     }
 
-    // 2. Fetch all students from the Student collection
     const students = await Student.find({}).populate('userId', 'name email');
 
     if (!students || students.length === 0) {
@@ -205,23 +203,18 @@ export const matchCandidatesForJob = async (req, res) => {
       });
     }
 
-    // 3. Normalize job skills (lowercase + trim)
     const jobSkills = (job.requiredSkills || []).map((skill) =>
       String(skill).toLowerCase().trim()
     );
 
-    // 4. Compare job.requiredSkills with student.skills and calculate matchScore
     const candidates = students
       .map((student) => {
-        // Normalize student skills (lowercase + trim)
         const studentSkills = (student.skills || []).map((skill) =>
           String(skill).toLowerCase().trim()
         );
 
-        // Find matching skills
         const matchingSkills = jobSkills.filter((jobSkill) =>
           studentSkills.some((studentSkill) => {
-            // Exact match or partial match (e.g., "react.js" matches "react")
             return (
               studentSkill === jobSkill ||
               studentSkill.includes(jobSkill) ||
@@ -230,7 +223,6 @@ export const matchCandidatesForJob = async (req, res) => {
           })
         );
 
-        // 5. Calculate matchScore = (matchingSkills / jobSkills) * 100
         const matchScore =
           jobSkills.length === 0
             ? 0
@@ -244,13 +236,10 @@ export const matchCandidatesForJob = async (req, res) => {
           matchingSkills,
         };
       })
-      // 6. Only return candidates with matchScore > 0
       .filter((candidate) => candidate.matchScore > 0);
 
-    // 7. Sort candidates by matchScore descending
     const sortedCandidates = candidates.sort((a, b) => b.matchScore - a.matchScore);
 
-    // 8. Return response
     return res.json({
       success: true,
       totalCandidates: sortedCandidates.length,
