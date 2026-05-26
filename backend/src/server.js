@@ -75,13 +75,13 @@ app.use("/api/recruiter", recruiterRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/admin", adminRoutes); 
 
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../../frontend/dist")));
+// if (process.env.NODE_ENV === "production") {
+//   app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
-  });
-}
+//   app.get("*", (req, res) => {
+//     res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
+//   });
+// }
 
 
 app.use(notFound);
@@ -111,7 +111,7 @@ const startServer = async () => {
 
     server = app.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🔗 Backend URL: http://localhost:${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
       console.log(`🖥️ Frontend URL: ${process.env.FRONTEND_URL}`);
       console.log(
         `🔑 GROQ KEY loaded: ${process.env.GROQ_API_KEY ? "YES" : "NO"}`
