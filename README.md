@@ -135,6 +135,16 @@ echo "VITE_API_URL=http://localhost:5000" > .env.local
 # Start development server
 npm run dev
 ```
+
+# ML-Service
+```bash
+
+cd ml-service
+# Start ml service
+python train_model.py
+
+```
+
 # Frontend
 
 ```bash
